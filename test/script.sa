@@ -1,0 +1,13 @@
+
+i = 5;
+a = 0;
+while i > 0 then
+	i = i - 1;
+	a = a + 5;
+end
+
+i = a;
+print(a 1 2);
+
+
+
