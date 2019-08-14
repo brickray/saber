@@ -37,10 +37,10 @@ private:
 	vector<shared_ptr<Astree>> asts;
 
 public:
-	SyntaxParse(Lexer& lexer) :lexer(lexer){}
+	SyntaxParse(){}
 
-	void Parse();
-	int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm);
+	void Parse(Lexer& lexer);
+	int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
 
 private:
 	bool match(string name);

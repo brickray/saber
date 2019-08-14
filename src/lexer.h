@@ -71,8 +71,9 @@ private:
 	int tokenPtr;
 
 public:
-	Lexer(string c);
+	Lexer();
 
+	void Parse(string c);
 	vector<Token> GetTokens() const { return tokens; }
 	Token* NextToken();
 	Token* PrevToken();

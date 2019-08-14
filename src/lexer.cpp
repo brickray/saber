@@ -1,10 +1,13 @@
 #include "lexer.h"
 
-Lexer::Lexer(string c){
-	code = c;
+Lexer::Lexer(){
 	ptr = 0;
 	lineNo = 0;
 	tokenPtr = 0;
+}
+
+void Lexer::Parse(string c){
+	code = c;
 
 	parse();
 }

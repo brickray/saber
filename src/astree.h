@@ -5,7 +5,7 @@
 #include "lexer.h"
 #include "value.h"
 #include "environment.h"
-#include "vm.h"
+#include "svm.h"
 #include "opcode.h"
 
 class Astree{
@@ -22,8 +22,7 @@ public:
 		children.push_back(ast);
 	}
 
-	virtual int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm) = 0;
-	virtual void Compile(){};
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm) = 0;
 
 	virtual string ToString() const{
 		string ret;

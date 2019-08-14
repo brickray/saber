@@ -6,7 +6,7 @@
 
 class AstFunc : public Astree{
 public:
-	virtual int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		Token* tok = children[0]->GetToken();
 		string funcName = tok->GetToken();
 		if (!e->HasSymbol(funcName)){
@@ -20,30 +20,18 @@ public:
 			return 0;
 		}
 		if (isFunc){
-			shared_ptr<Astree> func = e->GetSymbol(funcName).value.GetFunction();
-			AstDef* rfunc = dynamic_cast<AstDef*>(func.get());
-			int numChilds = rfunc->GetNumChildren();
-			int numRetParams = rfunc->GetNumReturnParams();
-			if (children.size() - 1 != numChilds - 2 - numRetParams){
+			SymbolInfo si = e->GetSymbol(funcName);
+			int numParams = si.value.GetInteger();
+			if (children.size() - 1 != numParams){
 				printf("行数:%d, 函数参数不一致\n", tok->GetLineNumber());
 				return 0;
 			}
 
-			shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
-			shared_ptr<Environment> root = e;
-			while (root->GetOutter().get())	root = root->GetOutter();
-
-			local->SetOutter(root);
-			//set local variable
-			/*for (int i = 0; i < numChilds - 2 - numRetParams; ++i){
-				Value ret = children[i + 1]->Eval(e, vm);
-				string name = rfunc->GetChild(i + 1)->GetToken()->GetToken();
-				local->Add(name, ret);
-			}
-			Value ret = rfunc->GetChild(numChilds - 1 - numRetParams)->Eval(local, vm);
-			if (numRetParams > 0){
-				ret = rfunc->GetChild(numChilds - 1)->Eval(local, vm);
-			}*/
+			SVM::Instruction call = { Opcode::CALL, si.address };
+			int callAddress = svm->AddCode(call);
+			call.operand1 = callAddress + 1;
+			svm->SetCode(callAddress, call);
+			
 			return 0;
 		}
 		else{
@@ -51,15 +39,11 @@ public:
 			int numParams = children.size() - 1;
 			vector<int> addresses(numParams);
 			for (int i = 0; i < numParams; ++i){
-				addresses[i] = children[i + 1]->Eval(e, vm);
+				addresses[i] = children[i + 1]->Compile(e, svm);
 			}
 
-			vm->AddCode(Opcode::CALLN);
-			vm->AddCode(func);
-			vm->AddCode(numParams);
-			for (int i = 0; i < numParams; ++i){
-				vm->AddCode(addresses[i]);
-			}
+			SVM::Instruction call = { Opcode::CALLN, func, numParams };
+			svm->AddCode(call);
 
 			return 0;
 		}

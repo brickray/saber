@@ -14,18 +14,16 @@ enum EValueType{
 
 class Environment;
 class Astree;
-class Value;
-class VM;
-typedef Value(*SFunc)(VM* vm);
+class SVM;
+typedef int(*SFunc)(SVM* vm, int numParams);
 struct SValue{
 	union{
 		bool   bValue;
 		int    iValue;
 		float  fValue;
+		SFunc sfunc;
 	};
 	string sValue;
-	shared_ptr<Astree> func;
-	SFunc sfunc;
 };
 
 class Value{
@@ -39,7 +37,10 @@ public:
 
 	void SetType(EValueType t) { type = t; }
 	EValueType GetType() const { return type; }
-	void SetValue(SValue& v) { value = v; }
+	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; }
+	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i; }
+	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; }
+	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -50,7 +51,6 @@ public:
 	int GetInteger() const { return value.iValue; }
 	float GetFloat() const { return value.fValue; }
 	string GetString() const { return value.sValue; }
-	shared_ptr<Astree> GetFunction() const { return value.func; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 
 	Value operator+(Value& v){
@@ -199,110 +199,92 @@ public:
 	}
 
 	Value operator<(Value& v){
-		SValue sv;
 		Value va;
-		va.SetType(EValueType::EBOOLEAN);
-
 		if (type == v.GetType()){
 			if (IsInteger()){
-				sv.bValue = value.iValue < v.value.iValue;
+				va.SetBool(value.iValue < v.value.iValue);
 			}
 			else if (IsFloat()){
-				sv.bValue = value.fValue < v.value.fValue;
+				va.SetBool(value.fValue < v.value.fValue);
 			}
 		}
-		va.SetValue(sv);
+
 		return va;
 	}
 
 	Value operator>(Value& v){
-		SValue sv;
 		Value va;
-		va.SetType(EValueType::EBOOLEAN);
-
 		if (type == v.GetType()){
 			if (IsInteger()){
-				sv.bValue = value.iValue > v.value.iValue;
+				va.SetBool(value.iValue > v.value.iValue);
 			}
 			else if (IsFloat()){
-				sv.bValue = value.fValue > v.value.fValue;
+				va.SetBool(value.fValue > v.value.fValue);
 			}
 		}
-		va.SetValue(sv);
+
 		return va;
 	}
 
 	Value operator<=(Value& v){
-		SValue sv;
 		Value va;
-		va.SetType(EValueType::EBOOLEAN);
-
 		if (type == v.GetType()){
 			if (IsInteger()){
-				sv.bValue = value.iValue <= v.value.iValue;
+				va.SetBool(value.iValue <= v.value.iValue);
 			}
 			else if (IsFloat()){
-				sv.bValue = value.fValue <= v.value.fValue;
+				va.SetBool(value.fValue <= v.value.fValue);
 			}
 		}
-		va.SetValue(sv);
+
 		return va;
 	}
 
 	Value operator>=(Value& v){
-		SValue sv;
 		Value va;
-		va.SetType(EValueType::EBOOLEAN);
-
 		if (type == v.GetType()){
 			if (IsInteger()){
-				sv.bValue = value.iValue >= v.value.iValue;
+				va.SetBool(value.iValue >= v.value.iValue);
 			}
 			else if (IsFloat()){
-				sv.bValue = value.fValue >= v.value.fValue;
+				va.SetBool(value.fValue >= v.value.fValue);
 			}
 		}
-		va.SetValue(sv);
+
 		return va;
 	}
 
 	Value operator==(Value& v){
-		SValue sv;
 		Value va;
-		va.SetType(EValueType::EBOOLEAN);
-
 		if (type == v.GetType()){
 			if (IsInteger()){
-				sv.bValue = value.iValue == v.value.iValue;
+				va.SetBool(value.iValue == v.value.iValue);
 			}
 			else if (IsFloat()){
-				sv.bValue = value.fValue == v.value.fValue;
+				va.SetBool(value.fValue == v.value.fValue);
 			}
 			else if (IsString()){
-				sv.bValue = value.sValue == v.value.sValue;
+				va.SetBool(value.sValue == v.value.sValue);
 			}
 		}
-		va.SetValue(sv);
+
 		return va;
 	}
 
 	Value operator!=(Value& v){
-		SValue sv;
 		Value va;
-		va.SetType(EValueType::EBOOLEAN);
-
 		if (type == v.GetType()){
 			if (IsInteger()){
-				sv.bValue = value.iValue != v.value.iValue;
+				va.SetBool(value.iValue != v.value.iValue);
 			}
 			else if (IsFloat()){
-				sv.bValue = value.fValue != v.value.fValue;
+				va.SetBool(value.fValue != v.value.fValue);
 			}
 			else if (IsString()){
-				sv.bValue = value.sValue != v.value.sValue;
+				va.SetBool(value.sValue != v.value.sValue);
 			}
 		}
-		va.SetValue(sv);
+
 		return va;
 	}
 

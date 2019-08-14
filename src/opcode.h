@@ -6,27 +6,30 @@
 class Opcode{
 public:
 	enum{
-		LOAD    = 0,
-		MOVE    = 1,
-		JZ      = 2,
-		JUMP    = 3,
-		CALL    = 4,
-		CALLN   = 5,
-		RET     = 6,
-		SAVE    = 7,
-		RESTORE = 8,
-		NEG     = 9,
-		ADD     = 10,
-		SUB     = 11,
-		MUL     = 12,
-		DIV     = 13,
-		MOD     = 14,
-		GT      = 15, //greater than
-		GE      = 16, //greater equal than
-		EQ      = 17,
-		NE      = 18, //not equal
-		NOP     = 19, //do nothing
-		ECNUM   = 20,
+		MOVE    = 0,
+		JZ      = 1,
+		JUMP    = 2,
+		CALL    = 3,
+		CALLN   = 4,
+		RET     = 5,
+		PUSH    = 6,
+		POP     = 7,
+		SAVE    = 8,
+		RESTORE = 9,
+		NEG     = 10,
+		ADD     = 11,
+		SUB     = 12,
+		MUL     = 13,
+		DIV     = 14,
+		MOD     = 15,
+		GT      = 16, //greater than
+		LT      = 17, //less than
+		GE      = 18, //greater equal than
+		LE      = 19, //less equal than
+		EQ      = 20,
+		NE      = 21, //not equal
+		NOP     = 22, //do nothing
+		ECNUM   = 23,
 	};
 };
 

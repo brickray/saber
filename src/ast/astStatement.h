@@ -5,10 +5,10 @@
 
 class AstStatement : public Astree{
 public:
-	virtual int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm){
-		int ret;
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm){
+		int ret = 0;
 		for (int i = 0; i < children.size(); ++i){
-			ret = children[i]->Eval(e, vm);
+			children[i]->Compile(e, vm);
 		}
 
 		return ret;

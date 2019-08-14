@@ -12,33 +12,37 @@ public:
 		hasElseBlock = true;
 	}
 
-	virtual int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm){
-		SValue sv;
-		Value value;
-		value.SetType(EValueType::EBOOLEAN);
-		/*Value cond = children[0]->Eval(e, vm);
-		if ((cond.IsBoolean() && !cond.GetBoolean()) || 
-			(cond.IsInteger() && cond.GetInteger()) ||
-			(cond.IsFloat() && cond.GetFloat())){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+		SVM::Instruction nop = { Opcode::NOP };
 
-			int size = hasElseBlock ? children.size() - 1 : children.size();
-			for (int i = 2; i < size; ++i){
-				Value ret = children[i]->Eval(e, vm);
-				if (ret.GetBoolean()) return value;
-			}
+		children[0]->Compile(e, svm);
+		
+		int next = 0;
+		SVM::Instruction jz = { Opcode::JZ, next };
+		int jumpAdress = svm->AddCode(jz);
+		children[1]->Compile(e, svm);
+		SVM::Instruction jump = { Opcode::JUMP, 0 };
+		int endAdress = svm->AddCode(jump);
+		next = svm->AddCode(nop);
+		jz.operand = next;
+		svm->SetCode(jumpAdress, jz);
 
-			if (hasElseBlock){
-				children[children.size() - 1]->Eval(e, vm);
-			}
+		int size = hasElseBlock ? children.size() - 1 : children.size();
+		for (int i = 2; i < size; ++i){
+			children[i]->Compile(e, svm);
+		}
 
-			sv.bValue = false;
-			value.SetValue(sv);
-			return value;
-		}*/
+		if (hasElseBlock){
+			children[children.size() - 1]->Compile(e, svm);
+			next = svm->AddCode(nop);
+			jump.operand = next;
+			svm->SetCode(endAdress, jump);
+		}
+		else{
+			jump.operand = next;
+			svm->SetCode(endAdress, jump);
+		}
 
-		children[1]->Eval(e, vm);
-		sv.bValue = true;
-		value.SetValue(sv);
 		return 0;
 	}
 };

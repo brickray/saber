@@ -5,23 +5,24 @@
 
 class AstWhile : public Astree{
 public:
-	virtual int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm){
-		int loop = vm->AddCode(Opcode::NOP);
-		int cond = children[0]->Eval(e, vm);
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+		SVM::Instruction nop = { Opcode::NOP };
+		int loopAddress = svm->AddCode(nop);
+		children[0]->Compile(e, svm);
 
 		int end = 0;
-		vm->AddCode(Opcode::JZ);
-		vm->AddCode(cond);
-		int jump = vm->AddCode(end);
+		SVM::Instruction jz = { Opcode::JZ, end };
+		int jumpAddress = svm->AddCode(jz);
 
 		for (int i = 1; i < children.size(); ++i)
-			children[i]->Eval(e, vm);
+			children[i]->Compile(e, svm);
 
-		vm->AddCode(Opcode::JUMP);
-		end = vm->AddCode(loop);
-		vm->SetCode(jump, end + 1);
+		SVM::Instruction jump = { Opcode::JUMP, loopAddress };
+		end = svm->AddCode(jump);
+		jz.operand = end + 1;
+		svm->SetCode(jumpAddress, jz);
 
-		return loop;
+		return 0;
 	}
 };
 

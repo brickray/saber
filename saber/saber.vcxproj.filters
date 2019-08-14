@@ -30,7 +30,10 @@
     <ClCompile Include="..\src\nativeFunc.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\vm.cpp">
+    <ClCompile Include="..\src\svm.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\sstate.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -77,10 +80,13 @@
     <ClInclude Include="..\src\nativeFunc.h">
       <Filter>源文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\vm.h">
+    <ClInclude Include="..\src\opcode.h">
       <Filter>源文件</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\opcode.h">
+    <ClInclude Include="..\src\svm.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\sstate.h">
       <Filter>源文件</Filter>
     </ClInclude>
   </ItemGroup>

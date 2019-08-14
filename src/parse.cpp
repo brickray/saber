@@ -1,6 +1,8 @@
 #include "parse.h"
 
-void SyntaxParse::Parse(){
+void SyntaxParse::Parse(Lexer& lex){
+	lexer = lex;
+
 	int idx = 0;
 	while (!lexer.IsEnd()){
 		shared_ptr<Astree> node = shared_ptr<Astree>(new AstStatement());
@@ -11,17 +13,12 @@ void SyntaxParse::Parse(){
 
 		}
 	}
-
-	/*for (int i = 0; i < asts.size(); ++i){
-		string str = asts[i]->ToString();
-		printf("%s\n", str.c_str());
-	}*/
 }
 
-int SyntaxParse::Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm){
+int SyntaxParse::Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	int ret;
 	for (int i = 0; i < asts.size(); ++i){
-		ret = asts[i]->Eval(e, vm);
+		ret = asts[i]->Compile(e, svm);
 	}
 
 	return ret;
@@ -214,6 +211,8 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 		}
 		else break;
 	}
+	AstDef* d = dynamic_cast<AstDef*>(def.get());
+	d->SetNumParams(d->GetNumChildren() - 1);
 
 	if (!match(")")) return false;
 

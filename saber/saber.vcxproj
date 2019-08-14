@@ -51,7 +51,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_DEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -82,7 +82,8 @@
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\nativeFunc.cpp" />
     <ClCompile Include="..\src\parse.cpp" />
-    <ClCompile Include="..\src\vm.cpp" />
+    <ClCompile Include="..\src\sstate.cpp" />
+    <ClCompile Include="..\src\svm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\astree.h" />
@@ -99,8 +100,9 @@
     <ClInclude Include="..\src\nativeFunc.h" />
     <ClInclude Include="..\src\opcode.h" />
     <ClInclude Include="..\src\parse.h" />
+    <ClInclude Include="..\src\sstate.h" />
     <ClInclude Include="..\src\value.h" />
-    <ClInclude Include="..\src\vm.h" />
+    <ClInclude Include="..\src\svm.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

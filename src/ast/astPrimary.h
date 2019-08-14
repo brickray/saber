@@ -5,9 +5,8 @@
 
 class AstPrimary : public Astree{
 public:
-	virtual int Eval(shared_ptr<Environment>& e, shared_ptr<VM>& vm){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		EValueType vt;
-		SValue sv;
 		Value value;
 		ETokenType type = token->GetTokenType();
 		switch (type){
@@ -16,54 +15,54 @@ public:
 			if (tok.find('.') != -1){
 				value.SetType(EValueType::EFLOAT);
 				float v = atof(tok.c_str());
-				sv.fValue = v;
+				value.SetFloat(v);
 			}
 			else{
 				value.SetType(EValueType::EINTEGER);
 				int v = atoi(tok.c_str());
-				sv.iValue = v;
+				value.SetInt(v);
 			}
 
-			value.SetValue(sv);
+			int idx = svm->AddConstant(value);
+			SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
+			svm->AddCode(ins);
 
-			int idx = vm->AddConstant(value);
-
-			return idx;
+			return 0;
 		}
 		case ETokenType::EIDENTIFIER:
 			if (e->HasSymbol(token->GetToken())){
 				int idx = e->GetSymbol(token->GetToken()).address;
-				return idx;
+
+				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
+				svm->AddCode(ins);
+				return 0;
 			}
 
 			if (token->GetToken() == "true" ){
-				sv.bValue = true;
-				value.SetType(EValueType::EBOOLEAN);
-				value.SetValue(sv);
+				int idx = -65;
+				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
+				svm->AddCode(ins);
 
-				int idx = vm->AddConstant(value);
-
-				return idx;
+				return 0;
 			}
 			else if (token->GetToken() == "false"){
-				sv.bValue = false;
-				value.SetType(EValueType::EBOOLEAN);
-				value.SetValue(sv);
+				int idx = -66;
+				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
+				svm->AddCode(ins);
 
-				int idx = vm->AddConstant(value);
-
-				return idx;
+				return 0;
 			}
 
 			printf("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
 			break;
 		case ETokenType::ESTRING:
-			value.SetType(EValueType::ESTRING);
-			sv.sValue = token->GetToken();
-			value.SetValue(sv);
+			value.SetString(token->GetToken());
 
-			int idx = vm->AddConstant(value);
-			return idx;
+			int idx = svm->AddConstant(value);
+			SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
+			svm->AddCode(ins);
+
+			return 0;
 		}
 	}
 };

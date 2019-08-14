@@ -10,4 +10,16 @@
 
 using namespace std;
 
+#define PI                  3.14159265358f
+
+inline float RadiansToDegree(float radians) {
+	float degrees = radians * 180.0 / PI;
+	return degrees;
+}
+
+inline float DegreeToRadians(float degrees) {
+	float radians = degrees / 180.0 * PI;
+	return radians;
+}
+
 #endif

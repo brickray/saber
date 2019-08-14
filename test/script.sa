@@ -1,13 +1,16 @@
 
-i = 5;
-a = 0;
-while i > 0 then
-	i = i - 1;
-	a = a + 5;
+def A()
+	i = 7;
+	print(5);
 end
 
-i = a;
-print(a 1 2);
+i = 5;
+a = 0;
+c = 4 + 6;
+A();
+print(i);
+print(degree(acos(0.707107)));
+print(gettime());
 
 
 
