@@ -7,16 +7,14 @@ SABER_NAMESPACE_BEGIN
 
 class AstContinue : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		if (!bc.isloop){
 			printf("行数:%d, 必需在循环体中才能使用关键字[continue]\n", token->GetLineNumber());
-			return 0;
+			return;
 		}
 
 		SVM::Instruction jump = { Opcode::JUMP, bc.start };
 		svm->AddCode(jump);
-
-		return 0;
 	}
 };
 

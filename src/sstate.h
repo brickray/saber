@@ -15,12 +15,14 @@ private:
 	shared_ptr<SVM> svm;
 	shared_ptr<Environment> env;
 
+	bool sc = false;
+
 public:
 	SState(){}
 
 	void Init();
 	void Run(string code);
-	void ShowCode() const;
+	void ShowCode(bool t);
 
 	void Register(RegisterFunction func[]);
 
@@ -28,6 +30,9 @@ public:
 	shared_ptr<SyntaxParse> GetParser() const { return parse; }
 	shared_ptr<SVM> GetSVM() const { return svm; }
 	shared_ptr<Environment> GetEnvironment() const { return env; }
+
+private:
+	void showCode() const;
 };
 
 SABER_NAMESPACE_END

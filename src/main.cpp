@@ -17,9 +17,9 @@ void main(){
 	string code(buffer.str());
 	
 	SState state;
+	state.ShowCode(true);
 	state.Init();
 	state.Run(code);
-	state.ShowCode();
 
 	getchar();
 }

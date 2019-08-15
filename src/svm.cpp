@@ -227,7 +227,6 @@ int SVM::decodeConstantIndex(int idx){
 
 string SVM::ShowCode(){
 	static string codeString[Opcode::ECNUM] = {
-		"JZ",
 		"POP",
 		"NEG",
 		"ADD",
@@ -245,6 +244,7 @@ string SVM::ShowCode(){
 		"AND",
 		"NOP",
 		"MOVE",
+		"JZ",
 		"JUMP",
 		"CALL",
 		"RET",

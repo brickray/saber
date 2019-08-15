@@ -14,6 +14,7 @@ enum class ETokenType{
 	ESEMICOLON,
 	ELEFT_BRACKET,
 	ERIGHT_BRACKET,
+	ECOMMA,
 	ENUM,
 };
 
@@ -26,6 +27,7 @@ static string tokenTypeString[int(ETokenType::ENUM)] = {
 	"semicolon",
 	"left bracket",
 	"right bracket",
+	"comma",
 };
 
 static hash_set<string> reserved = {

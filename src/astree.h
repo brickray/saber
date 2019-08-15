@@ -15,6 +15,7 @@ struct BlockCnt{
 	bool isloop;
 	vector<int> bps; //break points
 	vector<int> elifs; //else if
+	int nearst;
 
 	BlockCnt(){
 		isloop = false;
@@ -33,7 +34,7 @@ public:
 	shared_ptr<Astree > GetChild(int n) { return children[n]; }
 	void AddChild(shared_ptr<Astree>& ast){ children.push_back(ast); }
 
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc) = 0;
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc) = 0;
 
 	virtual string ToString() const{
 		string ret;

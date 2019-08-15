@@ -7,7 +7,7 @@ SABER_NAMESPACE_BEGIN
 
 class AstPrimary : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		EValueType vt;
 		Value value;
 		ETokenType type = token->GetTokenType();
@@ -28,23 +28,20 @@ public:
 			int idx = svm->AddConstant(value);
 			SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 			svm->AddCode(ins);
-
-			return 0;
+			break;
 		}
 		case ETokenType::EIDENTIFIER:
 			if (token->GetToken() == "true"){
 				int idx = -65;
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
-
-				return 0;
+				return;
 			}
 			else if (token->GetToken() == "false"){
 				int idx = -66;
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
-
-				return 0;
+				return;
 			}
 
 			if (e->HasSymbol(token->GetToken())){
@@ -52,7 +49,9 @@ public:
 
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
-				return 0;
+
+				bc.nearst = idx;
+				return;
 			}
 
 			printf("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
@@ -63,8 +62,7 @@ public:
 			int idx = svm->AddConstant(value);
 			SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 			svm->AddCode(ins);
-
-			return 0;
+			break;
 		}
 	}
 };

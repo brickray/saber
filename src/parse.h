@@ -6,6 +6,7 @@
 #include "astree.h"
 #include "ast\astPrimary.h"
 #include "ast\astWhile.h"
+#include "ast\astFor.h"
 #include "ast\astIf.h"
 #include "ast\astElif.h"
 #include "ast\astStatement.h"
@@ -24,14 +25,16 @@
 // expr       : func | primary | primary op expr 
 // block      : statement | statement block | empty
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
-// while      : 'while' expr 'then' blcok 'end'
+// while      : 'while' expr 'do' blcok 'end'
+// for        : 'for' expr expr (expr) 'do' block 'end'
 // def        : 'def' identifier '(' identifier *')' block ('return' (primary)) 'end'
-// func       : identifier '(' primary ')' ';'
+// func       : identifier '(' primary ')' 
 // statement  : if
 //			  | while
+//            | for
 //            | def
 //            | func
-//            | expr ';'
+//            | expr 
 // program    : statement
 
 SABER_NAMESPACE_BEGIN
@@ -45,7 +48,7 @@ public:
 	SyntaxParse(){}
 
 	void Parse(Lexer& lexer);
-	int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
+	void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
 
 private:
 	bool match(string name, Token** tok = nullptr);
@@ -59,6 +62,7 @@ private:
 	bool matchExpr(shared_ptr<Astree>& astree);
 	bool matchIf(shared_ptr<Astree>& astree);
 	bool matchWhile(shared_ptr<Astree>& astree);
+	bool matchFor(shared_ptr<Astree>& astree);
 	bool matchDef(shared_ptr<Astree>& astree);
 	bool matchFunc(shared_ptr<Astree>& astree);
 	bool matchStatement(shared_ptr<Astree>& astree);

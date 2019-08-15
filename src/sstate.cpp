@@ -15,11 +15,12 @@ void SState::Run(string code){
 	lexer->Parse(code);
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
+	if (sc) showCode();
 	svm->Run();
 }
 
-void SState::ShowCode() const{
-	printf("%s\n", svm->ShowCode().c_str());
+void SState::ShowCode(bool t){
+	sc = t;
 }
 
 void SState::Register(RegisterFunction func[]){
@@ -34,6 +35,10 @@ void SState::Register(RegisterFunction func[]){
 		SymbolInfo si = { function, idx };
 		env->SetSymbol(name, si);
 	}
+}
+
+void SState::showCode() const{
+	printf("%s\n", svm->ShowCode().c_str());
 }
 
 SABER_NAMESPACE_END

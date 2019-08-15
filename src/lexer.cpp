@@ -148,6 +148,11 @@ void Lexer::parseLine(string line){
 			c = line[++p];
 			type = ETokenType::ERIGHT_BRACKET;
 		}
+		else if (c == ','){
+			tok += c;
+			c = line[++p];
+			type = ETokenType::ECOMMA;
+		}
 		else if (c == '\0' || c == '\t'){
 			if (p < size) c = line[++p];
 

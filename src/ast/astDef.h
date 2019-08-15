@@ -15,7 +15,7 @@ public:
 	void SetNumReturnParams(int n) { numReturnParams = n; }
 	int GetNumReturnParams() const { return numReturnParams; }
 
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop = { Opcode::NOP };
 
 		int next = 0;
@@ -39,8 +39,6 @@ public:
 		next = svm->AddCode(nop);
 		jump.operand = next;
 		svm->SetCode(jumpAddress, jump);
-
-		return 0;
 	}
 };
 

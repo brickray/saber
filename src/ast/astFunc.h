@@ -8,12 +8,12 @@ SABER_NAMESPACE_BEGIN
 
 class AstFunc : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		Token* tok = children[0]->GetToken();
 		string funcName = tok->GetToken();
 		if (!e->HasSymbol(funcName)){
 			printf("行数:%d, 未定义标识符[%s]\n", tok->GetLineNumber(), funcName.c_str());
-			return 0;
+			return;
 		}
 		
 		int func = e->GetSymbol(funcName).address;
@@ -28,8 +28,6 @@ public:
 		int callAddress = svm->AddCode(call);
 		call.operand1 = callAddress + 1;
 		svm->SetCode(callAddress, call);
-
-		return 0;
 	}
 };
 

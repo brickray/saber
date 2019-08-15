@@ -7,12 +7,10 @@ SABER_NAMESPACE_BEGIN
 
 class AstStatement : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc){
 		for (int i = 0; i < children.size(); ++i){
 			children[i]->Compile(e, vm, bc);
 		}
-
-		return 0;
 	}
 };
 

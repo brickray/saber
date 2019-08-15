@@ -7,7 +7,7 @@ SABER_NAMESPACE_BEGIN
 
 class AstElif : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop = { Opcode::NOP };
 
 		children[0]->Compile(e, svm, bc);
@@ -23,8 +23,6 @@ public:
 		svm->SetCode(jumpAddress, jz);
 
 		bc.elifs.push_back(endAddress);
-
-		return 0;
 	}
 };
 

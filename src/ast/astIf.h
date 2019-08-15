@@ -14,7 +14,7 @@ public:
 		hasElseBlock = true;
 	}
 
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop = { Opcode::NOP };
 
 		children[0]->Compile(e, svm, bc);
@@ -51,8 +51,6 @@ public:
 		}
 
 		bc.bps = subBc.bps;
-
-		return 0;
 	}
 };
 
