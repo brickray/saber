@@ -5,7 +5,7 @@
 
 class AstPrimary : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		EValueType vt;
 		Value value;
 		ETokenType type = token->GetTokenType();
@@ -30,15 +30,7 @@ public:
 			return 0;
 		}
 		case ETokenType::EIDENTIFIER:
-			if (e->HasSymbol(token->GetToken())){
-				int idx = e->GetSymbol(token->GetToken()).address;
-
-				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
-				svm->AddCode(ins);
-				return 0;
-			}
-
-			if (token->GetToken() == "true" ){
+			if (token->GetToken() == "true"){
 				int idx = -65;
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
@@ -50,6 +42,14 @@ public:
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
 
+				return 0;
+			}
+
+			if (e->HasSymbol(token->GetToken())){
+				int idx = e->GetSymbol(token->GetToken()).address;
+
+				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
+				svm->AddCode(ins);
 				return 0;
 			}
 

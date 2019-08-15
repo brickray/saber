@@ -6,47 +6,28 @@
 
 class AstFunc : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		Token* tok = children[0]->GetToken();
 		string funcName = tok->GetToken();
 		if (!e->HasSymbol(funcName)){
-			printf("行数:%d, 未定义函数名[%s]\n", tok->GetLineNumber(), funcName.c_str());
+			printf("行数:%d, 未定义标识符[%s]\n", tok->GetLineNumber(), funcName.c_str());
 			return 0;
 		}
-		bool isFunc = e->GetSymbol(funcName).value.IsFunction();
-		bool isNativeFunc = e->GetSymbol(funcName).value.IsNativeFunction();
-		if (!isFunc && !isNativeFunc){
-			printf("行数:%d,[%s]不是函数\n", tok->GetLineNumber(), funcName.c_str());
-			return 0;
+		
+		int func = e->GetSymbol(funcName).address;
+		int numParams = children.size() - 1;
+		for (int i = 0; i < numParams; ++i){
+			children[i + 1]->Compile(e, svm, bc);
 		}
-		if (isFunc){
-			SymbolInfo si = e->GetSymbol(funcName);
-			int numParams = si.value.GetInteger();
-			if (children.size() - 1 != numParams){
-				printf("行数:%d, 函数参数不一致\n", tok->GetLineNumber());
-				return 0;
-			}
 
-			SVM::Instruction call = { Opcode::CALL, si.address };
-			int callAddress = svm->AddCode(call);
-			call.operand1 = callAddress + 1;
-			svm->SetCode(callAddress, call);
-			
-			return 0;
-		}
-		else{
-			int func = e->GetSymbol(funcName).address;
-			int numParams = children.size() - 1;
-			vector<int> addresses(numParams);
-			for (int i = 0; i < numParams; ++i){
-				addresses[i] = children[i + 1]->Compile(e, svm);
-			}
+		SVM::Instruction push = { Opcode::PUSH, func };
+		svm->AddCode(push);
+		SVM::Instruction call = { Opcode::CALL, numParams };
+		int callAddress = svm->AddCode(call);
+		call.operand1 = callAddress + 1;
+		svm->SetCode(callAddress, call);
 
-			SVM::Instruction call = { Opcode::CALLN, func, numParams };
-			svm->AddCode(call);
-
-			return 0;
-		}
+		return 0;
 	}
 };
 

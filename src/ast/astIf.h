@@ -12,36 +12,44 @@ public:
 		hasElseBlock = true;
 	}
 
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop = { Opcode::NOP };
 
-		children[0]->Compile(e, svm);
+		children[0]->Compile(e, svm, bc);
 		
 		int next = 0;
 		SVM::Instruction jz = { Opcode::JZ, next };
-		int jumpAdress = svm->AddCode(jz);
-		children[1]->Compile(e, svm);
+		int jumpAddress = svm->AddCode(jz);
+		children[1]->Compile(e, svm, bc);
 		SVM::Instruction jump = { Opcode::JUMP, 0 };
-		int endAdress = svm->AddCode(jump);
+		int endAddress = svm->AddCode(jump);
 		next = svm->AddCode(nop);
 		jz.operand = next;
-		svm->SetCode(jumpAdress, jz);
+		svm->SetCode(jumpAddress, jz);
 
+		BlockCnt subBc;
+		subBc.start = bc.start;
+		subBc.isloop = bc.isloop;
+		subBc.bps = bc.bps;
 		int size = hasElseBlock ? children.size() - 1 : children.size();
 		for (int i = 2; i < size; ++i){
-			children[i]->Compile(e, svm);
+			children[i]->Compile(e, svm, subBc);
 		}
 
 		if (hasElseBlock){
-			children[children.size() - 1]->Compile(e, svm);
-			next = svm->AddCode(nop);
-			jump.operand = next;
-			svm->SetCode(endAdress, jump);
+			children[children.size() - 1]->Compile(e, svm, subBc);
+			
 		}
-		else{
-			jump.operand = next;
-			svm->SetCode(endAdress, jump);
+		
+		next = svm->AddCode(nop);
+		jump.operand = next;
+		svm->SetCode(endAddress, jump);
+
+		for (int i = 0; i < subBc.elifs.size(); ++i){
+			svm->SetCode(subBc.elifs[i], jump);
 		}
+
+		bc.bps = subBc.bps;
 
 		return 0;
 	}

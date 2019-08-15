@@ -89,5 +89,14 @@
     <ClInclude Include="..\src\sstate.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ast\astBreak.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astContinue.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astElif.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

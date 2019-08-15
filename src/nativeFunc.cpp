@@ -162,15 +162,16 @@ static RegisterFunction native[] = {
 	{ "", nullptr },
 };
 
-void NativeFunc::Register(shared_ptr<Environment>& e){
+void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	for (int i = 0;; ++i){
 		string name = native[i].name;
 		if (name == "") break;
 
 		SValue sv;
 		sv.sfunc = native[i].f;
-		Value print(EValueType::ENATIVEFUNC, sv);
-		SymbolInfo si = { print, int(sv.sfunc) };
+		Value function(EValueType::ENATIVEFUNC, sv);
+		int idx = svm->AddGlobal(function);
+		SymbolInfo si = { function, idx };
 		e->SetSymbol(name, si);
 	}
 }

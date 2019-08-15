@@ -10,26 +10,27 @@ public:
 		JZ      = 1,
 		JUMP    = 2,
 		CALL    = 3,
-		CALLN   = 4,
-		RET     = 5,
-		PUSH    = 6,
-		POP     = 7,
-		SAVE    = 8,
-		RESTORE = 9,
-		NEG     = 10,
-		ADD     = 11,
-		SUB     = 12,
-		MUL     = 13,
-		DIV     = 14,
-		MOD     = 15,
-		GT      = 16, //greater than
-		LT      = 17, //less than
-		GE      = 18, //greater equal than
-		LE      = 19, //less equal than
-		EQ      = 20,
-		NE      = 21, //not equal
-		NOP     = 22, //do nothing
-		ECNUM   = 23,
+		RET     = 4,
+		PUSH    = 5,
+		POP     = 6,
+		SAVE    = 7,
+		RESTORE = 8,
+		NEG     = 9,
+		ADD     = 10,
+		SUB     = 11,
+		MUL     = 12,
+		DIV     = 13,
+		MOD     = 14,
+		GT      = 15, //greater than
+		LT      = 16, //less than
+		GE      = 17, //greater equal than
+		LE      = 18, //less equal than
+		EQ      = 19,
+		NE      = 20, //not equal
+		OR      = 21,
+		AND     = 22,
+		NOP     = 23, //do nothing
+		ECNUM   = 24,
 	};
 };
 

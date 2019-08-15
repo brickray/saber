@@ -5,7 +5,7 @@
 
 class AstOperator : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction pop = { Opcode::POP };
 
 		string op = token->GetToken();
@@ -17,7 +17,7 @@ public:
 			}
 
 
-			int rightIdx = children[1]->Compile(e, svm);
+			int rightIdx = children[1]->Compile(e, svm, bc);
 			
 			int idx;
 			if (e->HasSymbol(tok->GetToken())){
@@ -36,8 +36,8 @@ public:
 			return 0;
 		}
 		else if (op == "+"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::ADD };
 			svm->AddCode(ins);
@@ -46,8 +46,8 @@ public:
 			return 0;
 		}
 		else if (op == "-"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::SUB };
 			svm->AddCode(ins);
@@ -56,8 +56,8 @@ public:
 			return 0;
 		}
 		else if (op == "*"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::MUL };
 			svm->AddCode(ins);
@@ -66,8 +66,8 @@ public:
 			return 0;
 		}
 		else if (op == "/"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::DIV };
 			svm->AddCode(ins);
@@ -76,8 +76,8 @@ public:
 			return 0;
 		}
 		else if (op == "%"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::MOD };
 			svm->AddCode(ins);
@@ -86,8 +86,8 @@ public:
 			return 0;
 		}
 		else if (op == "+="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::ADD };
 			svm->AddCode(ins);
@@ -99,8 +99,8 @@ public:
 			return 0;
 		}
 		else if (op == "-="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			int ret = left - right;
 
 			SVM::Instruction ins = { Opcode::SUB };
@@ -113,8 +113,8 @@ public:
 			return 0;
 		}
 		else if (op == "*="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::MUL };
 			svm->AddCode(ins);
@@ -126,8 +126,8 @@ public:
 			return 0;
 		}
 		else if (op == "/="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			int ret = left / right;
 
 			SVM::Instruction ins = { Opcode::DIV };
@@ -140,8 +140,8 @@ public:
 			return 0;
 		}
 		else if (op == "%="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			int ret = left % right;
 
 			SVM::Instruction ins = { Opcode::MOD };
@@ -154,8 +154,8 @@ public:
 			return 0;
 		}
 		else if (op == "<"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::LT };
 			svm->AddCode(ins);
@@ -164,8 +164,8 @@ public:
 			return 0;
 		}
 		else if (op == ">"){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 
 			SVM::Instruction ins = { Opcode::GT };
 			svm->AddCode(ins);
@@ -174,8 +174,8 @@ public:
 			return 0;
 		}
 		else if (op == "<="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			
 			SVM::Instruction ins = { Opcode::LE };
 			svm->AddCode(ins);
@@ -184,8 +184,8 @@ public:
 			return 0;
 		}
 		else if (op == ">="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			
 			SVM::Instruction ins = { Opcode::GE };
 			svm->AddCode(ins);
@@ -194,8 +194,8 @@ public:
 			return 0;
 		}
 		else if (op == "=="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			
 			SVM::Instruction ins = { Opcode::EQ };
 			svm->AddCode(ins);
@@ -204,10 +204,30 @@ public:
 			return 0;
 		}
 		else if (op == "!="){
-			int right = children[1]->Compile(e, svm);
-			int left = children[0]->Compile(e, svm);
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
 			
 			SVM::Instruction ins = { Opcode::NE };
+			svm->AddCode(ins);
+			svm->AddCode(pop);
+
+			return 0;
+		}
+		else if (op == "||"){
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
+
+			SVM::Instruction ins = { Opcode::OR };
+			svm->AddCode(ins);
+			svm->AddCode(pop);
+
+			return 0;
+		}
+		else if (op == "&&"){
+			int right = children[1]->Compile(e, svm, bc);
+			int left = children[0]->Compile(e, svm, bc);
+
+			SVM::Instruction ins = { Opcode::AND };
 			svm->AddCode(ins);
 			svm->AddCode(pop);
 

@@ -11,7 +11,7 @@ struct RegisterFunction{
 
 class NativeFunc{
 public:
-	static void Register(shared_ptr<Environment>& e);
+	static void Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
 };
 
 #endif

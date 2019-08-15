@@ -6,7 +6,7 @@ void SState::Init(){
 	svm = shared_ptr<SVM>(new SVM());
 	env = shared_ptr<Environment>(new Environment());
 	
-	NativeFunc::Register(env);
+	NativeFunc::Register(env, svm);
 }
 
 void SState::Run(string code){
@@ -27,8 +27,9 @@ void SState::Register(RegisterFunction func[]){
 
 		SValue sv;
 		sv.sfunc = func[i].f;
-		Value print(EValueType::ENATIVEFUNC, sv);
-		SymbolInfo si = { print, int(sv.sfunc) };
+		Value function(EValueType::ENATIVEFUNC, sv);
+		int idx = svm->AddGlobal(function);
+		SymbolInfo si = { function, idx };
 		env->SetSymbol(name, si);
 	}
 }

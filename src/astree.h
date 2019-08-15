@@ -8,6 +8,17 @@
 #include "svm.h"
 #include "opcode.h"
 
+struct BlockCnt{
+	int start;
+	bool isloop;
+	vector<int> bps; //break points
+	vector<int> elifs; //else if
+
+	BlockCnt(){
+		isloop = false;
+	}
+};
+
 class Astree{
 protected:
 	Token* token = nullptr;
@@ -18,11 +29,9 @@ public:
 	Token* GetToken() { return token; }
 	int GetNumChildren() const { return children.size(); }
 	shared_ptr<Astree > GetChild(int n) { return children[n]; }
-	void AddChild(shared_ptr<Astree> ast){
-		children.push_back(ast);
-	}
+	void AddChild(shared_ptr<Astree>& ast){ children.push_back(ast); }
 
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm) = 0;
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc) = 0;
 
 	virtual string ToString() const{
 		string ret;

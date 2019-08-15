@@ -114,10 +114,27 @@ void Lexer::parseLine(string line){
 			}
 			type = ETokenType::EOPERATOR;
 		}
-		else if (c == ';'){
+		else if (c == '|'){
 			tok += c;
 			c = line[++p];
-			type = ETokenType::ESEMICOLON;
+			if (c == '|'){
+				tok += c;
+				c = line[++p];
+			}
+			type = ETokenType::EOPERATOR;
+		}
+		else if (c == '&'){
+			tok += c;
+			c = line[++p];
+			if (c == '&'){
+				tok += c;
+				c = line[++p];
+			}
+			type = ETokenType::EOPERATOR;
+		}
+		else if (c == ';'){
+			c = line[++p];
+			continue;
 		}
 		else if (c == '('){
 			tok += c;
@@ -135,7 +152,7 @@ void Lexer::parseLine(string line){
 			continue;
 		}
 		else{
-			printf("错误的标识符\n");
+			printf("行数[%d], 错误的标识符\n", lineNo);
 			return;
 		}
 

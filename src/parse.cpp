@@ -9,26 +9,53 @@ void SyntaxParse::Parse(Lexer& lex){
 		if (matchStatement(node)){
 			asts.push_back(node);
 		}
-		else{
-
-		}
 	}
 }
 
 int SyntaxParse::Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	int ret;
 	for (int i = 0; i < asts.size(); ++i){
-		ret = asts[i]->Compile(e, svm);
+		BlockCnt bc;
+		ret = asts[i]->Compile(e, svm, bc);
 	}
 
 	return ret;
 }
 
-bool SyntaxParse::match(string name){
-	Token* tok = lexer.NextToken();
-	if (tok->GetToken() == name) return true;
+bool SyntaxParse::match(string name, Token** tok){
+	Token* t = lexer.NextToken();
+	if (t->GetToken() == name){
+		if (tok) *tok = t;
+		return true;
+	}
 
 	lexer.Back();
+	return false;
+}
+
+bool SyntaxParse::matchBreak(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> astBreak = shared_ptr<Astree>(new AstBreak());
+	Token* tok;
+	if (match("break", &tok)){
+		astBreak->SetToken(tok);
+		astree->AddChild(astBreak);
+
+		return true;
+	}
+
+	return false;
+}
+
+bool SyntaxParse::matchContinue(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> astContinue = shared_ptr<Astree>(new AstContinue());
+	Token* tok;
+	if (match("continue", &tok)){
+		astContinue->SetToken(tok);
+		astree->AddChild(astContinue);
+
+		return true;
+	}
+
 	return false;
 }
 
@@ -128,70 +155,70 @@ bool SyntaxParse::matchExpr(shared_ptr<Astree>& astree){
 bool SyntaxParse::matchIf(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> astIf = shared_ptr<Astree>(new AstIf());
 	if (!match("if")) return false;
+	astree->AddChild(astIf);
 	shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 	if (!matchExpr(expr)) return false;
 	astIf->AddChild(expr);
 	if (!match("then")) return false;
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	astIf->AddChild(stat);
 	while (true){
 		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
-		if (!matchStatement(statement)) break;
 		stat->AddChild(statement);
+		if (!matchStatement(statement)) break;
 	}
 
-	astIf->AddChild(stat);
-
 	while (match("elif")){
-		shared_ptr<Astree> elif = shared_ptr<Astree>(new AstIf());
+		shared_ptr<Astree> elif = shared_ptr<Astree>(new AstElif());
+		astIf->AddChild(elif);
 		shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 		if (!matchExpr(expr)) return false;
 		elif->AddChild(expr);
 		if (!match("then")) return false;
 		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+		elif->AddChild(stat);
 		while (true){
 			shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
-			if (!matchStatement(statement)) break;
 			stat->AddChild(statement);
+			if (!matchStatement(statement)) break;
 		}
-
-		elif->AddChild(stat);
-		astIf->AddChild(elif);
 	}
 
 	if (match("else")){
 		dynamic_cast<AstIf*>(astIf.get())->SetElseBlock();
 		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+		astIf->AddChild(stat);
 		while (true){
 			shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
-			if (!matchStatement(statement)) break;
 			stat->AddChild(statement);
+			if (!matchStatement(statement)) break;
 		}
-
-		astIf->AddChild(stat);
 	}
 
 	if (!match("end")) return false;
-
-	astree->AddChild(astIf);
 
 	return true;
 }
 
 bool SyntaxParse::matchWhile(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> astWhile = shared_ptr<Astree>(new AstWhile());
-	if (!match("while")) return false;
+	Token* tok;
+	if (!match("while", &tok)) return false;
+	astWhile->SetToken(tok);
+	astree->AddChild(astWhile);
 	shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 	if (!matchExpr(expr)) return false;
 	astWhile->AddChild(expr);
-	if (!match("then")) return false;
+	if (!match("do")) return false;
 	while (true){
-		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());	
-		if (!matchStatement(statement)) break;
+		matchBreak(astWhile);
+		matchContinue(astWhile);
+		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
 		astWhile->AddChild(statement);
+		if (!matchStatement(statement)) break;
 	}
 	if (!match("end")) return false;
 
-	astree->AddChild(astWhile);
 
 	return true;
 }
@@ -231,8 +258,6 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 			def->AddChild(ret);
 			dynamic_cast<AstDef*>(def.get())->SetNumReturnParams(1);
 		}
-
-		match(";");
 	}
 	
 	if (!match("end")) return false;
@@ -262,8 +287,6 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 
 	if (!match(")")) return false;
 
-	match(";");
-
 	astree->AddChild(func);
 
 	return true;
@@ -280,10 +303,11 @@ bool SyntaxParse::matchStatement(shared_ptr<Astree>& astree){
 
 	if (matchFunc(astree)) return true;
 
-	if (matchExpr(astree)){
-		match(";");
-		return true;
-	}
+	if (matchExpr(astree)) return true;
+
+
+	if (matchBreak(astree)) return true;
+	if (matchContinue(astree)) return true;
 
 	return false;
 }

@@ -86,6 +86,7 @@ void SVM::Run(){
 			if (stack[sp - 1].IsFloat()) t = stack[sp - 1].GetFloat() != 0;
 			else t = stack[sp - 1].GetBoolean();
 
+			sp--;
 			if (!t){
 				ip = operand;
 				continue;
@@ -98,20 +99,29 @@ void SVM::Run(){
 
 			continue;
 		case Opcode::CALL:{
-			ip = operand;
-			Value ret;
-			ret.SetInt(operand1);
-			stack[sp++] = ret;
-
-			continue;
+			Value func = stack[sp - 1];
+			sp--; //pop
+			if (func.IsNativeFunction()){
+				func.GetNativeFunction()(this, operand);
+				break;
+			}
+			else if (func.IsFunction()){
+				ip = func.GetInteger();
+				Value ret;
+				ret.SetInt(operand1);
+				stack[sp++] = ret;
+				continue;
+			}
+			else{
+				printf("对非函数进行调用\n");
+				exit(1);
+				break;
+			}
 		}
-		case Opcode::CALLN:
-			(SFunc(operand))(this, operand1);
-			break;
 		case Opcode::RET:
 			ip = stack[sp - 1].GetInteger();
 
-			sp--;
+			sp -= operand + 1;
 			continue;
 		case Opcode::PUSH:{
 			Value src;
@@ -172,6 +182,28 @@ void SVM::Run(){
 			stack[sp - 2] = stack[sp - 2] != stack[sp - 1];
 			
 			break;
+		case Opcode::OR:{
+			bool t1, t2;
+			if (stack[sp - 1].IsFloat()) t1 = stack[sp - 1].GetFloat() != 0;
+			else t1 = stack[sp - 1].GetBoolean();
+			if (stack[sp - 2].IsFloat()) t2 = stack[sp - 2].GetFloat() != 0;
+			else t2 = stack[sp - 2].GetBoolean();
+
+			stack[sp - 2].SetBool(t1 || t2);
+
+			break;
+		}
+		case Opcode::AND:{
+			bool t1, t2;
+			if (stack[sp - 1].IsFloat()) t1 = stack[sp - 1].GetFloat() != 0;
+			else t1 = stack[sp - 1].GetBoolean();
+			if (stack[sp - 2].IsFloat()) t2 = stack[sp - 2].GetFloat() != 0;
+			else t2 = stack[sp - 2].GetBoolean();
+
+			stack[sp - 2].SetBool(t1 && t2);
+
+			break;
+		}
 		case Opcode::NOP: //do nothing
 			break;
 		}
@@ -198,7 +230,6 @@ string SVM::ShowCode(){
 		"JZ",
 		"JUMP",
 		"CALL",
-		"CALLN",
 		"RET",
 		"PUSH",
 		"POP",
@@ -216,12 +247,16 @@ string SVM::ShowCode(){
 		"LE",
 		"EQ",
 		"NE",
+		"OR",
+		"AND",
 		"NOP",
 	};
 
 	string ret;
 	for (int i = 0; i < code.size(); ++i){
 		string c = codeString[code[i].opcode];
+		ret += to_string(i);
+		ret += "  ";
 		ret += c;
 		if (code[i].opcode < 10){
 			ret += "  ";

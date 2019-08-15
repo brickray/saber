@@ -5,13 +5,12 @@
 
 class AstStatement : public Astree{
 public:
-	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm){
-		int ret = 0;
+	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc){
 		for (int i = 0; i < children.size(); ++i){
-			children[i]->Compile(e, vm);
+			children[i]->Compile(e, vm, bc);
 		}
 
-		return ret;
+		return 0;
 	}
 };
 

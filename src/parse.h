@@ -7,10 +7,13 @@
 #include "ast\astPrimary.h"
 #include "ast\astWhile.h"
 #include "ast\astIf.h"
+#include "ast\astElif.h"
 #include "ast\astStatement.h"
 #include "ast\astOperator.h"
 #include "ast\astDef.h"
 #include "ast\astFunc.h"
+#include "ast\astBreak.h"
+#include "ast\astContinue.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +
@@ -43,7 +46,9 @@ public:
 	int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
 
 private:
-	bool match(string name);
+	bool match(string name, Token** tok = nullptr);
+	bool matchBreak(shared_ptr<Astree>& astree);
+	bool matchContinue(shared_ptr<Astree>& astree);
 	bool matchNumber(shared_ptr<Astree>& astree);
 	bool matchIdentifier(shared_ptr<Astree>& astree);
 	bool matchString(shared_ptr<Astree>& astree);

@@ -87,7 +87,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\astree.h" />
+    <ClInclude Include="..\src\ast\astBreak.h" />
+    <ClInclude Include="..\src\ast\astContinue.h" />
     <ClInclude Include="..\src\ast\astDef.h" />
+    <ClInclude Include="..\src\ast\astElif.h" />
     <ClInclude Include="..\src\ast\astFunc.h" />
     <ClInclude Include="..\src\ast\astIf.h" />
     <ClInclude Include="..\src\ast\astOperator.h" />

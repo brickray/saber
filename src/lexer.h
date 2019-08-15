@@ -35,7 +35,9 @@ static hash_set<string> reserved = {
 	"and",
 	"or",
 	"while",
+	"do",
 	"break",
+	"continue",
 	"def",
 	"return",
 };
