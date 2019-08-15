@@ -38,7 +38,6 @@ public:
 
 		if (hasElseBlock){
 			children[children.size() - 1]->Compile(e, svm, subBc);
-			
 		}
 		
 		next = svm->AddCode(nop);

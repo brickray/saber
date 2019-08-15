@@ -226,15 +226,8 @@ int SVM::decodeConstantIndex(int idx){
 
 string SVM::ShowCode(){
 	static string codeString[Opcode::ECNUM] = {
-		"MOVE",
 		"JZ",
-		"JUMP",
-		"CALL",
-		"RET",
-		"PUSH",
 		"POP",
-		"SAVE",
-		"RESTORE",
 		"NEG",
 		"ADD",
 		"SUB",
@@ -250,6 +243,11 @@ string SVM::ShowCode(){
 		"OR",
 		"AND",
 		"NOP",
+		"MOVE",
+		"JUMP",
+		"CALL",
+		"RET",
+		"PUSH",
 	};
 
 	string ret;
@@ -258,11 +256,9 @@ string SVM::ShowCode(){
 		ret += to_string(i);
 		ret += "  ";
 		ret += c;
-		if (code[i].opcode < 10){
+		if (code[i].opcode >= Opcode::ENUM0){
 			ret += "  ";
 			ret += to_string(code[i].operand);
-			ret += "  ";
-			ret += to_string(code[i].operand1);
 		}
 
 		ret += "\n";
