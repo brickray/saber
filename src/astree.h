@@ -11,9 +11,9 @@
 SABER_NAMESPACE_BEGIN
 
 struct BlockCnt{
-	int start;
 	bool isloop;
 	vector<int> bps; //break points
+	vector<int> cps; //continue points
 	vector<int> elifs; //else if
 	int nearst;
 

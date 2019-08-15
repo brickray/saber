@@ -13,8 +13,10 @@ public:
 			return;
 		}
 
-		SVM::Instruction jump = { Opcode::JUMP, bc.start };
-		svm->AddCode(jump);
+		SVM::Instruction jump = { Opcode::JUMP, 0 };
+		int cp = svm->AddCode(jump);
+
+		bc.cps.push_back(cp);
 	}
 };
 

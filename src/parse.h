@@ -26,7 +26,7 @@
 // block      : statement | statement block | empty
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
-// for        : 'for' expr expr (expr) 'do' block 'end'
+// for        : 'for' expr ',' expr (',' expr) 'do' block 'end'
 // def        : 'def' identifier '(' identifier *')' block ('return' (primary)) 'end'
 // func       : identifier '(' primary ')' 
 // statement  : if

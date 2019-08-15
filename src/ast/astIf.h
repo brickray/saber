@@ -30,9 +30,9 @@ public:
 		svm->SetCode(jumpAddress, jz);
 
 		BlockCnt subBc;
-		subBc.start = bc.start;
 		subBc.isloop = bc.isloop;
 		subBc.bps = bc.bps;
+		subBc.cps = bc.cps;
 		int size = hasElseBlock ? children.size() - 1 : children.size();
 		for (int i = 2; i < size; ++i){
 			children[i]->Compile(e, svm, subBc);
@@ -51,6 +51,7 @@ public:
 		}
 
 		bc.bps = subBc.bps;
+		bc.cps = subBc.cps;
 	}
 };
 

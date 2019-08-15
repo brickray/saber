@@ -17,10 +17,10 @@ public:
 		int jumpAddress = svm->AddCode(jz);
 
 		BlockCnt subBc;
-		subBc.start = loopAddress;
 		subBc.isloop = true;
 		children[children.size() - 1]->Compile(e, svm, subBc);
 
+		int continueAddress = svm->AddCode(nop);
 		if (children.size() == 4){//has step component
 			children[2]->Compile(e, svm, bc);
 		}
@@ -33,6 +33,10 @@ public:
 		SVM::Instruction jumpb = { Opcode::JUMP, end + 1 };
 		for (int i = 0; i < subBc.bps.size(); ++i){
 			svm->SetCode(subBc.bps[i], jumpb);
+		}
+		SVM::Instruction jumpc = { Opcode::JUMP, continueAddress };
+		for (int i = 0; i < subBc.cps.size(); ++i){
+			svm->SetCode(subBc.cps[i], jumpc);
 		}
 	}
 };

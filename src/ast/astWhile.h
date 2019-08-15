@@ -18,7 +18,6 @@ public:
 
 		BlockCnt subBc;
 		subBc.isloop = true;
-		subBc.start = loopAddress;
 		for (int i = 1; i < children.size(); ++i){
 			children[i]->Compile(e, svm, subBc);
 		}
@@ -30,6 +29,9 @@ public:
 		SVM::Instruction jumpb = { Opcode::JUMP, end + 1 };
 		for (int i = 0; i < subBc.bps.size(); ++i){
 			svm->SetCode(subBc.bps[i], jumpb);
+		}
+		for (int i = 0; i < subBc.cps.size(); ++i){
+			svm->SetCode(subBc.cps[i], jump);
 		}
 	}
 };

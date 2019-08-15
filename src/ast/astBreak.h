@@ -13,7 +13,7 @@ public:
 			return;
 		}
 
-		SVM::Instruction jump = { Opcode::JUMP, bc.start };
+		SVM::Instruction jump = { Opcode::JUMP, 0 };
 		int bp = svm->AddCode(jump);
 
 		bc.bps.push_back(bp);
