@@ -1,6 +1,7 @@
 #ifndef H_SSTATE_H
 #define H_SSTATE_H
 
+#include "preprocessor.h"
 #include "lexer.h"
 #include "parse.h"
 #include "svm.h"
@@ -10,6 +11,7 @@ SABER_NAMESPACE_BEGIN
 
 class SState{
 private:
+	shared_ptr<Preprocessor> preprocessor;
 	shared_ptr<Lexer> lexer;
 	shared_ptr<SyntaxParse> parse;
 	shared_ptr<SVM> svm;
@@ -23,6 +25,7 @@ public:
 	void Init();
 	void Run(string code);
 	void ShowCode(bool t);
+	void ShowCode() const;
 
 	void Register(RegisterFunction func[]);
 
@@ -30,9 +33,6 @@ public:
 	shared_ptr<SyntaxParse> GetParser() const { return parse; }
 	shared_ptr<SVM> GetSVM() const { return svm; }
 	shared_ptr<Environment> GetEnvironment() const { return env; }
-
-private:
-	void showCode() const;
 };
 
 SABER_NAMESPACE_END

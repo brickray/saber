@@ -115,7 +115,7 @@ bool SyntaxParse::matchOp(shared_ptr<Astree>& astree){
 
 	if (tok->GetTokenType() == ETokenType::EOPERATOR){
 		string t = tok->GetToken();
-		if (t == "+=" || t == "-=" || t == "*=" || t == "/=" || t == "&="){
+		if (t == "+=" || t == "-=" || t == "*=" || t == "/=" || t == "%="){
 			if (lexer.PrevToken()->GetTokenType() != ETokenType::EIDENTIFIER){
 				printf("行数:%d, %s:左操作数必须为左值\n", tok->GetLineNumber(), tok->GetToken().c_str());
 

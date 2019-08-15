@@ -32,13 +32,13 @@ public:
 		}
 		case ETokenType::EIDENTIFIER:
 			if (token->GetToken() == "true"){
-				int idx = -65;
+				int idx = -1;
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
 				return;
 			}
 			else if (token->GetToken() == "false"){
-				int idx = -66;
+				int idx = -2;
 				SVM::Instruction ins = { Opcode::PUSH, idx, 0 };
 				svm->AddCode(ins);
 				return;

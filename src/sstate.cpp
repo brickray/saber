@@ -3,6 +3,7 @@
 SABER_NAMESPACE_BEGIN
 
 void SState::Init(){
+	preprocessor = shared_ptr<Preprocessor>(new Preprocessor());
 	lexer = shared_ptr<Lexer>(new Lexer());
 	parse = shared_ptr<SyntaxParse>(new SyntaxParse());
 	svm = shared_ptr<SVM>(new SVM());
@@ -12,15 +13,20 @@ void SState::Init(){
 }
 
 void SState::Run(string code){
-	lexer->Parse(code);
+	string afterProcess = preprocessor->Process(code);
+	lexer->Parse(afterProcess);
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
-	if (sc) showCode();
+	if (sc) ShowCode();
 	svm->Run();
 }
 
 void SState::ShowCode(bool t){
 	sc = t;
+}
+
+void SState::ShowCode() const{
+	printf("%s\n", svm->ShowCode().c_str());
 }
 
 void SState::Register(RegisterFunction func[]){
@@ -35,10 +41,6 @@ void SState::Register(RegisterFunction func[]){
 		SymbolInfo si = { function, idx };
 		env->SetSymbol(name, si);
 	}
-}
-
-void SState::showCode() const{
-	printf("%s\n", svm->ShowCode().c_str());
 }
 
 SABER_NAMESPACE_END
