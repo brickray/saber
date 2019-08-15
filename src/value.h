@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+SABER_NAMESPACE_BEGIN
+
 enum EValueType{
 	EBOOLEAN,
 	EINTEGER,
@@ -37,6 +39,16 @@ public:
 
 	void SetType(EValueType t) { type = t; }
 	EValueType GetType() const { return type; }
+	string GetTypeString() const {
+		string ret;
+		if (IsFunction() || IsNativeFunction()) ret = "function";
+		else if (IsBoolean()) ret = "boolean";
+		else if (IsInteger()) ret = "integer";
+		else if (IsFloat()) ret = "float";
+		else if (IsString()) ret = "string";
+
+		return ret;
+	}
 	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; }
 	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i; }
 	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; }
@@ -310,5 +322,7 @@ public:
 		return ret;
 	}
 };
+
+SABER_NAMESPACE_END
 
 #endif

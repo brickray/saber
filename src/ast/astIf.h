@@ -3,6 +3,8 @@
 
 #include "../astree.h"
 
+SABER_NAMESPACE_BEGIN
+
 class AstIf : public Astree{
 private:
 	bool hasElseBlock = false;
@@ -53,5 +55,7 @@ public:
 		return 0;
 	}
 };
+
+SABER_NAMESPACE_END
 
 #endif

@@ -4,6 +4,8 @@
 #include "common.h"
 #include "value.h"
 
+SABER_NAMESPACE_BEGIN
+
 class SVM{
 public:
 	struct Instruction{
@@ -13,12 +15,10 @@ public:
 	};
 
 protected:
-#define NUM_REGISTER  64
 	vector<Instruction> code;
 	vector<Value> stack;
 	vector<Value> constant;
 	vector<Value> global;
-	vector<Value> registers;
 
 	int ip;
 	int sp;
@@ -48,5 +48,7 @@ private:
 	int encodeConstantIndex(int idx);
 	int decodeConstantIndex(int idx);
 };
+
+SABER_NAMESPACE_END
 
 #endif

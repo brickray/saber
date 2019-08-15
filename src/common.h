@@ -10,6 +10,10 @@
 
 using namespace std;
 
+#define SABER_NAMESPACE_BEGIN namespace Saber{
+#define SABER_NAMESPACE_END }
+#define SABER_NAMESPACE_USING using namespace Saber;
+
 #define PI                  3.14159265358f
 
 inline float RadiansToDegree(float radians) {

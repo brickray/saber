@@ -3,6 +3,8 @@
 
 #include <time.h>
 
+SABER_NAMESPACE_BEGIN
+
 void mathParamsCheck(string func, Value& v, int numParams){
 	bool pass = true;
 	if (numParams > 1){
@@ -38,8 +40,8 @@ static int sin(SVM* svm, int numParams){
 	mathParamsCheck("sin", v, numParams);
 
 	float ret;
-	if (v.IsFloat()) ret = sin(DegreeToRadians(v.GetFloat()));
-	else if (v.IsInteger()) ret = sin(DegreeToRadians(v.GetInteger()));
+	if (v.IsFloat()) ret = sinf(DegreeToRadians(v.GetFloat()));
+	else if (v.IsInteger()) ret = sinf(DegreeToRadians(v.GetInteger()));
 
 	svm->PushFloat(ret);
 
@@ -51,8 +53,8 @@ static int asin(SVM* svm, int numParams){
 	mathParamsCheck("asin", v, numParams);
 
 	float ret;
-	if (v.IsFloat()) ret = asin(v.GetFloat());
-	else if (v.IsInteger()) ret = asin(v.GetInteger());
+	if (v.IsFloat()) ret = asinf(v.GetFloat());
+	else if (v.IsInteger()) ret = asinf(v.GetInteger());
 
 	svm->PushFloat(ret);
 
@@ -64,8 +66,8 @@ static int cos(SVM* svm, int numParams){
 	mathParamsCheck("cos", v, numParams);
 
 	float ret;
-	if (v.IsFloat()) ret = cos(DegreeToRadians(v.GetFloat()));
-	else if (v.IsInteger()) ret = cos(DegreeToRadians(v.GetInteger()));
+	if (v.IsFloat()) ret = cosf(DegreeToRadians(v.GetFloat()));
+	else if (v.IsInteger()) ret = cosf(DegreeToRadians(v.GetInteger()));
 
 	svm->PushFloat(ret);
 
@@ -77,8 +79,8 @@ static int acos(SVM* svm, int numParams){
 	mathParamsCheck("acos", v, numParams);
 
 	float ret;
-	if (v.IsFloat()) ret = acos(v.GetFloat());
-	else if (v.IsInteger()) ret = acos(v.GetInteger());
+	if (v.IsFloat()) ret = acosf(v.GetFloat());
+	else if (v.IsInteger()) ret = acosf(v.GetInteger());
 
 	svm->PushFloat(ret);
 
@@ -90,8 +92,8 @@ static int tan(SVM* svm, int numParams){
 	mathParamsCheck("tan", v, numParams);
 
 	float ret;
-	if (v.IsFloat()) ret = tan(DegreeToRadians(v.GetFloat()));
-	else if (v.IsInteger()) ret = tan(DegreeToRadians(v.GetInteger()));
+	if (v.IsFloat()) ret = tanf(DegreeToRadians(v.GetFloat()));
+	else if (v.IsInteger()) ret = tanf(DegreeToRadians(v.GetInteger()));
 
 	svm->PushFloat(ret);
 
@@ -103,8 +105,8 @@ static int atan(SVM* svm, int numParams){
 	mathParamsCheck("atan", v, numParams);
 
 	float ret;
-	if (v.IsFloat()) ret = atan(v.GetFloat());
-	else if (v.IsInteger()) ret = atan(v.GetInteger());
+	if (v.IsFloat()) ret = atanf(v.GetFloat());
+	else if (v.IsInteger()) ret = atanf(v.GetInteger());
 
 	svm->PushFloat(ret);
 
@@ -143,7 +145,10 @@ static int gettime(SVM* svm, int numParams){
 		exit(1);
 	}
 	time_t t = time(nullptr);
-	svm->PushString(ctime(&t));
+	string str = ctime(&t);
+	//È¥µôÄ©Î²µÄ»»ÐÐ·û
+	str = str.substr(0, str.size() - 1);
+	svm->PushString(str);
 
 	return numParams;
 }
@@ -175,3 +180,5 @@ void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		e->SetSymbol(name, si);
 	}
 }
+
+SABER_NAMESPACE_END

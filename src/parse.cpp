@@ -1,5 +1,7 @@
 #include "parse.h"
 
+SABER_NAMESPACE_BEGIN
+
 void SyntaxParse::Parse(Lexer& lex){
 	lexer = lex;
 
@@ -311,3 +313,5 @@ bool SyntaxParse::matchStatement(shared_ptr<Astree>& astree){
 
 	return false;
 }
+
+SABER_NAMESPACE_END

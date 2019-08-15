@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+SABER_NAMESPACE_BEGIN
+
 class Opcode{
 public:
 	enum{
@@ -33,5 +35,7 @@ public:
 		ECNUM   = 22,
 	};
 };
+
+SABER_NAMESPACE_END
 
 #endif

@@ -3,6 +3,8 @@
 
 #include "../astree.h"
 
+SABER_NAMESPACE_BEGIN
+
 class AstStatement : public Astree{
 public:
 	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc){
@@ -13,5 +15,7 @@ public:
 		return 0;
 	}
 };
+
+SABER_NAMESPACE_END
 
 #endif

@@ -3,6 +3,8 @@
 
 #include "../astree.h"
 
+SABER_NAMESPACE_BEGIN
+
 class AstDef : public Astree{
 private:
 	int numParams;
@@ -41,5 +43,7 @@ public:
 		return 0;
 	}
 };
+
+SABER_NAMESPACE_END
 
 #endif

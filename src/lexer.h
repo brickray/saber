@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+SABER_NAMESPACE_BEGIN
+
 enum class ETokenType{
 	ERESERVED,
 	EIDENTIFIER,
@@ -91,5 +93,7 @@ private:
 	bool isDigit(char c) const { return '0' <= c && c <= '9'; }
 	bool isSpace(char c) const { return c == ' '; }
 };
+
+SABER_NAMESPACE_END
 
 #endif

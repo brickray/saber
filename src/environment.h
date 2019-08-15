@@ -4,6 +4,8 @@
 #include "common.h"
 #include "value.h"
 
+SABER_NAMESPACE_BEGIN
+
 struct SymbolInfo{
 	Value value;
 	int address;
@@ -32,14 +34,41 @@ public:
 	}
 
 	SymbolInfo GetSymbol(string symbol){
-		if (HasSymbol(symbol)) return symbolTable[symbol];
+		if (hasSymbol(symbol)) return getSymbol(symbol);
+
+		if (outter.get()) return outter->GetSymbol(symbol);
 
 		return SymbolInfo();
 	}
 
-	bool HasSymbol(string symbol){
+	bool HasSymbol(string symbol) const{
+		if (hasSymbol(symbol))
+			return true;
+
+		if (outter.get() && outter->HasSymbol(symbol)) 
+			return true;
+
+		return false;
+	}
+
+	bool IsLocal() const{
+		return outter.get() != nullptr;
+	}
+
+	bool IsGlobal() const{
+		return outter.get() == nullptr;
+	}
+
+private:
+	SymbolInfo getSymbol(string symbol){
+		return symbolTable[symbol];
+	}
+
+	bool hasSymbol(string symbol) const{
 		return symbolTable.find(symbol) != symbolTable.end();
 	}
 };
+
+SABER_NAMESPACE_END
 
 #endif

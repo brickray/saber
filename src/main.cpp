@@ -3,6 +3,8 @@
 #include <sstream>
 #include "sstate.h"
 
+SABER_NAMESPACE_USING
+
 void main(){
 	ifstream stream;
 	stream.open("../test/script.sa");

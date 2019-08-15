@@ -4,6 +4,8 @@
 #include "../astree.h"
 #include "astDef.h"
 
+SABER_NAMESPACE_BEGIN
+
 class AstFunc : public Astree{
 public:
 	virtual int Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
@@ -30,5 +32,8 @@ public:
 		return 0;
 	}
 };
+
+
+SABER_NAMESPACE_END
 
 #endif

@@ -1,5 +1,7 @@
 #include "lexer.h"
 
+SABER_NAMESPACE_BEGIN
+
 Lexer::Lexer(){
 	ptr = 0;
 	lineNo = 0;
@@ -160,3 +162,5 @@ void Lexer::parseLine(string line){
 		tokens.push_back(token);
 	}
 }
+
+SABER_NAMESPACE_END

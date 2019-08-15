@@ -1,10 +1,11 @@
 #include "svm.h"
 #include "opcode.h"
 
+SABER_NAMESPACE_BEGIN
+
 SVM::SVM(){
 	code.reserve(64);
 	stack.resize(1024);
-	registers.reserve(NUM_REGISTER);
 	ip = 0;
 	sp = 0;
 
@@ -113,7 +114,7 @@ void SVM::Run(){
 				continue;
 			}
 			else{
-				printf("对非函数进行调用\n");
+				printf("尝试对[%s]值进行函数调用\n", func.GetTypeString().c_str());
 				exit(1);
 				break;
 			}
@@ -217,11 +218,11 @@ bool SVM::isGlobal(int idx){
 }
 
 int SVM::encodeConstantIndex(int idx){
-	return -idx - NUM_REGISTER;
+	return -idx;
 }
 
 int SVM::decodeConstantIndex(int idx){
-	return -(idx + NUM_REGISTER + 1);
+	return -(idx + 1);
 }
 
 string SVM::ShowCode(){
@@ -266,3 +267,5 @@ string SVM::ShowCode(){
 
 	return ret;
 }
+
+SABER_NAMESPACE_END

@@ -6,6 +6,8 @@
 #include "svm.h"
 #include "nativeFunc.h"
 
+SABER_NAMESPACE_BEGIN
+
 class SState{
 private:
 	shared_ptr<Lexer> lexer;
@@ -27,5 +29,7 @@ public:
 	shared_ptr<SVM> GetSVM() const { return svm; }
 	shared_ptr<Environment> GetEnvironment() const { return env; }
 };
+
+SABER_NAMESPACE_END
 
 #endif

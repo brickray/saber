@@ -34,6 +34,8 @@
 //            | expr ';'
 // program    : statement
 
+SABER_NAMESPACE_BEGIN
+
 class SyntaxParse{
 private:
 	Lexer lexer;
@@ -61,5 +63,7 @@ private:
 	bool matchFunc(shared_ptr<Astree>& astree);
 	bool matchStatement(shared_ptr<Astree>& astree);
 };
+
+SABER_NAMESPACE_END
 
 #endif

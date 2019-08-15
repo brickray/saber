@@ -1,5 +1,7 @@
 #include "sstate.h"
 
+SABER_NAMESPACE_BEGIN
+
 void SState::Init(){
 	lexer = shared_ptr<Lexer>(new Lexer());
 	parse = shared_ptr<SyntaxParse>(new SyntaxParse());
@@ -33,3 +35,5 @@ void SState::Register(RegisterFunction func[]){
 		env->SetSymbol(name, si);
 	}
 }
+
+SABER_NAMESPACE_END

@@ -8,6 +8,8 @@
 #include "svm.h"
 #include "opcode.h"
 
+SABER_NAMESPACE_BEGIN
+
 struct BlockCnt{
 	int start;
 	bool isloop;
@@ -47,5 +49,7 @@ public:
 		return ret;
 	}
 };
+
+SABER_NAMESPACE_END
 
 #endif
