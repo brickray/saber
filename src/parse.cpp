@@ -109,46 +109,117 @@ bool SyntaxParse::matchPrimary(shared_ptr<Astree>& astree){
 	return false;
 }
 
-bool SyntaxParse::matchOp(shared_ptr<Astree>& astree){
-	Token* tok = lexer.NextToken();
-	if (!tok) return false;
+bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
+	if (matchFunc(astree)) return true;
+	shared_ptr<Astree> left = shared_ptr<Astree>(new AstPrimary());
+	if (matchPrimary(left)) {
+		astree = left;
+		return true;
+	}
+	if (match("(")){
+		if (!matchAndorExpr(astree)) return false;
+		if (!match(")")) return false;
 
-	if (tok->GetTokenType() == ETokenType::EOPERATOR){
-		string t = tok->GetToken();
-		if (t == "+=" || t == "-=" || t == "*=" || t == "/=" || t == "%="){
-			if (lexer.PrevToken()->GetTokenType() != ETokenType::EIDENTIFIER){
-				printf("行数:%d, %s:左操作数必须为左值\n", tok->GetLineNumber(), tok->GetToken().c_str());
-
-				return false;
-			}
-		}
-
-		astree->SetToken(tok);
 		return true;
 	}
 
-	lexer.Back();
 	return false;
 }
 
-bool SyntaxParse::matchExpr(shared_ptr<Astree>& astree){
-	if (matchFunc(astree)) return true;
-
-	shared_ptr<Astree> left = shared_ptr<Astree>(new AstPrimary());
-	if (!matchPrimary(left)) return false;
-	shared_ptr<Astree> mid = shared_ptr<Astree>(new AstOperator());
-	if (matchOp(mid)){
-		mid->AddChild(left);
-		shared_ptr<Astree> right = shared_ptr<Astree>(new AstStatement());
-		if (!matchExpr(right)) return false;
-		mid->AddChild(right);
-		astree->AddChild(mid);
-
+bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchTerm(stat)) return false;
+	Token* tok;
+	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+	if (match("*", &tok) || match("/", &tok) || match("*=", &tok) || match("/=", &tok)){
+		op->SetToken(tok);
+		op->AddChild(stat);
+		if (!matchMuldivExpr(op)) return false;
+		astree->AddChild(op);
 		return true;
 	}
 
-	astree = left;
+	astree->AddChild(stat);
 	return true;
+}
+
+bool SyntaxParse::matchAddsubExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchMuldivExpr(stat)) return false;
+	Token* tok;
+	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+	if (match("+", &tok) || match("-", &tok) || match("+=", &tok) || match("-=", &tok)){
+		op->SetToken(tok);
+		op->AddChild(stat);
+		if (!matchAddsubExpr(op)) return false;
+		astree->AddChild(op);
+		return true;
+	}
+
+	astree->AddChild(stat);
+	return true;
+}
+
+bool SyntaxParse::matchCompExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchAddsubExpr(stat)) return false;
+	Token* tok;
+	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+	if (match("==", &tok) || match("!=", &tok) || 
+		match(">", &tok) || match("<", &tok) ||
+		match(">=", &tok) || match("<=", &tok)){
+		op->SetToken(tok);
+		op->AddChild(stat);
+		if (!matchCompExpr(op)) return false;
+		astree->AddChild(op);
+		return true;
+	}
+
+	astree->AddChild(stat);
+	return true;
+}
+
+bool SyntaxParse::matchAndorExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchCompExpr(stat)) return false;
+	Token* tok;
+	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+	if (match("&&", &tok) || match("||", &tok)){
+		op->SetToken(tok);
+		op->AddChild(stat);
+		if (!matchAndorExpr(op)) return false;
+		astree->AddChild(op);
+		return true;
+	}
+
+	astree->AddChild(stat);
+	return true;
+}
+
+bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+	if (matchIdentifier(name)){
+		Token* tok;
+		shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+		if (match("=", &tok)){
+			op->SetToken(tok);
+			op->AddChild(name);
+			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+			if (!matchAndorExpr(stat)) return false;
+			op->AddChild(stat);
+			astree->AddChild(op);
+			return true;
+		}
+
+		lexer.Back();
+	}
+
+	return matchAndorExpr(astree);
+}
+
+bool SyntaxParse::matchExpr(shared_ptr<Astree>& astree){
+	if (matchAssignExpr(astree)) return true;
+	else return false;
 }
 
 bool SyntaxParse::matchIf(shared_ptr<Astree>& astree){

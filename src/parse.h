@@ -21,8 +21,13 @@
 // identifier : ('a' .. 'z' | 'A' .. 'Z') +
 // string     : '"' ascii + '"' //ascii代表所有字符
 // primary    : number | identifier | string | true | false
-// op         : '+' | '-'
-// expr       : func | primary | primary op expr 
+// term       : func | primary | (andorexpr)
+// muldivexpr : term ( * | / | *= | /= term)*
+// addsubexpr : muldivexpr ( + | - | += | -= muldivexpr)*
+// compexpr   : addsubexpr ( == | != | > | >= | < | <= addsubexpr)*
+// andorexpr  : compexpr ( && | || compexpr)* 
+// assignexpr : identifier ( = andorexpr) | andorexpr
+// expr       : andorexpr
 // block      : statement | statement block | empty
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
@@ -58,7 +63,12 @@ private:
 	bool matchIdentifier(shared_ptr<Astree>& astree);
 	bool matchString(shared_ptr<Astree>& astree);
 	bool matchPrimary(shared_ptr<Astree>& astree);
-	bool matchOp(shared_ptr<Astree>& astree);
+	bool matchTerm(shared_ptr<Astree>& astree);
+	bool matchMuldivExpr(shared_ptr<Astree>& astree);
+	bool matchAddsubExpr(shared_ptr<Astree>& astree);
+	bool matchCompExpr(shared_ptr<Astree>& astree);
+	bool matchAndorExpr(shared_ptr<Astree>& astree);
+	bool matchAssignExpr(shared_ptr<Astree>& astree);
 	bool matchExpr(shared_ptr<Astree>& astree);
 	bool matchIf(shared_ptr<Astree>& astree);
 	bool matchWhile(shared_ptr<Astree>& astree);
