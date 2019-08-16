@@ -81,6 +81,7 @@ void SVM::Run(){
 		case Opcode::MOVE:
 			global[operand] = stack[sp - 1];
 
+			sp--;
 			break;
 		case Opcode::JZ:{
 			bool t;
@@ -142,46 +143,57 @@ void SVM::Run(){
 		case Opcode::ADD:
 			stack[sp - 2] = stack[sp - 1] + stack[sp - 2];
 
+			sp--;
 			break;
 		case Opcode::SUB:
 			stack[sp - 2] = stack[sp - 1] - stack[sp - 2];
-			
+
+			sp--;
 			break;
 		case Opcode::MUL:
 			stack[sp - 2] = stack[sp - 1] * stack[sp - 2];
-			
+
+			sp--;
 			break;
 		case Opcode::DIV:
 			stack[sp - 2] = stack[sp - 1] / stack[sp - 2];
-			
+
+			sp--;
 			break;
 		case Opcode::MOD:
 			stack[sp - 2] = stack[sp - 1] % stack[sp - 2];
-			
+
+			sp--;
 			break;
 		case Opcode::GT:
 			stack[sp - 2] = stack[sp - 2] < stack[sp - 1];
-			
+
+			sp--;
 			break;
 		case Opcode::LT:
 			stack[sp - 2] = stack[sp - 2] > stack[sp - 1];
-			
+
+			sp--;
 			break;
 		case Opcode::GE:
 			stack[sp - 2] = stack[sp - 2] <= stack[sp - 1];
-			
+
+			sp--;
 			break;
 		case Opcode::LE:
 			stack[sp - 2] = stack[sp - 2] >= stack[sp - 1];
-			
+
+			sp--;
 			break;
 		case Opcode::EQ:
 			stack[sp - 2] = stack[sp - 2] == stack[sp - 1];
-			
+
+			sp--;
 			break;
 		case Opcode::NE:
 			stack[sp - 2] = stack[sp - 2] != stack[sp - 1];
-			
+
+			sp--;
 			break;
 		case Opcode::OR:{
 			bool t1, t2;
@@ -192,6 +204,7 @@ void SVM::Run(){
 
 			stack[sp - 2].SetBool(t1 || t2);
 
+			sp--;
 			break;
 		}
 		case Opcode::AND:{
@@ -203,6 +216,7 @@ void SVM::Run(){
 
 			stack[sp - 2].SetBool(t1 && t2);
 
+			sp--;
 			break;
 		}
 		case Opcode::NOP: //do nothing

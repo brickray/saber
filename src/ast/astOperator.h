@@ -8,8 +8,6 @@ SABER_NAMESPACE_BEGIN
 class AstOperator : public Astree{
 public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
-		SVM::Instruction pop = { Opcode::POP };
-
 		string op = token->GetToken();
 		if (op == "="){
 			Token* tok = children[0]->GetToken();
@@ -33,7 +31,6 @@ public:
 			}
 			SVM::Instruction ins = { Opcode::MOVE, idx };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "+"){
 			children[1]->Compile(e, svm, bc);
@@ -41,7 +38,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::ADD };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "-"){
 			children[1]->Compile(e, svm, bc);
@@ -49,7 +45,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::SUB };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "*"){
 			children[1]->Compile(e, svm, bc);
@@ -57,7 +52,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::MUL };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "/"){
 			children[1]->Compile(e, svm, bc);
@@ -65,7 +59,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::DIV };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "%"){
 			children[1]->Compile(e, svm, bc);
@@ -73,7 +66,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::MOD };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "+="){
 			children[1]->Compile(e, svm, bc);
@@ -81,7 +73,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::ADD };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
 			svm->AddCode(ins);
@@ -92,7 +83,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::SUB };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
 			svm->AddCode(ins);
@@ -103,7 +93,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::MUL };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
 			svm->AddCode(ins);
@@ -114,7 +103,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::DIV };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
 			svm->AddCode(ins);
@@ -125,7 +113,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::MOD };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
 			svm->AddCode(ins);
@@ -136,7 +123,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::LT };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == ">"){
 			children[1]->Compile(e, svm, bc);
@@ -144,7 +130,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::GT };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "<="){
 			children[1]->Compile(e, svm, bc);
@@ -152,7 +137,6 @@ public:
 			
 			SVM::Instruction ins = { Opcode::LE };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == ">="){
 			children[1]->Compile(e, svm, bc);
@@ -160,7 +144,6 @@ public:
 			
 			SVM::Instruction ins = { Opcode::GE };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "=="){
 			children[1]->Compile(e, svm, bc);
@@ -168,7 +151,6 @@ public:
 			
 			SVM::Instruction ins = { Opcode::EQ };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "!="){
 			children[1]->Compile(e, svm, bc);
@@ -176,7 +158,6 @@ public:
 			
 			SVM::Instruction ins = { Opcode::NE };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "||"){
 			children[1]->Compile(e, svm, bc);
@@ -184,7 +165,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::OR };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 		else if (op == "&&"){
 			children[1]->Compile(e, svm, bc);
@@ -192,7 +172,6 @@ public:
 
 			SVM::Instruction ins = { Opcode::AND };
 			svm->AddCode(ins);
-			svm->AddCode(pop);
 		}
 	}
 

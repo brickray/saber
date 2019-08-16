@@ -132,6 +132,12 @@ bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("*", &tok) || match("/", &tok) || match("*=", &tok) || match("/=", &tok)){
+		if (tok->GetToken() == "*=" || tok->GetToken() == "/="){
+			if (!stat->GetToken() || stat->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+				printf("行数:%d, %s : 左操作数必须为左值\n", tok->GetLineNumber(), tok->GetToken().c_str());
+				return false;
+			}
+		}
 		op->SetToken(tok);
 		op->AddChild(stat);
 		if (!matchMuldivExpr(op)) return false;
@@ -149,6 +155,12 @@ bool SyntaxParse::matchAddsubExpr(shared_ptr<Astree>& astree){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("+", &tok) || match("-", &tok) || match("+=", &tok) || match("-=", &tok)){
+		if (tok->GetToken() == "+=" || tok->GetToken() == "-="){
+			if (!stat->GetChild(0)->GetToken() || stat->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+				printf("行数:%d, %s : 左操作数必须为左值\n", tok->GetLineNumber(), tok->GetToken().c_str());
+				return false;
+			}
+		}
 		op->SetToken(tok);
 		op->AddChild(stat);
 		if (!matchAddsubExpr(op)) return false;
@@ -218,8 +230,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 }
 
 bool SyntaxParse::matchExpr(shared_ptr<Astree>& astree){
-	if (matchAssignExpr(astree)) return true;
-	else return false;
+	return matchAssignExpr(astree);
 }
 
 bool SyntaxParse::matchIf(shared_ptr<Astree>& astree){

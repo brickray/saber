@@ -2,6 +2,7 @@
 #include "astree.h"
 
 #include <time.h>
+#include <Windows.h>
 
 SABER_NAMESPACE_BEGIN
 
@@ -153,6 +154,22 @@ static int gettime(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int getclock(SVM* svm, int numParams){
+	if (numParams > 0){
+		printf("gettime函数参数过多\n");
+		exit(1);
+	}
+	
+	LARGE_INTEGER start, freq;
+	QueryPerformanceCounter(&start);
+	QueryPerformanceFrequency(&freq);
+	float r = float(start.QuadPart) / freq.QuadPart;
+
+	svm->PushFloat(r);
+
+	return numParams;
+}
+
 static RegisterFunction native[] = {
 	{ "print", print },
 	{ "sin", sin },
@@ -164,6 +181,7 @@ static RegisterFunction native[] = {
 	{ "radians", radians },
 	{ "degree", degree },
 	{ "gettime", gettime },
+	{ "getclock", getclock },
 	{ "", nullptr },
 };
 

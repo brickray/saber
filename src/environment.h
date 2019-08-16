@@ -15,6 +15,7 @@ class Environment{
 protected:
 	shared_ptr<Environment> outter;
 	hash_map<string, SymbolInfo> symbolTable;
+	hash_map<string, SymbolInfo> constantTable;
 
 public:
 	Environment() : outter(nullptr){
