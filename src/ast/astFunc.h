@@ -25,9 +25,7 @@ public:
 		SVM::Instruction push = { Opcode::PUSH, func };
 		svm->AddCode(push);
 		SVM::Instruction call = { Opcode::CALL, numParams };
-		int callAddress = svm->AddCode(call);
-		call.operand1 = callAddress + 1;
-		svm->SetCode(callAddress, call);
+		svm->AddCode(call);
 	}
 };
 

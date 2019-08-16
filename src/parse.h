@@ -22,7 +22,8 @@
 // string     : '"' ascii + '"' //ascii代表所有字符
 // primary    : number | identifier | string | true | false
 // term       : func | primary | (andorexpr)
-// muldivexpr : term ( * | / | *= | /= term)*
+// negexpr    : term | - term
+// muldivexpr : negexpr ( * | / | *= | /= negexpr)*
 // addsubexpr : muldivexpr ( + | - | += | -= muldivexpr)*
 // compexpr   : addsubexpr ( == | != | > | >= | < | <= addsubexpr)*
 // andorexpr  : compexpr ( && | || compexpr)* 
@@ -64,6 +65,7 @@ private:
 	bool matchString(shared_ptr<Astree>& astree);
 	bool matchPrimary(shared_ptr<Astree>& astree);
 	bool matchTerm(shared_ptr<Astree>& astree);
+	bool matchNegExpr(shared_ptr<Astree>& astree);
 	bool matchMuldivExpr(shared_ptr<Astree>& astree);
 	bool matchAddsubExpr(shared_ptr<Astree>& astree);
 	bool matchCompExpr(shared_ptr<Astree>& astree);

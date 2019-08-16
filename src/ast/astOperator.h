@@ -40,11 +40,19 @@ public:
 			svm->AddCode(ins);
 		}
 		else if (op == "-"){
-			children[1]->Compile(e, svm, bc);
-			children[0]->Compile(e, svm, bc);
+			if (children.size() == 1){
+				//neg
+				children[0]->Compile(e, svm, bc);
+				SVM::Instruction ins = { Opcode::NEG };
+				svm->AddCode(ins);
+			}
+			else{ //sub
+				children[1]->Compile(e, svm, bc);
+				children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::SUB };
-			svm->AddCode(ins);
+				SVM::Instruction ins = { Opcode::SUB };
+				svm->AddCode(ins);
+			}
 		}
 		else if (op == "*"){
 			children[1]->Compile(e, svm, bc);

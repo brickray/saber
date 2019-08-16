@@ -11,7 +11,6 @@ public:
 	struct Instruction{
 		char opcode;
 		int operand;
-		int operand1;
 	};
 
 protected:

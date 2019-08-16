@@ -76,7 +76,6 @@ void SVM::Run(){
 		Instruction ins = code[ip];
 		char op = ins.opcode;
 		int operand = ins.operand;
-		int operand1 = ins.operand1;
 		switch (op){
 		case Opcode::MOVE:
 			global[operand] = stack[sp - 1];
@@ -108,10 +107,11 @@ void SVM::Run(){
 				break;
 			}
 			else if (func.IsFunction()){
-				ip = func.GetInteger();
 				Value ret;
-				ret.SetInt(operand1);
+				ret.SetInt(ip + 1);
 				stack[sp++] = ret;
+
+				ip = func.GetInteger();
 				continue;
 			}
 			else{
@@ -127,18 +127,18 @@ void SVM::Run(){
 			continue;
 		case Opcode::PUSH:{
 			Value src;
-			if (operand1 == 0){
-				if (isGlobal(operand)) src = global[operand];
-				else src = constant[decodeConstantIndex(operand)];
-			}
-			else{
-				src.SetInt(operand);
-			}
+			if (isGlobal(operand)) src = global[operand];
+			else src = constant[decodeConstantIndex(operand)];
+
 			stack[sp++] = src;
 			break;
 		}
 		case Opcode::POP:
 			sp--;
+			break;
+		case Opcode::NEG:
+			stack[sp - 1] = -stack[sp - 1];
+
 			break;
 		case Opcode::ADD:
 			stack[sp - 2] = stack[sp - 1] + stack[sp - 2];

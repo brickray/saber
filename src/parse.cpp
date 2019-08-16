@@ -126,9 +126,25 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 	return false;
 }
 
+bool SyntaxParse::matchNegExpr(shared_ptr<Astree>& astree){
+	Token* tok;
+	if (match("-", &tok)){
+		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+		shared_ptr<Astree> op = shared_ptr <Astree>(new AstOperator());
+		op->SetToken(tok);
+		if (!matchTerm(stat)) return false;
+		op->AddChild(stat);
+		astree->AddChild(op);
+
+		return true;
+	}
+
+	return matchTerm(astree);
+}
+
 bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-	if (!matchTerm(stat)) return false;
+	if (!matchNegExpr(stat)) return false;
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("*", &tok) || match("/", &tok) || match("*=", &tok) || match("/=", &tok)){

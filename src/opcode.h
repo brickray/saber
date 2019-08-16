@@ -9,7 +9,7 @@ class Opcode{
 public:
 	enum{
 		POP     = 0,  //0个参数，将值压出栈顶
-		NEG     = 1,  //现在没用
+		NEG     = 1,  //0个参数，将栈顶值取负
 		ADD     = 2,  //0个参数，操作栈sp-1, sp-2
 		SUB     = 3,  //0个参数，操作栈sp-1, sp-2
 		MUL     = 4,  //0个参数，操作栈sp-1, sp-2

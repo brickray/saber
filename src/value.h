@@ -67,6 +67,24 @@ public:
 	string GetString() const { return value.sValue; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 
+	Value operator-(){
+		Value va;
+		if (!IsNumber()){
+			printf("尝试对非Number值进行求负操作\n");
+			va.SetBool(false);
+			return va;
+		}
+
+		if (IsInteger()){
+			va.SetInt(-value.iValue);
+		}
+		else{
+			va.SetFloat(-value.fValue);
+		}
+
+		return va;
+	}
+
 	Value operator+(Value& v){
 		Value va;
 		if (IsString() && v.IsString()){
