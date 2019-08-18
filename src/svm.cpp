@@ -142,16 +142,16 @@ void SVM::Run(){
 		}
 		case Opcode::RET:{
 			Value ret = stack[sp - 1]; 
-			int numParams = (operand & 0xffff0000) >> 16;
-			int numVariable = operand & 0x0000ffff;
-			sp -= (numParams + numVariable);
-			int ocp = stack[sp - 1].GetInteger();
-			int esp = stack[sp - 2].GetInteger();
-			int eip = stack[sp - 3].GetInteger();
+			int numRetVariable = (operand & 0xffff0000) >> 16;
+			int numParams = operand & 0x0000ffff;
+			int base = cp + numParams;
+			int ocp = stack[base + 2].GetInteger();
+			int esp = stack[base + 1].GetInteger();
+			int eip = stack[base + 0].GetInteger();
 			cp = ocp;
 			sp = esp;
 			ip = eip;
-			if (numParams) stack[sp++] = ret;
+			if (numRetVariable) stack[sp++] = ret;
 
 			continue;
 		}

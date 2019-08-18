@@ -67,6 +67,7 @@ bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
 		shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 		if (matchExpr(expr)){
 			astReturn->AddChild(expr);
+			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
 		}
 		astree->AddChild(astReturn);
 

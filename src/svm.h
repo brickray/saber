@@ -22,7 +22,7 @@ protected:
 
 	int ip; //代码计数器
 	int sp;	//栈顶指针
-	int cp; //
+	int cp; //函数栈指针
 
 public:
 	SVM();

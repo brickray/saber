@@ -43,11 +43,11 @@ public:
 		reserve.operand = subBc.variableIndex - numParams - 3;
 		svm->SetCode(reserveAddress, reserve);
 
-		SVM::Instruction ret = { Opcode::RET, reserve.operand };
+		SVM::Instruction ret = { Opcode::RET, numParams };
 		for (int i = 0; i < subBc.rets.size(); ++i){
 			int idx = subBc.rets[i];
 			SVM::Instruction r = svm->GetCode(idx);
-			r.operand |= (reserve.operand & 0x0000ffff);
+			r.operand |= (numParams & 0x0000ffff);
 			svm->SetCode(idx, r);
 		}
 
