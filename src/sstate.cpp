@@ -1,4 +1,5 @@
 #include "sstate.h"
+#include "error.h"
 
 SABER_NAMESPACE_BEGIN
 
@@ -17,6 +18,7 @@ void SState::Run(string code){
 	lexer->Parse(afterProcess);
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
+
 	if (sc) ShowCode();
 	svm->Run();
 }

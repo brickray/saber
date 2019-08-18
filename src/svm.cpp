@@ -1,5 +1,6 @@
 #include "svm.h"
 #include "opcode.h"
+#include "error.h"
 
 SABER_NAMESPACE_BEGIN
 
@@ -135,8 +136,7 @@ void SVM::Run(){
 				continue;
 			}
 			else{
-				printf("尝试对[%s]值进行函数调用\n", func.GetTypeString().c_str());
-				exit(1);
+				Error::GetInstance()->ProcessError("尝试对[%s]值进行函数调用\n", func.GetTypeString().c_str());
 				break;
 			}
 		}

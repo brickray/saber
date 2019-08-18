@@ -1,4 +1,5 @@
 #include "parse.h"
+#include "error.h"
 
 SABER_NAMESPACE_BEGIN
 
@@ -133,9 +134,13 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 		astree = left;
 		return true;
 	}
-	if (match("(")){
+	Token* tok;
+	if (match("(", &tok)){
 		if (!matchAndorExpr(astree)) return false;
-		if (!match(")")) return false;
+		if (!match(")")){
+			Error::GetInstance()->ProcessError("行数:%d, 表达式语法错误,缺少')'", tok->GetLineNumber());
+			return false;
+		}
 
 		return true;
 	}
@@ -167,7 +172,7 @@ bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	if (match("*", &tok) || match("/", &tok) || match("*=", &tok) || match("/=", &tok)){
 		if (tok->GetToken() == "*=" || tok->GetToken() == "/="){
 			if (!stat->GetToken() || stat->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
-				printf("行数:%d, %s : 左操作数必须为左值\n", tok->GetLineNumber(), tok->GetToken().c_str());
+				Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 				return false;
 			}
 		}
@@ -190,7 +195,7 @@ bool SyntaxParse::matchAddsubExpr(shared_ptr<Astree>& astree){
 	if (match("+", &tok) || match("-", &tok) || match("+=", &tok) || match("-=", &tok)){
 		if (tok->GetToken() == "+=" || tok->GetToken() == "-="){
 			if (!stat->GetChild(0)->GetToken() || stat->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
-				printf("行数:%d, %s : 左操作数必须为左值\n", tok->GetLineNumber(), tok->GetToken().c_str());
+				Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 				return false;
 			}
 		}
@@ -268,12 +273,16 @@ bool SyntaxParse::matchExpr(shared_ptr<Astree>& astree){
 
 bool SyntaxParse::matchIf(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> astIf = shared_ptr<Astree>(new AstIf());
-	if (!match("if")) return false;
+	Token* iftok;
+	if (!match("if", &iftok)) return false;
 	astree->AddChild(astIf);
 	shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 	if (!matchExpr(expr)) return false;
 	astIf->AddChild(expr);
-	if (!match("then")) return false;
+	if (!match("then")){
+		Error::GetInstance()->ProcessError("行数:%d, if语句语法错误,缺少关键字[then]", iftok->GetLineNumber());
+		return false;
+	}
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 	astIf->AddChild(stat);
 	while (true){
@@ -288,7 +297,11 @@ bool SyntaxParse::matchIf(shared_ptr<Astree>& astree){
 		shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 		if (!matchExpr(expr)) return false;
 		elif->AddChild(expr);
-		if (!match("then")) return false;
+		Token* eliftok;
+		if (!match("then", &eliftok)){
+			Error::GetInstance()->ProcessError("行数:%d, elif语句语法错误,缺少关键字[then]", eliftok->GetLineNumber());
+			return false;
+		}
 		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 		elif->AddChild(stat);
 		while (true){
@@ -323,7 +336,11 @@ bool SyntaxParse::matchWhile(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 	if (!matchExpr(expr)) return false;
 	astWhile->AddChild(expr);
-	if (!match("do")) return false;
+	if (!match("do")){
+		Error::GetInstance()->ProcessError("行数:%d, while语句语法错误,缺少关键字[do]", tok->GetLineNumber());
+
+		return false;
+	}
 	while (true){
 		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
 		astWhile->AddChild(statement);
@@ -343,16 +360,25 @@ bool SyntaxParse::matchFor(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 	if (!matchExpr(expr)) return false;
 	astFor->AddChild(expr);
-	if (!match(",")) return false;
+	if (!match(",")){
+		Error::GetInstance()->ProcessError("行数:%d, for语句语法错误,循环条件间缺少[,]", tok->GetLineNumber());
+		return false;
+	}
 	shared_ptr<Astree> cond = shared_ptr<Astree>(new AstStatement());
 	if (!matchExpr(cond)) return false;
 	astFor->AddChild(cond);
 	shared_ptr<Astree> step = shared_ptr<Astree>(new AstStatement());
 	if (match(",")){
 		if(matchExpr(step)) astFor->AddChild(step);
-		else return false;
+		else{
+			Error::GetInstance()->ProcessError("行数:%d, for语句语法错误,缺少step条件", tok->GetLineNumber());
+			return false;
+		}
 	}
-	if (!match("do")) return false;
+	if (!match("do")){
+		Error::GetInstance()->ProcessError("行数:%d, for语句语法错误,缺少关键字[do]", tok->GetLineNumber());
+		return false;
+	}
 
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 	while (true){
@@ -369,12 +395,16 @@ bool SyntaxParse::matchFor(shared_ptr<Astree>& astree){
 
 bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> def = shared_ptr<Astree>(new AstDef());
-	if (!match("def")) return false;
+	Token* tok;
+	if (!match("def", &tok)) return false;
 	shared_ptr<Astree> fun = shared_ptr<Astree>(new AstPrimary());
 	if (matchIdentifier(fun)){
 		def->AddChild(fun);
 	}
-	if (!match("(")) return false;
+	if (!match("(")){
+		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少'('", tok->GetLineNumber());
+		return false;
+	}
 	while (true){
 		shared_ptr<Astree> param = shared_ptr<Astree>(new AstPrimary());
 		if (matchIdentifier(param)){
@@ -385,7 +415,10 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	AstDef* d = dynamic_cast<AstDef*>(def.get());
 	d->SetNumParams(d->GetNumChildren() - 1);
 
-	if (!match(")")) return false;
+	if (!match(")")){
+		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少')'", tok->GetLineNumber());
+		return false;
+	}
 
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 	while (true){
@@ -409,7 +442,8 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 	if (!matchIdentifier(name)) return false;
 	func->AddChild(name);
 	
-	if (!match("(")){
+	Token* tok;
+	if (!match("(", &tok)){
 		lexer.Back();
 		return false;
 	}
@@ -421,7 +455,10 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 		else break;
 	}
 
-	if (!match(")")) return false;
+	if (!match(")")){
+		Error::GetInstance()->ProcessError("行数:%d, 函数调用语法错误,缺少')'", tok->GetLineNumber());
+		return false;
+	}
 
 	astree->AddChild(func);
 

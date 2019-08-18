@@ -1,4 +1,5 @@
 #include "lexer.h"
+#include "error.h"
 
 SABER_NAMESPACE_BEGIN
 
@@ -159,7 +160,7 @@ void Lexer::parseLine(string line){
 			continue;
 		}
 		else{
-			printf("行数[%d], 错误的标识符\n", lineNo);
+			Error::GetInstance()->ProcessError("行数[%d], 错误的标识符", lineNo);
 			return;
 		}
 

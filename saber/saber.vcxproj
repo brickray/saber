@@ -78,6 +78,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\error.cpp" />
     <ClCompile Include="..\src\lexer.cpp" />
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\nativeFunc.cpp" />
@@ -102,6 +103,7 @@
     <ClInclude Include="..\src\ast\astWhile.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\environment.h" />
+    <ClInclude Include="..\src\error.h" />
     <ClInclude Include="..\src\lexer.h" />
     <ClInclude Include="..\src\nativeFunc.h" />
     <ClInclude Include="..\src\opcode.h" />
