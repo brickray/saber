@@ -170,8 +170,10 @@ bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	if (!matchNegExpr(stat)) return false;
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
-	if (match("*", &tok) || match("/", &tok) || match("*=", &tok) || match("/=", &tok)){
-		if (tok->GetToken() == "*=" || tok->GetToken() == "/="){
+	if (match("*", &tok) || match("/", &tok) || 
+		match("*=", &tok) || match("/=", &tok) ||
+		match("%", &tok) || match("%=", &tok)){
+		if (tok->GetToken() == "*=" || tok->GetToken() == "/=" || tok->GetToken() == "%="){
 			if (!stat->GetToken() || stat->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
 				Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 				return false;
