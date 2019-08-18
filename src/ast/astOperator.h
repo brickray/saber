@@ -20,15 +20,36 @@ public:
 		    children[1]->Compile(e, svm, bc);
 			
 			int idx;
-			if (e->HasSymbol(tok->GetToken())){
-				idx = e->GetSymbol(tok->GetToken()).address;
+			if (e->IsLocal()){
+				if (e->HasSymbol(tok->GetToken())){
+					bool local;
+					idx = e->GetSymbol(tok->GetToken(), local).address;
+					if (!local){
+						Value v;
+						SymbolInfo si = { v, bc.variableIndex++ };
+						e->SetSymbol(tok->GetToken(), si);
+						idx = si.address;
+					}
+				}
+				else{
+					Value v;
+					SymbolInfo si = { v, bc.variableIndex++ };
+					e->SetSymbol(tok->GetToken(), si);
+					idx = si.address;
+				}
 			}
 			else{
-				Value v;
-				idx = svm->AddGlobal(v);
-				SymbolInfo si = { v, idx };
-				e->SetSymbol(tok->GetToken(), si);
+				if (e->HasSymbol(tok->GetToken())){
+					idx = e->GetSymbol(tok->GetToken()).address;
+				}
+				else{
+					Value v;
+					idx = svm->AddGlobal(v);
+					SymbolInfo si = { v, idx };
+					e->SetSymbol(tok->GetToken(), si);
+				}
 			}
+
 			SVM::Instruction ins = { Opcode::MOVE, idx };
 			svm->AddCode(ins);
 		}

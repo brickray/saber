@@ -58,6 +58,23 @@ bool SyntaxParse::matchContinue(shared_ptr<Astree>& astree){
 	return false;
 }
 
+bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> astReturn = shared_ptr<Astree>(new AstReturn());
+	Token* tok;
+	if (match("return", &tok)){
+		astReturn->SetToken(tok);
+		shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
+		if (matchExpr(expr)){
+			astReturn->AddChild(expr);
+		}
+		astree->AddChild(astReturn);
+
+		return true;
+	}
+
+	return false;
+}
+
 bool SyntaxParse::matchNumber(shared_ptr<Astree>& astree){
 	Token* tok = lexer.NextToken();
 	if (!tok) return false;
@@ -308,8 +325,6 @@ bool SyntaxParse::matchWhile(shared_ptr<Astree>& astree){
 	astWhile->AddChild(expr);
 	if (!match("do")) return false;
 	while (true){
-		matchBreak(astWhile);
-		matchContinue(astWhile);
 		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
 		astWhile->AddChild(statement);
 		if (!matchStatement(statement)) break;
@@ -380,14 +395,6 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	}
 
 	def->AddChild(stat);
-
-	if (match("return")){
-		shared_ptr<Astree> ret = shared_ptr<Astree>(new AstPrimary());
-		if (matchPrimary(ret)){
-			def->AddChild(ret);
-			dynamic_cast<AstDef*>(def.get())->SetNumReturnParams(1);
-		}
-	}
 	
 	if (!match("end")) return false;
 
@@ -439,6 +446,7 @@ bool SyntaxParse::matchStatement(shared_ptr<Astree>& astree){
 
 	if (matchBreak(astree)) return true;
 	if (matchContinue(astree)) return true;
+	if (matchReturn(astree)) return true;
 
 	return false;
 }

@@ -54,6 +54,8 @@ public:
 	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i; }
 	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; }
 	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; }
+	void SetFunction(int i) { type = EValueType::EFUNC, value.iValue = i; }
+	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -65,6 +67,7 @@ public:
 	int GetInteger() const { return value.iValue; }
 	float GetFloat() const { return value.fValue; }
 	string GetString() const { return value.sValue; }
+	int GetFunction() const { return value.iValue; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 
 	Value operator-(){

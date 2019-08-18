@@ -34,9 +34,8 @@ void SState::Register(RegisterFunction func[]){
 		string name = func[i].name;
 		if (name == "") break;
 
-		SValue sv;
-		sv.sfunc = func[i].f;
-		Value function(EValueType::ENATIVEFUNC, sv);
+		Value function;
+		function.SetNativeFunction(func[i].f);
 		int idx = svm->AddGlobal(function);
 		SymbolInfo si = { function, idx };
 		env->SetSymbol(name, si);

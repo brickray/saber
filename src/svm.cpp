@@ -5,7 +5,9 @@ SABER_NAMESPACE_BEGIN
 
 SVM::SVM(){
 	code.reserve(64);
-	stack.resize(1024);
+	stack.resize(STACK_SIZE);
+	global.reserve(64);
+	constant.reserve(64);
 	ip = 0;
 	sp = 0;
 
@@ -22,6 +24,14 @@ int SVM::AddCode(Instruction c){
 	return code.size() - 1;
 }
 
+void SVM::RemoveLastCode(){
+	code.pop_back();
+}
+
+SVM::Instruction SVM::GetCode(int idx){
+	return code[idx];
+}
+
 void SVM::SetCode(int idx, Instruction c){
 	code[idx] = c;
 }
@@ -29,13 +39,13 @@ void SVM::SetCode(int idx, Instruction c){
 int SVM::AddGlobal(Value v){
 	global.push_back(v);
 	
-	return global.size() - 1;
+	return encodeGlobalIndex(global.size() - 1);
 }
 
 int SVM::AddConstant(Value v){
 	constant.push_back(v);
 
-	return encodeConstantIndex(constant.size());
+	return encodeConstantIndex(constant.size() - 1);
 }
 
 void SVM::PushStack(Value v){
@@ -78,7 +88,12 @@ void SVM::Run(){
 		int operand = ins.operand;
 		switch (op){
 		case Opcode::MOVE:
-			global[operand] = stack[sp - 1];
+			if (isStack(operand)){
+				stack[cp + operand] = stack[sp - 1];
+			}
+			else{
+				global[decodeGlobalIndex(operand)] = stack[sp - 1];
+			}
 
 			sp--;
 			break;
@@ -107,11 +122,16 @@ void SVM::Run(){
 				break;
 			}
 			else if (func.IsFunction()){
-				Value ret;
-				ret.SetInt(ip + 1);
-				stack[sp++] = ret;
+				Value eip, esp;
+				int ncp = sp - operand;
+				eip.SetInt(ip + 1);
+				stack[sp++] = eip;
+				esp.SetInt(ncp);
+				stack[sp++] = esp;
+				stack[sp++].SetInt(cp);
+				cp = ncp;
 
-				ip = func.GetInteger();
+				ip = func.GetFunction();
 				continue;
 			}
 			else{
@@ -120,14 +140,25 @@ void SVM::Run(){
 				break;
 			}
 		}
-		case Opcode::RET:
-			ip = stack[sp - 1].GetInteger();
+		case Opcode::RET:{
+			Value ret = stack[sp - 1]; 
+			int numParams = (operand & 0xffff0000) >> 16;
+			int numVariable = operand & 0x0000ffff;
+			sp -= (numParams + numVariable);
+			int ocp = stack[sp - 1].GetInteger();
+			int esp = stack[sp - 2].GetInteger();
+			int eip = stack[sp - 3].GetInteger();
+			cp = ocp;
+			sp = esp;
+			ip = eip;
+			if (numParams) stack[sp++] = ret;
 
-			sp -= operand + 1;
 			continue;
+		}
 		case Opcode::PUSH:{
 			Value src;
-			if (isGlobal(operand)) src = global[operand];
+			if (isStack(operand)) src = stack[cp + operand];
+			else if (isGlobal(operand)) src = global[decodeGlobalIndex(operand)];
 			else src = constant[decodeConstantIndex(operand)];
 
 			stack[sp++] = src;
@@ -135,6 +166,9 @@ void SVM::Run(){
 		}
 		case Opcode::POP:
 			sp--;
+			break;
+		case Opcode::RESERVE:
+			sp += operand;
 			break;
 		case Opcode::NEG:
 			stack[sp - 1] = -stack[sp - 1];
@@ -227,12 +261,24 @@ void SVM::Run(){
 	}
 }
 
+bool SVM::isStack(int idx){
+	return idx >= 0 && idx < STACK_SIZE;
+}
+
 bool SVM::isGlobal(int idx){
-	return idx >= 0;
+	return idx >= STACK_SIZE;
+}
+
+int SVM::encodeGlobalIndex(int idx){
+	return STACK_SIZE + idx;
+}
+
+int SVM::decodeGlobalIndex(int idx){
+	return idx - STACK_SIZE;
 }
 
 int SVM::encodeConstantIndex(int idx){
-	return -idx;
+	return -idx - 1;
 }
 
 int SVM::decodeConstantIndex(int idx){
@@ -263,6 +309,7 @@ string SVM::ShowCode(){
 		"CALL",
 		"RET",
 		"PUSH",
+		"RESERVE",
 	};
 
 	string ret;

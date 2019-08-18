@@ -18,6 +18,7 @@ public:
 
 		BlockCnt subBc;
 		subBc.isloop = true;
+		subBc.rets = bc.rets;
 		children[children.size() - 1]->Compile(e, svm, subBc);
 
 		int continueAddress = svm->AddCode(nop);
@@ -38,6 +39,8 @@ public:
 		for (int i = 0; i < subBc.cps.size(); ++i){
 			svm->SetCode(subBc.cps[i], jumpc);
 		}
+
+		bc.rets = subBc.rets;
 	}
 };
 

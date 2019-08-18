@@ -14,20 +14,22 @@ public:
 	};
 
 protected:
+#define STACK_SIZE 1024
 	vector<Instruction> code;
 	vector<Value> stack;
 	vector<Value> constant;
 	vector<Value> global;
 
-	int ip;
-	int sp;
-	int fp;
-	int ret;
+	int ip; //代码计数器
+	int sp;	//栈顶指针
+	int cp; //
 
 public:
 	SVM();
 
 	int AddCode(Instruction c);
+	void RemoveLastCode();
+	Instruction GetCode(int idx);
 	void SetCode(int idx, Instruction c);
 	int AddGlobal(Value v);
 	int AddConstant(Value v);
@@ -43,7 +45,10 @@ public:
 	string ShowCode();
 
 private:
+	bool isStack(int idx);
 	bool isGlobal(int idx);
+	int encodeGlobalIndex(int idx);
+	int decodeGlobalIndex(int idx);
 	int encodeConstantIndex(int idx);
 	int decodeConstantIndex(int idx);
 };

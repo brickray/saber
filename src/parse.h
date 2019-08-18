@@ -15,6 +15,7 @@
 #include "ast\astFunc.h"
 #include "ast\astBreak.h"
 #include "ast\astContinue.h"
+#include "ast\astReturn.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +
@@ -33,7 +34,7 @@
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
 // for        : 'for' expr ',' expr (',' expr) 'do' block 'end'
-// def        : 'def' identifier '(' identifier *')' block ('return' (primary)) 'end'
+// def        : 'def' identifier '(' identifier *')' block ('return' (expr)) 'end'
 // func       : identifier '(' primary ')' 
 // statement  : if
 //			  | while
@@ -60,6 +61,7 @@ private:
 	bool match(string name, Token** tok = nullptr);
 	bool matchBreak(shared_ptr<Astree>& astree);
 	bool matchContinue(shared_ptr<Astree>& astree);
+	bool matchReturn(shared_ptr<Astree>& astree);
 	bool matchNumber(shared_ptr<Astree>& astree);
 	bool matchIdentifier(shared_ptr<Astree>& astree);
 	bool matchString(shared_ptr<Astree>& astree);

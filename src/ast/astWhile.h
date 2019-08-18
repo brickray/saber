@@ -18,6 +18,7 @@ public:
 
 		BlockCnt subBc;
 		subBc.isloop = true;
+		subBc.rets = bc.rets;
 		for (int i = 1; i < children.size(); ++i){
 			children[i]->Compile(e, svm, subBc);
 		}
@@ -33,6 +34,8 @@ public:
 		for (int i = 0; i < subBc.cps.size(); ++i){
 			svm->SetCode(subBc.cps[i], jump);
 		}
+
+		bc.rets = subBc.rets;
 	}
 };
 

@@ -42,6 +42,17 @@ public:
 		return SymbolInfo();
 	}
 
+	SymbolInfo GetSymbol(string symbol, bool& local){
+		if (hasSymbol(symbol)){
+			local = IsLocal();
+			return getSymbol(symbol);
+		}
+
+		if (outter.get()) return outter->GetSymbol(symbol, local);
+
+		return SymbolInfo();
+	}
+
 	bool HasSymbol(string symbol) const{
 		if (hasSymbol(symbol))
 			return true;

@@ -2,7 +2,6 @@
 #include "astree.h"
 
 #include <time.h>
-#include <Windows.h>
 
 SABER_NAMESPACE_BEGIN
 
@@ -160,12 +159,10 @@ static int getclock(SVM* svm, int numParams){
 		exit(1);
 	}
 	
-	LARGE_INTEGER start, freq;
-	QueryPerformanceCounter(&start);
-	QueryPerformanceFrequency(&freq);
-	float r = float(start.QuadPart) / freq.QuadPart;
+	clock_t t = clock();
+	t /= CLOCKS_PER_SEC;
 
-	svm->PushFloat(r);
+	svm->PushInt(t);
 
 	return numParams;
 }
@@ -190,9 +187,8 @@ void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = native[i].name;
 		if (name == "") break;
 
-		SValue sv;
-		sv.sfunc = native[i].f;
-		Value function(EValueType::ENATIVEFUNC, sv);
+		Value function;
+		function.SetNativeFunction(native[i].f);
 		int idx = svm->AddGlobal(function);
 		SymbolInfo si = { function, idx };
 		e->SetSymbol(name, si);
