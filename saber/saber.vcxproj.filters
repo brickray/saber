@@ -36,6 +36,9 @@
     <ClCompile Include="..\src\sstate.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\preprocessor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\common.h">
@@ -96,6 +99,15 @@
       <Filter>源文件\ast</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ast\astElif.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astFor.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\preprocessor.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astReturn.h">
       <Filter>源文件\ast</Filter>
     </ClInclude>
   </ItemGroup>

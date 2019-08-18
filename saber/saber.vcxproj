@@ -82,6 +82,7 @@
     <ClCompile Include="..\src\main.cpp" />
     <ClCompile Include="..\src\nativeFunc.cpp" />
     <ClCompile Include="..\src\parse.cpp" />
+    <ClCompile Include="..\src\preprocessor.cpp" />
     <ClCompile Include="..\src\sstate.cpp" />
     <ClCompile Include="..\src\svm.cpp" />
   </ItemGroup>
@@ -91,10 +92,12 @@
     <ClInclude Include="..\src\ast\astContinue.h" />
     <ClInclude Include="..\src\ast\astDef.h" />
     <ClInclude Include="..\src\ast\astElif.h" />
+    <ClInclude Include="..\src\ast\astFor.h" />
     <ClInclude Include="..\src\ast\astFunc.h" />
     <ClInclude Include="..\src\ast\astIf.h" />
     <ClInclude Include="..\src\ast\astOperator.h" />
     <ClInclude Include="..\src\ast\astPrimary.h" />
+    <ClInclude Include="..\src\ast\astReturn.h" />
     <ClInclude Include="..\src\ast\astStatement.h" />
     <ClInclude Include="..\src\ast\astWhile.h" />
     <ClInclude Include="..\src\common.h" />
@@ -103,6 +106,7 @@
     <ClInclude Include="..\src\nativeFunc.h" />
     <ClInclude Include="..\src\opcode.h" />
     <ClInclude Include="..\src\parse.h" />
+    <ClInclude Include="..\src\preprocessor.h" />
     <ClInclude Include="..\src\sstate.h" />
     <ClInclude Include="..\src\value.h" />
     <ClInclude Include="..\src\svm.h" />
