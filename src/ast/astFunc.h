@@ -12,7 +12,8 @@ public:
 		Token* tok = children[0]->GetToken();
 		string funcName = tok->GetToken();
 		if (!e->HasSymbol(funcName)){
-			printf("行数:%d, 未定义标识符[%s]\n", tok->GetLineNumber(), funcName.c_str());
+			Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", tok->GetLineNumber(), funcName.c_str());
+
 			return;
 		}
 		

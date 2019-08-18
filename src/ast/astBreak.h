@@ -9,7 +9,8 @@ class AstBreak : public Astree{
 public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		if (!bc.isloop){
-			printf("行数:%d, 必需在循环体中才能使用关键字[break]\n", token->GetLineNumber());
+			Error::GetInstance()->ProcessError("行数:%d, 必需在循环体中才能使用关键字[break]\n", token->GetLineNumber());
+
 			return;
 		}
 

@@ -12,7 +12,7 @@ public:
 		if (op == "="){
 			Token* tok = children[0]->GetToken();
 			if (tok->GetTokenType() != ETokenType::EIDENTIFIER){
-				printf("行数:%d, 赋值语句非左值\n", tok->GetLineNumber());
+				Error::GetInstance()->ProcessError("行数:%d, 赋值语句非左值\n", tok->GetLineNumber());
 				return;
 			}
 

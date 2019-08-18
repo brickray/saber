@@ -248,7 +248,7 @@ bool SyntaxParse::matchAndorExpr(shared_ptr<Astree>& astree){
 
 bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
-	if (matchIdentifier(name)){
+	if (matchPrimary(name)){
 		Token* tok;
 		shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 		if (match("=", &tok)){
@@ -401,6 +401,10 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	if (matchIdentifier(fun)){
 		def->AddChild(fun);
 	}
+	else{
+		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,函数名必须以字母开头，由字母和数字组成", tok->GetLineNumber());
+		return false;
+	}
 	if (!match("(")){
 		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少'('", tok->GetLineNumber());
 		return false;
@@ -466,8 +470,6 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 }
 
 bool SyntaxParse::matchStatement(shared_ptr<Astree>& astree){
-	shared_ptr<Astree> dummy = shared_ptr<Astree>(new AstPrimary());
-
 	if (matchIf(astree)) return true;
 
 	if (matchWhile(astree)) return true;

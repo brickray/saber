@@ -7,6 +7,7 @@
 #include "environment.h"
 #include "svm.h"
 #include "opcode.h"
+#include "error.h"
 
 SABER_NAMESPACE_BEGIN
 

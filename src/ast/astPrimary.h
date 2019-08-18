@@ -54,7 +54,7 @@ public:
 				return;
 			}
 
-			printf("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
+			Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
 			break;
 		case ETokenType::ESTRING:
 			value.SetString(token->GetToken());
