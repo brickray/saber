@@ -1,22 +1,25 @@
 #include "nativeFunc.h"
 #include "astree.h"
+#include "error.h"
 
 #include <time.h>
 
 SABER_NAMESPACE_BEGIN
 
-void mathParamsCheck(string func, Value& v, int numParams){
-	bool pass = true;
-	if (numParams > 1){
-		printf("%s函数只接收一个参数\n", func.c_str());
-		pass = false;
-	}
-	if (!(v.IsFloat() || v.IsInteger())){
-		printf("%s函数参数类型必须为整数或浮点数\n", func.c_str());
-		pass = false;
+void mathParamsNumCheck(string func, int numParams){
+	if (numParams != 1){
+		Error::GetInstance()->ProcessError("%s函数只接收一个参数\n", func.c_str());
 	}
 
-	if (!pass) exit(1);
+	return;
+}
+
+void mathParamsTypeCheck(string func, Value& v){
+	if (!(v.IsFloat() || v.IsInteger())){
+		Error::GetInstance()->ProcessError("%s函数参数类型必须为整数或浮点数\n", func.c_str());
+	}
+
+	return;
 }
 
 static int print(SVM* svm, int numParams){
@@ -36,8 +39,9 @@ static int print(SVM* svm, int numParams){
 }
 
 static int sin(SVM* svm, int numParams){
+	mathParamsNumCheck("sin", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("sin", v, numParams);
+	mathParamsTypeCheck("sin", v);
 
 	float ret;
 	if (v.IsFloat()) ret = sinf(DegreeToRadians(v.GetFloat()));
@@ -49,8 +53,9 @@ static int sin(SVM* svm, int numParams){
 }
 
 static int asin(SVM* svm, int numParams){
+	mathParamsNumCheck("asin", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("asin", v, numParams);
+	mathParamsTypeCheck("asin", v);
 
 	float ret;
 	if (v.IsFloat()) ret = asinf(v.GetFloat());
@@ -62,8 +67,9 @@ static int asin(SVM* svm, int numParams){
 }
 
 static int cos(SVM* svm, int numParams){
+	mathParamsNumCheck("cos", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("cos", v, numParams);
+	mathParamsTypeCheck("cos", v);
 
 	float ret;
 	if (v.IsFloat()) ret = cosf(DegreeToRadians(v.GetFloat()));
@@ -75,8 +81,9 @@ static int cos(SVM* svm, int numParams){
 }
 
 static int acos(SVM* svm, int numParams){
+	mathParamsNumCheck("acos", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("acos", v, numParams);
+	mathParamsTypeCheck("acos", v);
 
 	float ret;
 	if (v.IsFloat()) ret = acosf(v.GetFloat());
@@ -88,8 +95,9 @@ static int acos(SVM* svm, int numParams){
 }
 
 static int tan(SVM* svm, int numParams){
+	mathParamsNumCheck("tan", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("tan", v, numParams);
+	mathParamsTypeCheck("tan", v);
 
 	float ret;
 	if (v.IsFloat()) ret = tanf(DegreeToRadians(v.GetFloat()));
@@ -101,8 +109,9 @@ static int tan(SVM* svm, int numParams){
 }
 
 static int atan(SVM* svm, int numParams){
+	mathParamsNumCheck("atan", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("atan", v, numParams);
+	mathParamsTypeCheck("atan", v);
 
 	float ret;
 	if (v.IsFloat()) ret = atanf(v.GetFloat());
@@ -114,8 +123,9 @@ static int atan(SVM* svm, int numParams){
 }
 
 static int radians(SVM* svm, int numParams){
+	mathParamsNumCheck("radians", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("radians", v, numParams);
+	mathParamsTypeCheck("radians", v);
 
 	float ret;
 	if (v.IsFloat()) ret = DegreeToRadians(v.GetFloat());
@@ -127,8 +137,9 @@ static int radians(SVM* svm, int numParams){
 }
 
 static int degree(SVM* svm, int numParams){
+	mathParamsNumCheck("degree", numParams);
 	Value v = svm->PopStack();
-	mathParamsCheck("degree", v, numParams);
+	mathParamsTypeCheck("degree", v);
 
 	float ret;
 	if (v.IsFloat()) ret = RadiansToDegree(v.GetFloat());
@@ -141,8 +152,7 @@ static int degree(SVM* svm, int numParams){
 
 static int gettime(SVM* svm, int numParams){
 	if (numParams > 0){
-		printf("gettime函数参数过多\n");
-		exit(1);
+		Error::GetInstance()->ProcessError("gettime函数参数过多\n");
 	}
 	time_t t = time(nullptr);
 	string str = ctime(&t);
@@ -155,14 +165,25 @@ static int gettime(SVM* svm, int numParams){
 
 static int getclock(SVM* svm, int numParams){
 	if (numParams > 0){
-		printf("gettime函数参数过多\n");
-		exit(1);
+		Error::GetInstance()->ProcessError("getclock函数参数过多\n");
 	}
 	
 	clock_t t = clock();
 	t /= CLOCKS_PER_SEC;
 
 	svm->PushInt(t);
+
+	return numParams;
+}
+
+static int type(SVM* svm, int numParams){
+	if (numParams != 1){
+		Error::GetInstance()->ProcessError("type函数只接受1个参数\n");
+	}
+
+	Value v = svm->PopStack();
+	
+	svm->PushString(v.GetTypeString());
 
 	return numParams;
 }
@@ -179,6 +200,7 @@ static RegisterFunction native[] = {
 	{ "degree", degree },
 	{ "gettime", gettime },
 	{ "getclock", getclock },
+	{ "type", type },
 	{ "", nullptr },
 };
 
