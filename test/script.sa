@@ -1,16 +1,71 @@
 
-def A()
-	i = 7;
-	print(5);
+i = 10;
+b = 3;
+
+
+while i > 5 do
+	if i > 7 then
+		print(i)
+	else
+		break
+	end
+
+	i = i - 1;
 end
 
-i = 5;
-a = 0;
-c = 4 + 6;
-A();
-print(i);
-print(degree(acos(0.707107)));
-print(gettime());
+time = gettime();
+print(time);
 
+for i = 0, i < 11, i += 1 do
+	if i == 10 then
+		if b == 5 then
+			print("i == 10 b == 5")
+		elif b == 3 then
+			print("i == 10 b == 3")
+		end
+	elif i == 5 then
+		print("elif i == 5")
+	elif i == 3 then
+		print("elif i == 3")
+	else
+		print("else")
+	end
+end
 
+print(5*4 + 1 > 4*5);
+
+n = 10
+
+a= 100
+def fib(a)
+	if a == 1 || a == 0 then
+		return 1
+	end
+
+	return fib(a - 1) + fib(a-2)
+	
+end
+
+print(fib(7))
+print(n a b)
+
+/*i = 0
+while true do
+	while i < 10 do
+		i = i+1
+	    if i > 5 then
+			continue
+		end
+
+		print(i)
+	end
+
+	if i > 8 then
+	    break
+	end
+end
+
+n = -n
+print(-(n*(5+8))/2)
+*/
 
