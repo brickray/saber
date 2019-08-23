@@ -44,6 +44,7 @@ static hash_set<string> reserved = {
 	"continue",
 	"def",
 	"return",
+	"local",
 };
 
 class Token{

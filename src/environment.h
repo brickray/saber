@@ -9,6 +9,7 @@ SABER_NAMESPACE_BEGIN
 struct SymbolInfo{
 	Value value;
 	int address;
+	bool local;
 };
 
 class Environment{
@@ -44,8 +45,9 @@ public:
 
 	SymbolInfo GetSymbol(string symbol, bool& local){
 		if (hasSymbol(symbol)){
-			local = IsLocal();
-			return getSymbol(symbol);
+			SymbolInfo si = getSymbol(symbol);
+			local = si.local;
+			return si;
 		}
 
 		if (outter.get()) return outter->GetSymbol(symbol, local);
@@ -61,14 +63,6 @@ public:
 			return true;
 
 		return false;
-	}
-
-	bool IsLocal() const{
-		return outter.get() != nullptr;
-	}
-
-	bool IsGlobal() const{
-		return outter.get() == nullptr;
 	}
 
 private:

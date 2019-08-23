@@ -116,5 +116,14 @@
     <ClInclude Include="..\src\error.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ast\astLocal.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astGlobal.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astProgram.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

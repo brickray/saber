@@ -10,47 +10,10 @@ public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		string op = token->GetToken();
 		if (op == "="){
-			Token* tok = children[0]->GetToken();
-			if (tok->GetTokenType() != ETokenType::EIDENTIFIER){
-				Error::GetInstance()->ProcessError("行数:%d, 赋值语句非左值\n", tok->GetLineNumber());
-				return;
-			}
+			children[1]->Compile(e, svm, bc);
+			children[0]->Compile(e, svm, bc);
 
-
-		    children[1]->Compile(e, svm, bc);
-			
-			int idx;
-			if (e->IsLocal()){
-				if (e->HasSymbol(tok->GetToken())){
-					bool local;
-					idx = e->GetSymbol(tok->GetToken(), local).address;
-					if (!local){
-						Value v;
-						SymbolInfo si = { v, bc.variableIndex++ };
-						e->SetSymbol(tok->GetToken(), si);
-						idx = si.address;
-					}
-				}
-				else{
-					Value v;
-					SymbolInfo si = { v, bc.variableIndex++ };
-					e->SetSymbol(tok->GetToken(), si);
-					idx = si.address;
-				}
-			}
-			else{
-				if (e->HasSymbol(tok->GetToken())){
-					idx = e->GetSymbol(tok->GetToken()).address;
-				}
-				else{
-					Value v;
-					idx = svm->AddGlobal(v);
-					SymbolInfo si = { v, idx };
-					e->SetSymbol(tok->GetToken(), si);
-				}
-			}
-
-			SVM::Instruction ins = { Opcode::MOVE, idx };
+			SVM::Instruction ins = { Opcode::MOVE, bc.nearst };
 			svm->AddCode(ins);
 		}
 		else if (op == "+"){

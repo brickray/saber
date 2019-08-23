@@ -10,20 +10,19 @@ void SyntaxParse::Parse(Lexer& lex){
 	while (!lexer.IsEnd()){
 		shared_ptr<Astree> node = shared_ptr<Astree>(new AstStatement());
 		if (matchStatement(node)){
-			asts.push_back(node);
+			astProgram->AddChild(node);
 		}
 	}
 }
 
 void SyntaxParse::Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
-	for (int i = 0; i < asts.size(); ++i){
-		BlockCnt bc;
-		asts[i]->Compile(e, svm, bc);
-	}
+	BlockCnt bc;
+	astProgram->Compile(e, svm, bc);
 }
 
 bool SyntaxParse::match(string name, Token** tok){
 	Token* t = lexer.NextToken();
+	if (!t) return false;
 	if (t->GetToken() == name){
 		if (tok) *tok = t;
 		return true;
@@ -114,17 +113,10 @@ bool SyntaxParse::matchString(shared_ptr<Astree>& astree){
 }
 
 bool SyntaxParse::matchPrimary(shared_ptr<Astree>& astree){
-	Token* tok = lexer.NextToken();
-	if (!tok) return false;
-	if (tok->GetTokenType() == ETokenType::ENUMBER ||
-		tok->GetTokenType() == ETokenType::EIDENTIFIER ||
-		tok->GetTokenType() == ETokenType::ESTRING){
-		astree->SetToken(tok);
+	if (matchNumber(astree)) return true;
+	if (matchIdentifier(astree)) return true;
+	if (matchString(astree)) return true;
 
-		return true;
-	}
-
-	lexer.Back();
 	return false;
 }
 
@@ -250,13 +242,41 @@ bool SyntaxParse::matchAndorExpr(shared_ptr<Astree>& astree){
 }
 
 bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> l = shared_ptr<Astree>(new AstLocal());
+	Token* local;
+	if (match("local", &local)){
+		l->SetToken(local);
+		shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+		if (matchPrimary(name)){
+			l->AddChild(name);
+			Token* tok;
+			shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+			if (match("=", &tok)){
+				op->SetToken(tok);
+				op->AddChild(l);
+				shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+				if (!matchAndorExpr(stat)) return false;
+				op->AddChild(stat);
+				astree->AddChild(op);
+				return true;
+			}
+
+			astree->AddChild(l);
+			return true;
+		}
+
+		return false;
+	}
+
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
 	if (matchPrimary(name)){
 		Token* tok;
-		shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 		if (match("=", &tok)){
+			shared_ptr<Astree> g = shared_ptr<Astree>(new AstGlobal());
+			g->AddChild(name);
+			shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 			op->SetToken(tok);
-			op->AddChild(name);
+			op->AddChild(g);
 			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 			if (!matchAndorExpr(stat)) return false;
 			op->AddChild(stat);

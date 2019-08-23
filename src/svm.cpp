@@ -11,6 +11,7 @@ SVM::SVM(){
 	constant.reserve(64);
 	ip = 0;
 	sp = 0;
+	cp = 0;
 
 	Value t, f;
 	t.SetBool(true);

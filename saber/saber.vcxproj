@@ -95,9 +95,12 @@
     <ClInclude Include="..\src\ast\astElif.h" />
     <ClInclude Include="..\src\ast\astFor.h" />
     <ClInclude Include="..\src\ast\astFunc.h" />
+    <ClInclude Include="..\src\ast\astGlobal.h" />
     <ClInclude Include="..\src\ast\astIf.h" />
+    <ClInclude Include="..\src\ast\astLocal.h" />
     <ClInclude Include="..\src\ast\astOperator.h" />
     <ClInclude Include="..\src\ast\astPrimary.h" />
+    <ClInclude Include="..\src\ast\astProgram.h" />
     <ClInclude Include="..\src\ast\astReturn.h" />
     <ClInclude Include="..\src\ast\astStatement.h" />
     <ClInclude Include="..\src\ast\astWhile.h" />

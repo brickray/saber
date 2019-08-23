@@ -32,13 +32,15 @@ protected:
 	vector<shared_ptr<Astree>> children;
 
 public:
+	virtual ~Astree(){};
+
 	void SetToken(Token* tok) { token = tok; }
 	Token* GetToken() { return token; }
 	int GetNumChildren() const { return children.size(); }
 	shared_ptr<Astree > GetChild(int n) { return children[n]; }
 	void AddChild(shared_ptr<Astree>& ast){ children.push_back(ast); }
 
-	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& vm, BlockCnt& bc) = 0;
+	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc) = 0;
 
 	virtual string ToString() const{
 		string ret;

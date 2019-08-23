@@ -16,6 +16,9 @@
 #include "ast\astBreak.h"
 #include "ast\astContinue.h"
 #include "ast\astReturn.h"
+#include "ast\astLocal.h"
+#include "ast\astGlobal.h"
+#include "ast\astProgram.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +
@@ -29,7 +32,7 @@
 // compexpr   : addsubexpr ( == | != | > | >= | < | <= addsubexpr)*
 // andorexpr  : compexpr ( && | || compexpr)* 
 // assignexpr : identifier ( = andorexpr) | andorexpr
-// expr       : andorexpr
+// expr       : assignexpr
 // block      : statement | statement block | empty
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
@@ -49,10 +52,10 @@ SABER_NAMESPACE_BEGIN
 class SyntaxParse{
 private:
 	Lexer lexer;
-	vector<shared_ptr<Astree>> asts;
+	shared_ptr<Astree> astProgram;
 
 public:
-	SyntaxParse(){}
+	SyntaxParse(){ astProgram = shared_ptr<Astree>(new AstProgram()); }
 
 	void Parse(Lexer& lexer);
 	void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
