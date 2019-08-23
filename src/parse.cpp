@@ -63,9 +63,13 @@ bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
 	Token* tok;
 	if (match("return", &tok)){
 		astReturn->SetToken(tok);
-		shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
-		if (matchExpr(expr)){
-			astReturn->AddChild(expr);
+		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+		if (matchExpr(stat)){
+			astReturn->AddChild(stat);
+			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
+		}
+		else if (matchClosure(stat)){
+			astReturn->AddChild(stat);
 			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
 		}
 		astree->AddChild(astReturn);
@@ -255,10 +259,17 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 				op->SetToken(tok);
 				op->AddChild(l);
 				shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-				if (!matchAndorExpr(stat)) return false;
-				op->AddChild(stat);
-				astree->AddChild(op);
-				return true;
+				if (matchAndorExpr(stat)){
+					op->AddChild(stat);
+					astree->AddChild(op);
+					return true;
+				}
+				else if (matchClosure(stat)){
+					op->AddChild(stat);
+					astree->AddChild(op);
+					return true;
+				}
+				return false;
 			}
 
 			astree->AddChild(l);
@@ -278,9 +289,16 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 			op->SetToken(tok);
 			op->AddChild(g);
 			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-			if (!matchAndorExpr(stat)) return false;
-			op->AddChild(stat);
-			astree->AddChild(op);
+			if (matchAndorExpr(stat)){
+				op->AddChild(stat);
+				astree->AddChild(op);
+				return true;
+			}
+			else if (matchClosure(stat)){
+				op->AddChild(stat);
+				astree->AddChild(op);
+				return true;
+			}
 			return true;
 		}
 
@@ -425,7 +443,11 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 		def->AddChild(fun);
 	}
 	else{
-		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,函数名必须以字母开头，由字母和数字组成", tok->GetLineNumber());
+		if (matchPrimary(fun)){
+			Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,函数名必须以字母开头，由字母和数字组成", tok->GetLineNumber());
+			return false;
+		}
+
 		return false;
 	}
 	if (!match("(")){
@@ -474,20 +496,63 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 		lexer.Back();
 		return false;
 	}
+	do{	
+		shared_ptr<Astree> parent = shared_ptr<Astree>(new AstStatement());
+		while (true){
+			shared_ptr<Astree> param = shared_ptr<Astree>(new AstStatement());
+			if (matchExpr(param)){
+				parent->AddChild(param);
+			}
+			else break;
+		}
+		func->AddChild(parent);
+
+		if (!match(")")){
+			Error::GetInstance()->ProcessError("行数:%d, 函数调用语法错误,缺少')'", tok->GetLineNumber());
+			return false;
+		}
+	} while (match("(", &tok));
+
+	astree->AddChild(func);
+
+	return true;
+}
+
+bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> closure = shared_ptr<Astree>(new AstClosure());
+	Token* tok;
+	if (!match("def", &tok)) return false;
+	if (!match("(")){
+		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少'('", tok->GetLineNumber());
+		return false;
+	}
 	while (true){
-		shared_ptr<Astree> param = shared_ptr<Astree>(new AstStatement());
-		if (matchExpr(param)){
-			func->AddChild(param);
+		shared_ptr<Astree> param = shared_ptr<Astree>(new AstPrimary());
+		if (matchIdentifier(param)){
+			closure->AddChild(param);
 		}
 		else break;
 	}
+	AstClosure* d = dynamic_cast<AstClosure*>(closure.get());
+	d->SetNumParams(d->GetNumChildren());
 
 	if (!match(")")){
-		Error::GetInstance()->ProcessError("行数:%d, 函数调用语法错误,缺少')'", tok->GetLineNumber());
+		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少')'", tok->GetLineNumber());
 		return false;
 	}
 
-	astree->AddChild(func);
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	while (true){
+		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
+		if (!matchStatement(statement)) break;
+		stat->AddChild(statement);
+	}
+
+	closure->AddChild(stat);
+
+	if (!match("end")) return false;
+
+	astree->AddChild(closure);
 
 	return true;
 }
@@ -502,6 +567,8 @@ bool SyntaxParse::matchStatement(shared_ptr<Astree>& astree){
 	if (matchDef(astree)) return true;
 
 	if (matchFunc(astree)) return true;
+
+	if (matchClosure(astree)) return true;
 
 	if (matchExpr(astree)) return true;
 

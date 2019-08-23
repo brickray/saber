@@ -14,7 +14,7 @@ public:
 	int GetNumRetParams() const { return numRetParams; }
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
-		if (bc.variableIndex == 0){
+		if (!e->GetOutter()){
 			Error::GetInstance()->ProcessError("行数:%d, 必需在函数体中才能使用关键字[return]\n", token->GetLineNumber());
 
 			return;
@@ -23,7 +23,7 @@ public:
 		for (int i = 0; i < children.size(); ++i)
 			children[i]->Compile(e, svm, bc);
 
-		SVM::Instruction ret = { Opcode::RET, 0 };
+		SVM::Instruction ret(Opcode::RET, 0);
 		ret.operand |= (numRetParams << 16);
 		int rp = svm->AddCode(ret);
 

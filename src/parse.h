@@ -19,6 +19,7 @@
 #include "ast\astLocal.h"
 #include "ast\astGlobal.h"
 #include "ast\astProgram.h"
+#include "ast\astClosure.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +
@@ -31,19 +32,21 @@
 // addsubexpr : muldivexpr ( + | - | += | -= muldivexpr)*
 // compexpr   : addsubexpr ( == | != | > | >= | < | <= addsubexpr)*
 // andorexpr  : compexpr ( && | || compexpr)* 
-// assignexpr : identifier ( = andorexpr) | andorexpr
+// assignexpr : identifier ( = (andorexpr | closure)) | andorexpr
 // expr       : assignexpr
 // block      : statement | statement block | empty
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
 // for        : 'for' expr ',' expr (',' expr) 'do' block 'end'
-// def        : 'def' identifier '(' identifier *')' block ('return' (expr)) 'end'
+// def        : 'def' identifier '(' identifier *')' block ('return' (expr | closure)) 'end'
 // func       : identifier '(' primary ')' 
+// closure    : 'def' '(' identifier *')' block ('return' (expr | closure)) 'end'
 // statement  : if
 //			  | while
 //            | for
 //            | def
 //            | func
+//            | closure
 //            | expr 
 // program    : statement
 
@@ -82,6 +85,7 @@ private:
 	bool matchFor(shared_ptr<Astree>& astree);
 	bool matchDef(shared_ptr<Astree>& astree);
 	bool matchFunc(shared_ptr<Astree>& astree);
+	bool matchClosure(shared_ptr<Astree>& astree);
 	bool matchStatement(shared_ptr<Astree>& astree);
 };
 

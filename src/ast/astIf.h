@@ -15,15 +15,15 @@ public:
 	}
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
-		SVM::Instruction nop = { Opcode::NOP };
+		SVM::Instruction nop(Opcode::NOP);
 
 		children[0]->Compile(e, svm, bc);
 		
 		int next = 0;
-		SVM::Instruction jz = { Opcode::JZ, next };
+		SVM::Instruction jz(Opcode::JZ, next);
 		int jumpAddress = svm->AddCode(jz);
 		children[1]->Compile(e, svm, bc);
-		SVM::Instruction jump = { Opcode::JUMP, 0 };
+		SVM::Instruction jump(Opcode::JUMP, 0);
 		int endAddress = svm->AddCode(jump);
 		next = svm->AddCode(nop);
 		jz.operand = next;

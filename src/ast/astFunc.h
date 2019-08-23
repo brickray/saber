@@ -18,15 +18,23 @@ public:
 		}
 		
 		int func = e->GetSymbol(funcName).address;
-		int numParams = children.size() - 1;
-		for (int i = 0; i < numParams; ++i){
-			children[i + 1]->Compile(e, svm, bc);
-		}
+		for (int j = 1; j < children.size(); ++j){
+			int numParams = children[j]->GetNumChildren();
+			for (int i = 0; i < numParams; ++i){
+				children[j]->GetChild(i)->Compile(e, svm, bc);
+			}
 
-		SVM::Instruction push = { Opcode::PUSH, func };
-		svm->AddCode(push);
-		SVM::Instruction call = { Opcode::CALL, numParams };
-		svm->AddCode(call);
+			if (j == 1){
+				SVM::Instruction push(Opcode::PUSH, func);
+				svm->AddCode(push);
+			}
+			else{
+				SVM::Instruction push(Opcode::PUSH, -numParams, true);
+				svm->AddCode(push);
+			}
+			SVM::Instruction call(Opcode::CALL, numParams);
+			svm->AddCode(call);
+		}
 	}
 };
 

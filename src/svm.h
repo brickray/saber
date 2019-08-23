@@ -10,7 +10,13 @@ class SVM{
 public:
 	struct Instruction{
 		char opcode;
+		bool relative;
+		char padding0;
+		char padding1;
 		int operand;
+
+		Instruction(char opc, int ope = 0, bool r = false)
+		:opcode(opc), operand(ope), relative(r){}
 	};
 
 protected:

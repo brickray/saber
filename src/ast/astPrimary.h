@@ -26,20 +26,20 @@ public:
 			}
 
 			int idx = svm->AddConstant(value);
-			SVM::Instruction ins = { Opcode::PUSH, idx };
+			SVM::Instruction ins(Opcode::PUSH, idx);
 			svm->AddCode(ins);
 			break;
 		}
 		case ETokenType::EIDENTIFIER:
 			if (token->GetToken() == "true"){
 				int idx = -1;
-				SVM::Instruction ins = { Opcode::PUSH, idx };
+				SVM::Instruction ins(Opcode::PUSH, idx);
 				svm->AddCode(ins);
 				return;
 			}
 			else if (token->GetToken() == "false"){
 				int idx = -2;
-				SVM::Instruction ins = { Opcode::PUSH, idx };
+				SVM::Instruction ins(Opcode::PUSH, idx);
 				svm->AddCode(ins);
 				return;
 			}
@@ -47,7 +47,7 @@ public:
 			if (e->HasSymbol(token->GetToken())){
 				int idx = e->GetSymbol(token->GetToken()).address;
 
-				SVM::Instruction ins = { Opcode::PUSH, idx };
+				SVM::Instruction ins(Opcode::PUSH, idx);
 				svm->AddCode(ins);
 
 				bc.nearst = idx;
@@ -60,7 +60,7 @@ public:
 			value.SetString(token->GetToken());
 
 			int idx = svm->AddConstant(value);
-			SVM::Instruction ins = { Opcode::PUSH, idx };
+			SVM::Instruction ins(Opcode::PUSH, idx);
 			svm->AddCode(ins);
 			break;
 		}

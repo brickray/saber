@@ -13,28 +13,28 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::MOVE, bc.nearst };
+			SVM::Instruction ins(Opcode::MOVE, bc.nearst);
 			svm->AddCode(ins);
 		}
 		else if (op == "+"){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::ADD };
+			SVM::Instruction ins(Opcode::ADD);
 			svm->AddCode(ins);
 		}
 		else if (op == "-"){
 			if (children.size() == 1){
 				//neg
 				children[0]->Compile(e, svm, bc);
-				SVM::Instruction ins = { Opcode::NEG };
+				SVM::Instruction ins(Opcode::NEG);
 				svm->AddCode(ins);
 			}
 			else{ //sub
 				children[1]->Compile(e, svm, bc);
 				children[0]->Compile(e, svm, bc);
 
-				SVM::Instruction ins = { Opcode::SUB };
+				SVM::Instruction ins(Opcode::SUB);
 				svm->AddCode(ins);
 			}
 		}
@@ -42,28 +42,28 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::MUL };
+			SVM::Instruction ins(Opcode::MUL);
 			svm->AddCode(ins);
 		}
 		else if (op == "/"){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::DIV };
+			SVM::Instruction ins(Opcode::DIV);
 			svm->AddCode(ins);
 		}
 		else if (op == "%"){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::MOD };
+			SVM::Instruction ins(Opcode::MOD);
 			svm->AddCode(ins);
 		}
 		else if (op == "+="){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::ADD };
+			SVM::Instruction ins(Opcode::ADD);
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
@@ -73,7 +73,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::SUB };
+			SVM::Instruction ins(Opcode::SUB);
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
@@ -83,7 +83,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::MUL };
+			SVM::Instruction ins(Opcode::MUL);
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
@@ -93,7 +93,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::DIV };
+			SVM::Instruction ins(Opcode::DIV);
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
@@ -103,7 +103,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::MOD };
+			SVM::Instruction ins(Opcode::MOD);
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
@@ -113,56 +113,56 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::LT };
+			SVM::Instruction ins(Opcode::LT);
 			svm->AddCode(ins);
 		}
 		else if (op == ">"){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::GT };
+			SVM::Instruction ins(Opcode::GT);
 			svm->AddCode(ins);
 		}
 		else if (op == "<="){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 			
-			SVM::Instruction ins = { Opcode::LE };
+			SVM::Instruction ins(Opcode::LE);
 			svm->AddCode(ins);
 		}
 		else if (op == ">="){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 			
-			SVM::Instruction ins = { Opcode::GE };
+			SVM::Instruction ins(Opcode::GE);
 			svm->AddCode(ins);
 		}
 		else if (op == "=="){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 			
-			SVM::Instruction ins = { Opcode::EQ };
+			SVM::Instruction ins(Opcode::EQ);
 			svm->AddCode(ins);
 		}
 		else if (op == "!="){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 			
-			SVM::Instruction ins = { Opcode::NE };
+			SVM::Instruction ins(Opcode::NE);
 			svm->AddCode(ins);
 		}
 		else if (op == "||"){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::OR };
+			SVM::Instruction ins(Opcode::OR);
 			svm->AddCode(ins);
 		}
 		else if (op == "&&"){
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins = { Opcode::AND };
+			SVM::Instruction ins(Opcode::AND);
 			svm->AddCode(ins);
 		}
 	}

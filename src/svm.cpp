@@ -87,6 +87,7 @@ void SVM::Run(){
 	while (ip < numCode){
 		Instruction ins = code[ip];
 		char op = ins.opcode;
+		bool relative = ins.relative;
 		int operand = ins.operand;
 		switch (op){
 		case Opcode::MOVE:
@@ -158,9 +159,14 @@ void SVM::Run(){
 		}
 		case Opcode::PUSH:{
 			Value src;
-			if (isStack(operand)) src = stack[cp + operand];
-			else if (isGlobal(operand)) src = global[decodeGlobalIndex(operand)];
-			else src = constant[decodeConstantIndex(operand)];
+			if (relative){
+				src = stack[sp - 1 + operand];
+			}
+			else{
+				if (isStack(operand)) src = stack[cp + operand];
+				else if (isGlobal(operand)) src = global[decodeGlobalIndex(operand)];
+				else src = constant[decodeConstantIndex(operand)];
+			}
 
 			stack[sp++] = src;
 			break;
@@ -309,8 +315,8 @@ string SVM::ShowCode(){
 		"JUMP",
 		"CALL",
 		"RET",
-		"PUSH",
 		"RESERVE",
+		"PUSH",
 	};
 
 	string ret;
@@ -319,9 +325,15 @@ string SVM::ShowCode(){
 		ret += to_string(i);
 		ret += "  ";
 		ret += c;
-		if (code[i].opcode >= Opcode::ENUM0){
+		if (code[i].opcode >= Opcode::ENUM0 && code[i].opcode < Opcode::ENUM1){
 			ret += "  ";
 			ret += to_string(code[i].operand);
+		}
+		else if (code[i].opcode >= Opcode::ENUM1 && code[i].opcode < Opcode::ENUM2){
+			ret += "  ";
+			ret += to_string(code[i].operand);
+			ret += "  ";
+			ret += to_string(code[i].relative);
 		}
 
 		ret += "\n";

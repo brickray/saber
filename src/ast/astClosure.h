@@ -1,11 +1,11 @@
-#ifndef H_AST_ASTDEF_H
-#define H_AST_ASTDEF_H
+#ifndef H_AST_ASTCLOSURE_H
+#define H_AST_ASTCLOSURE_H
 
 #include "../astree.h"
 
 SABER_NAMESPACE_BEGIN
 
-class AstDef : public Astree{
+class AstClosure : public Astree{
 private:
 	int numParams = 0;
 public:
@@ -24,20 +24,18 @@ public:
 		Value func;
 		func.SetFunction(start);
 		int funcAddress = svm->AddGlobal(func);
-		SymbolInfo si = { func, funcAddress };
-		e->SetSymbol(children[0]->GetToken()->GetToken(), si);
 
 		shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
 		local->SetOutter(e);
-		for (int i = 1; i < numParams + 1; ++i){
+		for (int i = 0; i < numParams; ++i){
 			SymbolInfo si;
-			si.address = i - 1;
+			si.address = i;
 			local->SetSymbol(children[i]->GetToken()->GetToken(), si);
 		}
 
 		BlockCnt subBc;
 		subBc.variableIndex = numParams + 3;
-		for (int i = numParams + 1; i < children.size(); ++i){
+		for (int i = numParams; i < children.size(); ++i){
 			children[i]->Compile(local, svm, subBc);
 		}
 		reserve.operand = subBc.variableIndex - numParams - 3;
@@ -63,6 +61,9 @@ public:
 		next = svm->AddCode(nop);
 		jump.operand = next;
 		svm->SetCode(jumpAddress, jump);
+
+		SVM::Instruction push(Opcode::PUSH, funcAddress);
+		svm->AddCode(push);
 	}
 };
 

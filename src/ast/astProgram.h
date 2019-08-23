@@ -8,7 +8,7 @@ SABER_NAMESPACE_BEGIN
 class AstProgram : public Astree{
 public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
-		SVM::Instruction reserve = { Opcode::RESERVE };
+		SVM::Instruction reserve(Opcode::RESERVE);
 		int reserveAddress = svm->AddCode(reserve);
 
 		for (int i = 0; i < children.size(); ++i)
