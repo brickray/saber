@@ -20,8 +20,10 @@ public:
 			return;
 		}
 
+		BlockCnt subBc;
+		subBc.closure = true;
 		for (int i = 0; i < children.size(); ++i)
-			children[i]->Compile(e, svm, bc);
+			children[i]->Compile(e, svm, subBc);
 
 		SVM::Instruction ret(Opcode::RET, 0);
 		ret.operand |= (numRetParams << 16);

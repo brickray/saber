@@ -13,6 +13,7 @@ SABER_NAMESPACE_BEGIN
 
 struct BlockCnt{
 	bool isloop;
+	bool closure;
 	vector<int> bps; //break points
 	vector<int> cps; //continue points
 	vector<int> elifs; //else if
@@ -22,6 +23,7 @@ struct BlockCnt{
 
 	BlockCnt(){
 		isloop = false;
+		closure = false;
 		variableIndex = 0;
 	}
 };

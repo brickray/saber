@@ -6,20 +6,42 @@
 
 SABER_NAMESPACE_BEGIN
 
-void mathParamsNumCheck(string func, int numParams){
-	if (numParams != 1){
-		Error::GetInstance()->ProcessError("%s函数只接收一个参数\n", func.c_str());
+void checkParamsNum(string func, int numParams, int expect = 1){
+	if (numParams != expect){
+		Error::GetInstance()->ProcessError("%s函数只接收%d个参数\n", func.c_str(), expect);
 	}
 
 	return;
 }
 
-void mathParamsTypeCheck(string func, Value& v){
-	if (!(v.IsFloat() || v.IsInteger())){
-		Error::GetInstance()->ProcessError("%s函数参数类型必须为整数或浮点数\n", func.c_str());
+void checkBoolean(string func, Value& v, int idx = 1){
+	if (!v.IsBoolean()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为boolean\n", func.c_str(), idx);
 	}
+}
 
-	return;
+void checkNumber(string func, Value& v, int idx = 1){
+	if (!v.IsNumber()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为number\n", func.c_str(), idx);
+	}
+}
+
+void checkInteger(string func, Value& v, int idx = 1){
+	if (!v.IsInteger()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为integer\n", func.c_str(), idx);
+	}
+}
+
+void checkFloat(string func, Value& v, int idx = 1){
+	if (!v.IsFloat()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为float\n", func.c_str(), idx);
+	}
+}
+
+void checkString(string func, Value& v, int idx = 1){
+	if (!v.IsString()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为string\n", func.c_str(), idx);
+	}
 }
 
 static int print(SVM* svm, int numParams){
@@ -38,10 +60,11 @@ static int print(SVM* svm, int numParams){
 	return numParams;
 }
 
+//------------------------------------math lib---------------------
 static int sin(SVM* svm, int numParams){
-	mathParamsNumCheck("sin", numParams);
+	checkParamsNum("sin", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("sin", v);
+	checkNumber("sin", v);
 
 	float ret;
 	if (v.IsFloat()) ret = sinf(DegreeToRadians(v.GetFloat()));
@@ -53,9 +76,9 @@ static int sin(SVM* svm, int numParams){
 }
 
 static int asin(SVM* svm, int numParams){
-	mathParamsNumCheck("asin", numParams);
+	checkParamsNum("asin", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("asin", v);
+	checkNumber("asin", v);
 
 	float ret;
 	if (v.IsFloat()) ret = asinf(v.GetFloat());
@@ -67,9 +90,9 @@ static int asin(SVM* svm, int numParams){
 }
 
 static int cos(SVM* svm, int numParams){
-	mathParamsNumCheck("cos", numParams);
+	checkParamsNum("cos", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("cos", v);
+	checkNumber("cos", v);
 
 	float ret;
 	if (v.IsFloat()) ret = cosf(DegreeToRadians(v.GetFloat()));
@@ -81,9 +104,9 @@ static int cos(SVM* svm, int numParams){
 }
 
 static int acos(SVM* svm, int numParams){
-	mathParamsNumCheck("acos", numParams);
+	checkParamsNum("acos", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("acos", v);
+	checkNumber("acos", v);
 
 	float ret;
 	if (v.IsFloat()) ret = acosf(v.GetFloat());
@@ -95,9 +118,9 @@ static int acos(SVM* svm, int numParams){
 }
 
 static int tan(SVM* svm, int numParams){
-	mathParamsNumCheck("tan", numParams);
+	checkParamsNum("tan", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("tan", v);
+	checkNumber("tan", v);
 
 	float ret;
 	if (v.IsFloat()) ret = tanf(DegreeToRadians(v.GetFloat()));
@@ -109,9 +132,9 @@ static int tan(SVM* svm, int numParams){
 }
 
 static int atan(SVM* svm, int numParams){
-	mathParamsNumCheck("atan", numParams);
+	checkParamsNum("atan", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("atan", v);
+	checkNumber("atan", v);
 
 	float ret;
 	if (v.IsFloat()) ret = atanf(v.GetFloat());
@@ -123,9 +146,9 @@ static int atan(SVM* svm, int numParams){
 }
 
 static int radians(SVM* svm, int numParams){
-	mathParamsNumCheck("radians", numParams);
+	checkParamsNum("radians", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("radians", v);
+	checkNumber("radians", v);
 
 	float ret;
 	if (v.IsFloat()) ret = DegreeToRadians(v.GetFloat());
@@ -137,9 +160,9 @@ static int radians(SVM* svm, int numParams){
 }
 
 static int degree(SVM* svm, int numParams){
-	mathParamsNumCheck("degree", numParams);
+	checkParamsNum("degree", numParams);
 	Value v = svm->PopStack();
-	mathParamsTypeCheck("degree", v);
+	checkNumber("degree", v);
 
 	float ret;
 	if (v.IsFloat()) ret = RadiansToDegree(v.GetFloat());
@@ -150,10 +173,85 @@ static int degree(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int abs(SVM* svm, int numParams){
+	checkParamsNum("abs", numParams);
+	Value v = svm->PopStack();
+	checkNumber("abs", v);
+
+	float ret;
+	if (v.IsFloat()) ret = fabsf(v.GetFloat());
+	else if (v.IsInteger()) ret = fabsf(v.GetInteger());
+
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+static int log(SVM* svm, int numParams){
+	checkParamsNum("log", numParams);
+	Value v = svm->PopStack();
+	checkNumber("log", v);
+
+	float ret;
+	if (v.IsFloat()) ret = logf(v.GetFloat());
+	else if (v.IsInteger()) ret = logf(v.GetInteger());
+
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+static int exp(SVM* svm, int numParams){
+	checkParamsNum("exp", numParams);
+	Value v = svm->PopStack();
+	checkNumber("exp", v);
+
+	float ret;
+	if (v.IsFloat()) ret = expf(v.GetFloat());
+	else if (v.IsInteger()) ret = expf(v.GetInteger());
+
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+static int sqrt(SVM* svm, int numParams){
+	checkParamsNum("sqrt", numParams);
+	Value v = svm->PopStack();
+	checkNumber("sqrt", v);
+
+	float ret;
+	if (v.IsFloat()) ret = sqrtf(v.GetFloat());
+	else if (v.IsInteger()) ret = sqrtf(v.GetInteger());
+
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+static int pow(SVM* svm, int numParams){
+	checkParamsNum("pow", numParams, 2);
+	Value exponent = svm->PopStack();
+	Value base = svm->PopStack();
+	checkNumber("pow", base);
+	checkNumber("pow", exponent, 2);
+
+	float b = 1, e = 1;
+	if (base.IsFloat()) b = base.GetFloat();
+	else if (base.IsInteger()) b = base.GetInteger();
+	if (exponent.IsFloat()) e = exponent.GetFloat();
+	else if (exponent.IsInteger()) e = exponent.GetInteger();
+
+	float ret = powf(b, e);
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+//---------------------------------os lib-------------------------
 static int gettime(SVM* svm, int numParams){
-	if (numParams > 0){
-		Error::GetInstance()->ProcessError("gettime函数参数过多\n");
-	}
+	checkParamsNum("gettime", numParams, 0);
+
 	time_t t = time(nullptr);
 	string str = ctime(&t);
 	//去掉末尾的换行符
@@ -164,9 +262,7 @@ static int gettime(SVM* svm, int numParams){
 }
 
 static int getclock(SVM* svm, int numParams){
-	if (numParams > 0){
-		Error::GetInstance()->ProcessError("getclock函数参数过多\n");
-	}
+	checkParamsNum("getclock", numParams, 0);
 	
 	clock_t t = clock();
 	t /= CLOCKS_PER_SEC;
@@ -176,16 +272,188 @@ static int getclock(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int osexit(SVM* svm, int numParams){
+	checkParamsNum("exit", numParams, 0);
+
+	exit(0);
+	
+	return numParams;
+}
+
 static int type(SVM* svm, int numParams){
-	if (numParams != 1){
-		Error::GetInstance()->ProcessError("type函数只接受1个参数\n");
-	}
+	checkParamsNum("type", numParams, 1);
 
 	Value v = svm->PopStack();
 	
 	svm->PushString(v.GetTypeString());
 
 	return numParams;
+}
+
+//------------------------------str lib------------------------
+static int len(SVM* svm, int numParams){
+	checkParamsNum("len", numParams);
+	Value str = svm->PopStack();
+	checkString("len", str);
+
+	svm->PushInt(str.GetString().length());
+
+	return numParams;
+}
+
+static int substr(SVM* svm, int numParams){
+	checkParamsNum("substr", numParams, 3);
+	Value endV = svm->PopStack();
+	Value startV = svm->PopStack();
+	Value strV = svm->PopStack();
+	checkString("substr", strV);
+	checkInteger("substr", startV, 2);
+	checkInteger("substr", endV, 3);
+
+	int start = startV.GetInteger();
+	int end = endV.GetInteger();
+	int length = end - start + 1;
+	string str = strV.GetString();
+	svm->PushString(str.substr(start, length));
+
+	return numParams;
+}
+
+static int findfirst(SVM* svm, int numParams){
+	Value strV, findV, startV;
+	if (numParams == 2){
+		findV = svm->PopStack();
+		strV = svm->PopStack();
+
+		checkString("findfirst", strV);
+		checkString("findfirst", findV, 2);
+	}
+	else if (numParams == 3){
+		startV = svm->PopStack();
+		findV = svm->PopStack();
+		strV = svm->PopStack();
+
+		checkString("findfirst", strV);
+		checkString("findfirst", findV, 2);
+		checkInteger("findfirst", startV, 3);
+	}
+	else{
+		Error::GetInstance()->ProcessError("findfirst函数只接收2个或3个参数\n");
+	}
+
+	string str = strV.GetString();
+	string find = findV.GetString();
+	int start = 0;
+	if (numParams == 3) start = startV.GetInteger();
+
+	svm->PushInt(str.find_first_of(find, start));
+
+	return numParams;
+}
+
+static int findlast(SVM* svm, int numParams){
+	Value strV, findV, startV;
+	if (numParams == 2){
+		findV = svm->PopStack();
+		strV = svm->PopStack();
+
+		checkString("findlast", strV);
+		checkString("findlast", findV, 2);
+	}
+	else if (numParams == 3){
+		startV = svm->PopStack();
+		findV = svm->PopStack();
+		strV = svm->PopStack();
+
+		checkString("findlast", strV);
+		checkString("findlast", findV, 2);
+		checkInteger("findlast", startV, 3);
+	}
+	else{
+		Error::GetInstance()->ProcessError("findlast函数只接收2个或3个参数\n");
+	}
+
+	string str = strV.GetString();
+	string find = findV.GetString();
+	int start = str.length();
+	if (numParams == 3) start = startV.GetInteger();
+
+	svm->PushInt(str.find_last_of(find, start));
+
+	return numParams;
+}
+
+static int findsub(SVM* svm, int numParams){
+	Value strV, findV, startV;
+	if (numParams == 2){
+		findV = svm->PopStack();
+		strV = svm->PopStack();
+
+		checkString("findsub", strV);
+		checkString("findsub", findV, 2);
+	}
+	else if (numParams == 3){
+		startV = svm->PopStack();
+		findV = svm->PopStack();
+		strV = svm->PopStack();
+
+		checkString("findsub", strV);
+		checkString("findsub", findV, 2);
+		checkInteger("findsub", startV, 3);
+	}
+	else{
+		Error::GetInstance()->ProcessError("findsub函数只接收2个或3个参数\n");
+	}
+
+	string str = strV.GetString();
+	string find = findV.GetString();
+	int start = 0;
+	if (numParams == 3) start = startV.GetInteger();
+
+	svm->PushInt(str.find(find, start));
+
+	return numParams;
+}
+
+static int insert(SVM* svm, int numParams){
+	checkParamsNum("insert", numParams, 3);
+	Value pV = svm->PopStack();
+	Value insertV = svm->PopStack();
+	Value strV = svm->PopStack();
+	checkString("insert", strV);
+	checkString("insert", insertV, 2);
+	checkInteger("insert", pV, 3);
+
+	string str = strV.GetString();
+	string i = insertV.GetString();
+	int p0 = pV.GetInteger();
+	
+	svm->PushString(str.insert(p0, i));
+
+	return numParams;
+}
+
+static int reverse(SVM* svm, int numParams){
+	checkParamsNum("reverse", numParams, 1);
+	Value strV = svm->PopStack();
+	checkString("reverse", strV);
+
+	string str = strV.GetString();
+	string ret;
+	ret.resize(str.length());
+	int size = str.length();
+	for (int i = 0; i < size; ++i){
+		ret[i] = str[size - i - 1];
+	}
+	
+	svm->PushString(ret);
+
+	return numParams;
+}
+
+//------------------------------io lib-------------------------
+static int open(SVM* svm, int numParams){
+	
 }
 
 static RegisterFunction native[] = {
@@ -198,9 +466,22 @@ static RegisterFunction native[] = {
 	{ "atan", atan },
 	{ "radians", radians },
 	{ "degree", degree },
+	{ "abs", abs },
+	{ "log", log },
+	{ "exp", exp },
+	{ "sqrt", sqrt },
+	{ "pow", pow },
 	{ "gettime", gettime },
 	{ "getclock", getclock },
+	{ "exit", osexit },
 	{ "type", type },
+	{ "len", len },
+	{ "substr", substr },
+	{ "findfirst", findfirst },
+	{ "findlast", findlast },
+	{ "findsub", findsub },
+	{ "insert", insert },
+	{ "reverse", reverse },
 	{ "", nullptr },
 };
 
