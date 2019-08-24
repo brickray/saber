@@ -3,6 +3,7 @@
 #include "error.h"
 
 #include <time.h>
+#include <sys\stat.h>
 
 SABER_NAMESPACE_BEGIN
 
@@ -41,6 +42,12 @@ void checkFloat(string func, Value& v, int idx = 1){
 void checkString(string func, Value& v, int idx = 1){
 	if (!v.IsString()){
 		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为string\n", func.c_str(), idx);
+	}
+}
+
+void checkLightUData(string func, Value& v, int idx = 1){
+	if (!v.IsLightUData()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为lightudata\n", func.c_str(), idx);
 	}
 }
 
@@ -452,8 +459,110 @@ static int reverse(SVM* svm, int numParams){
 }
 
 //------------------------------io lib-------------------------
+static int fexist(SVM* svm, int numParams){
+	Value fileV, modeV;
+	checkParamsNum("fexist", numParams);
+	fileV = svm->PopStack();
+	checkString("fexist", fileV);
+
+	string file = fileV.GetString();
+	string mode = "r";
+
+	FILE* f = nullptr;
+	f = fopen(file.c_str(), mode.c_str());
+	if (f) svm->PushBool(true);
+	else svm->PushBool(false);
+
+	return numParams;
+}
+
 static int open(SVM* svm, int numParams){
+	Value fileV, modeV;
+	if (numParams == 1){
+		fileV = svm->PopStack();
+
+		checkString("open", fileV);
+	}
+	else if (numParams == 2){
+		modeV = svm->PopStack();
+		fileV = svm->PopStack();
+
+		checkString("open", fileV);
+		checkString("open", modeV, 2);
+	}
+	else{
+		Error::GetInstance()->ProcessError("open函数只接收1个或2个参数\n");
+	}
+
+	string file = fileV.GetString();
+	string mode = "r";
+	if (numParams == 2) mode = modeV.GetString();
+
+	FILE* f = nullptr;
+	f = fopen(file.c_str(), mode.c_str());
 	
+	svm->PushLightUData(int(f));
+
+	return numParams;
+}
+
+static int read(SVM* svm, int numParams){
+	Value file;
+	checkParamsNum("read", numParams);
+	file = svm->PopStack();
+	checkLightUData("read", file);
+
+	FILE* f = reinterpret_cast<FILE*>(file.GetLightUData());
+	fseek(f, 0, SEEK_END);
+	long length = ftell(f);
+	rewind(f);
+	char* str = new char[length + 1];
+	int result = fread(str, 1, length, f);
+	str[result] = '\0';
+	svm->PushString(str);
+	delete[] str;
+
+	return numParams;
+}
+
+static int write(SVM* svm, int numParams){
+	Value file, data;
+	checkParamsNum("write", numParams, 2);
+	data = svm->PopStack();
+	file = svm->PopStack();
+	checkLightUData("write", file);
+
+	FILE* f = reinterpret_cast<FILE*>(file.GetLightUData());
+	if (data.IsBoolean()){
+		bool b = data.GetBoolean();
+		fwrite(&b, sizeof(bool), 1, f);
+	}
+	else if (data.IsInteger()){
+		int i = data.GetInteger();
+		fwrite(&i, sizeof(int), 1, f);
+	}
+	else if (data.IsFloat()){
+		float fl = data.GetFloat();
+		fwrite(&fl, sizeof(float), 1, f);
+	}
+	else if (data.IsString()){
+		string s = data.GetString(); 
+		fwrite(s.c_str(), s.length()*sizeof(char), 1, f);
+	}
+
+	return numParams;
+}
+
+static int close(SVM* svm, int numParams){
+	Value file;
+	checkParamsNum("close", numParams);
+	file = svm->PopStack();
+	checkLightUData("close", file);
+
+	FILE* f = reinterpret_cast<FILE*>(file.GetLightUData());
+	fclose(f);
+
+	return numParams;
 }
 
 static RegisterFunction native[] = {
@@ -482,6 +591,11 @@ static RegisterFunction native[] = {
 	{ "findsub", findsub },
 	{ "insert", insert },
 	{ "reverse", reverse },
+	{ "fexist", fexist },
+	{ "open", open },
+	{ "read", read },
+	{ "write", write },
+	{ "close", close },
 	{ "", nullptr },
 };
 

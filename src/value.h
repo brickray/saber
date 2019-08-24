@@ -12,6 +12,7 @@ enum EValueType{
 	ESTRING     = 8,
 	EFUNC       = 16,
 	ENATIVEFUNC = 32,
+	ELIGHTUDATA = 64,
 	ENUMBER     = EINTEGER | EFLOAT,
 };
 
@@ -47,6 +48,7 @@ public:
 		else if (IsInteger()) ret = "integer";
 		else if (IsFloat()) ret = "float";
 		else if (IsString()) ret = "string";
+		else if (IsLightUData()) ret = "lightudata";
 
 		return ret;
 	}
@@ -54,8 +56,9 @@ public:
 	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i; }
 	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; }
 	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; }
-	void SetFunction(int i) { type = EValueType::EFUNC, value.iValue = i; }
+	void SetFunction(int i) { type = EValueType::EFUNC; value.iValue = i; }
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; }
+	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -63,12 +66,14 @@ public:
 	bool IsString() const { return type == EValueType::ESTRING; }
 	bool IsFunction() const { return type == EValueType::EFUNC; }
 	bool IsNativeFunction() const { return type == EValueType::ENATIVEFUNC; }
+	bool IsLightUData() const { return type == EValueType::ELIGHTUDATA; }
 	bool GetBoolean() const { return value.bValue; }
 	int GetInteger() const { return value.iValue; }
 	float GetFloat() const { return value.fValue; }
 	string GetString() const { return value.sValue; }
 	int GetFunction() const { return value.iValue; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
+	int GetLightUData() const { return value.iValue; }
 
 	Value operator-(){
 		Value va;
@@ -486,6 +491,9 @@ public:
 		}
 		else if (IsString()){
 			ret = value.sValue;
+		}
+		else if (IsLightUData()){
+			ret = to_string(value.iValue);
 		}
 		else{
 			ret = "function";

@@ -100,7 +100,44 @@ void Lexer::parseLine(string line){
 		else if (c == '\"'){
 			c = line[++p];
 			while (c != '\"'){
-				tok += c;
+				if (c == '\\'){
+					char next = line[++p];
+					switch (next){
+					case 'a':
+						tok += '\a';
+						break;
+					case 'b':
+						tok += '\b';
+						break;
+					case 'f':
+						tok += '\f';
+						break;
+					case 'n':
+						tok += '\n';
+						break;
+					case 'r':
+						tok += '\r';
+						break;
+					case 't':
+						tok += '\t';
+						break;
+					case 'v':
+						tok += '\v';
+						break;
+					case '\\':
+						tok += '\\';
+						break;
+					case '?':
+						tok += '\?';
+						break;
+					default:
+						tok += c;
+						tok += next;
+					}
+				}
+				else{
+					tok += c;
+				}
 				c = line[++p];
 			}
 			c = line[++p];

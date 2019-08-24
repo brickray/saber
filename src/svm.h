@@ -44,6 +44,7 @@ public:
 	void PushInt(int i);
 	void PushFloat(float f);
 	void PushString(string s);
+	void PushLightUData(int i);
 	Value PopStack();
 
 	void Run();

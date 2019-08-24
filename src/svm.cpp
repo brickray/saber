@@ -78,6 +78,12 @@ void SVM::PushString(string s){
 	PushStack(v);
 }
 
+void SVM::PushLightUData(int i){
+	Value v;
+	v.SetLightUData(i);
+	PushStack(v);
+}
+
 Value SVM::PopStack(){
 	return stack[--sp];
 }
