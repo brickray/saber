@@ -176,12 +176,12 @@ void Lexer::parseLine(string line){
 			c = line[++p];
 			continue;
 		}
-		else if (c == '('){
+		else if (c == '(' || c == '{'){
 			tok += c;
 			c = line[++p];
 			type = ETokenType::ELEFT_BRACKET;
 		}
-		else if (c == ')'){
+		else if (c == ')' || c == '}'){
 			tok += c;
 			c = line[++p];
 			type = ETokenType::ERIGHT_BRACKET;
@@ -190,6 +190,11 @@ void Lexer::parseLine(string line){
 			tok += c;
 			c = line[++p];
 			type = ETokenType::ECOMMA;
+		}
+		else if (c == '.'){
+			tok += c;
+			c = line[++p];
+			type = ETokenType::EDOT;
 		}
 		else if (c == '\0' || c == '\t'){
 			if (p < size) c = line[++p];

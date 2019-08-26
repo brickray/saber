@@ -67,7 +67,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;NDEBUG;_CONSOLE;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
     </ClCompile>
     <Link>
@@ -90,8 +90,10 @@
   <ItemGroup>
     <ClInclude Include="..\src\astree.h" />
     <ClInclude Include="..\src\ast\astBreak.h" />
+    <ClInclude Include="..\src\ast\astClosure.h" />
     <ClInclude Include="..\src\ast\astContinue.h" />
     <ClInclude Include="..\src\ast\astDef.h" />
+    <ClInclude Include="..\src\ast\astDot.h" />
     <ClInclude Include="..\src\ast\astElif.h" />
     <ClInclude Include="..\src\ast\astFor.h" />
     <ClInclude Include="..\src\ast\astFunc.h" />
@@ -103,6 +105,7 @@
     <ClInclude Include="..\src\ast\astProgram.h" />
     <ClInclude Include="..\src\ast\astReturn.h" />
     <ClInclude Include="..\src\ast\astStatement.h" />
+    <ClInclude Include="..\src\ast\astTable.h" />
     <ClInclude Include="..\src\ast\astWhile.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\environment.h" />

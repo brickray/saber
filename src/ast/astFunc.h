@@ -11,7 +11,7 @@ public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		Token* tok = children[0]->GetToken();
 		string funcName = tok->GetToken();
-		if (!e->HasSymbol(funcName)){
+		if (!istable && !e->HasSymbol(funcName)){
 			Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", tok->GetLineNumber(), funcName.c_str());
 
 			return;
@@ -24,14 +24,19 @@ public:
 				children[j]->GetChild(i)->Compile(e, svm, bc);
 			}
 
-			if (j == 1){
-				SVM::Instruction push(Opcode::PUSH, func);
-				svm->AddCode(push);
+			if (!istable){
+				if (j == 1){
+					SVM::Instruction push(Opcode::PUSH, func);
+					svm->AddCode(push);
+				}
+				else{
+					SVM::Instruction push(Opcode::PUSH, -numParams, true);
+					svm->AddCode(push);
+				}
 			}
-			else{
-				SVM::Instruction push(Opcode::PUSH, -numParams, true);
-				svm->AddCode(push);
-			}
+
+			if (j == 1 && istable)
+				children[0]->Compile(e, svm, bc);
 			SVM::Instruction call(Opcode::CALL, numParams);
 			svm->AddCode(call);
 		}

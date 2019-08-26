@@ -2,6 +2,7 @@
 #define H_VALUE_H
 
 #include "common.h"
+#include "error.h"
 
 SABER_NAMESPACE_BEGIN
 
@@ -13,6 +14,8 @@ enum EValueType{
 	EFUNC       = 16,
 	ENATIVEFUNC = 32,
 	ELIGHTUDATA = 64,
+	ETABLE      = 128,
+	ENULL       = 256,
 	ENUMBER     = EINTEGER | EFLOAT,
 };
 
@@ -30,13 +33,18 @@ struct SValue{
 	string sValue;
 };
 
+class Value;
+struct Table{
+	hash_map<string, Value> kv;
+};
+
 class Value{
 private:
 	SValue value;
 	EValueType type;
 
 public:
-	Value(){}
+	Value(){ type = EValueType::ENULL; }
 	Value(EValueType t, SValue& v) :type(t), value(v){}
 
 	void SetType(EValueType t) { type = t; }
@@ -49,6 +57,8 @@ public:
 		else if (IsFloat()) ret = "float";
 		else if (IsString()) ret = "string";
 		else if (IsLightUData()) ret = "lightudata";
+		else if (IsTable()) ret = "table";
+		else if (IsNull()) ret = "null";
 
 		return ret;
 	}
@@ -59,6 +69,7 @@ public:
 	void SetFunction(int i) { type = EValueType::EFUNC; value.iValue = i; }
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; }
 	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; }
+	void SetTable(int i) { type = EValueType::ETABLE; value.iValue = i; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -67,6 +78,8 @@ public:
 	bool IsFunction() const { return type == EValueType::EFUNC; }
 	bool IsNativeFunction() const { return type == EValueType::ENATIVEFUNC; }
 	bool IsLightUData() const { return type == EValueType::ELIGHTUDATA; }
+	bool IsTable() const { return type == EValueType::ETABLE; }
+	bool IsNull() const { return type == EValueType::ENULL; }
 	bool GetBoolean() const { return value.bValue; }
 	int GetInteger() const { return value.iValue; }
 	float GetFloat() const { return value.fValue; }
@@ -74,11 +87,12 @@ public:
 	int GetFunction() const { return value.iValue; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 	int GetLightUData() const { return value.iValue; }
+	int GetTable() const { return value.iValue; }
 
 	Value operator-(){
 		Value va;
 		if (!IsNumber()){
-			printf("尝试对非Number值进行求负操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行求负操作\n");
 			va.SetBool(false);
 			return va;
 		}
@@ -100,7 +114,7 @@ public:
 			return va;
 		}
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行加操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作\n");
 			va.SetBool(false);
 			return va;
 		}
@@ -128,7 +142,7 @@ public:
 	Value operator-(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行减操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作\n");
 			va.SetBool(false);
 			return va;
 		}
@@ -156,7 +170,7 @@ public:
 	Value operator*(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行乘操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作\n");
 			va.SetBool(false);
 			return va;
 		}
@@ -184,7 +198,7 @@ public:
 	Value operator/(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行除操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作\n");
 			va.SetBool(false);
 			return va;
 		}
@@ -212,7 +226,7 @@ public:
 	Value operator%(Value& v){
 		Value va;
 		if (!IsInteger() || !v.IsInteger()){
-			printf("尝试对非Integer值取模\n");
+			Error::GetInstance()->ProcessError("尝试对非Integer值取模\n");
 			va.SetBool(false);
 			return va;
 		}
@@ -224,7 +238,7 @@ public:
 	Value operator+=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行加操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作\n");
 			this->SetBool(false);
 			return *this;
 		}
@@ -252,7 +266,7 @@ public:
 	Value operator-=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行减操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作\n");
 			this->SetBool(false);
 			return *this;
 		}
@@ -280,7 +294,7 @@ public:
 	Value operator*=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行乘操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作\n");
 			this->SetBool(false);
 			return *this;
 		}
@@ -308,7 +322,7 @@ public:
 	Value operator/=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试对非Number值进行除操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作\n");
 			this->SetBool(false);
 			return *this;
 		}
@@ -336,7 +350,7 @@ public:
 	Value operator%=(Value& v){
 		SValue sv;
 		if (!IsInteger() || !IsInteger()){
-			printf("尝试对非Integer值取模\n");
+			Error::GetInstance()->ProcessError("尝试对非Integer值取模\n");
 			this->SetBool(false);
 			return *this;
 		}
@@ -348,7 +362,7 @@ public:
 	Value operator<(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
 			va.SetBool(false);
 		}
 		else{
@@ -366,7 +380,7 @@ public:
 	Value operator>(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
 			va.SetBool(false);
 		}
 		else{
@@ -384,7 +398,7 @@ public:
 	Value operator<=(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
 			va.SetBool(false);
 		}
 		else{
@@ -402,7 +416,7 @@ public:
 	Value operator>=(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			printf("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
 			va.SetBool(false);
 		}
 		else{
@@ -494,6 +508,12 @@ public:
 		}
 		else if (IsLightUData()){
 			ret = to_string(value.iValue);
+		}
+		else if (IsTable()){
+			ret = "table";
+		}
+		else if (IsNull()){
+			ret = "null";
 		}
 		else{
 			ret = "function";

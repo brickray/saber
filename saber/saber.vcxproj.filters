@@ -125,5 +125,14 @@
     <ClInclude Include="..\src\ast\astProgram.h">
       <Filter>源文件\ast</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ast\astClosure.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astDot.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ast\astTable.h">
+      <Filter>源文件\ast</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -20,27 +20,31 @@
 #include "ast\astGlobal.h"
 #include "ast\astProgram.h"
 #include "ast\astClosure.h"
+#include "ast\astDot.h"
+#include "ast\astTable.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +
-// identifier : ('a' .. 'z' | 'A' .. 'Z') +
+// identifier : ('a' .. 'z' | 'A' .. 'Z' | '0' .. '9') +
 // string     : '"' ascii + '"' //ascii代表所有字符
-// primary    : number | identifier | string | true | false
-// term       : func | primary | (andorexpr)
+// primary    : number | string | true | false
+// lvalue     : identifier | identifier '.' lvalue
+// term       : func | primary | lvalue | (andorexpr)
 // negexpr    : term | - term
 // muldivexpr : negexpr ( * | / | *= | /= negexpr)*
 // addsubexpr : muldivexpr ( + | - | += | -= muldivexpr)*
 // compexpr   : addsubexpr ( == | != | > | >= | < | <= addsubexpr)*
 // andorexpr  : compexpr ( && | || compexpr)* 
-// assignexpr : identifier ( = (andorexpr | closure)) | andorexpr
+// assignexpr : lvalue ( = (andorexpr | closure | table)) | andorexpr
 // expr       : assignexpr
 // block      : statement | statement block | empty
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
 // for        : 'for' expr ',' expr (',' expr) 'do' block 'end'
 // def        : 'def' identifier '(' identifier *')' block ('return' (expr | closure)) 'end'
-// func       : identifier '(' primary ')' 
+// func       : identifier '(' expr* ')' 
 // closure    : 'def' '(' identifier *')' block ('return' (expr | closure)) 'end'
+// table      : '{' assignexpr* '}'
 // statement  : if
 //			  | while
 //            | for
@@ -72,6 +76,7 @@ private:
 	bool matchIdentifier(shared_ptr<Astree>& astree);
 	bool matchString(shared_ptr<Astree>& astree);
 	bool matchPrimary(shared_ptr<Astree>& astree);
+	bool matchLValue(shared_ptr<Astree>& astree);
 	bool matchTerm(shared_ptr<Astree>& astree);
 	bool matchNegExpr(shared_ptr<Astree>& astree);
 	bool matchMuldivExpr(shared_ptr<Astree>& astree);
@@ -86,6 +91,7 @@ private:
 	bool matchDef(shared_ptr<Astree>& astree);
 	bool matchFunc(shared_ptr<Astree>& astree);
 	bool matchClosure(shared_ptr<Astree>& astree);
+	bool matchTable(shared_ptr<Astree>& astree);
 	bool matchStatement(shared_ptr<Astree>& astree);
 };
 

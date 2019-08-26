@@ -13,8 +13,17 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins(Opcode::MOVE, bc.nearst);
-			svm->AddCode(ins);
+			if (istable){
+				SVM::Instruction ins(Opcode::STFILED);
+				svm->AddCode(ins);
+
+				SVM::Instruction dot(Opcode::GTFILED, 1);
+				svm->SetCode(bc.nearst, dot);
+			}
+			else{
+				SVM::Instruction ins(Opcode::MOVE, bc.nearst);
+				svm->AddCode(ins);
+			}
 		}
 		else if (op == "+"){
 			children[1]->Compile(e, svm, bc);

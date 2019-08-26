@@ -15,6 +15,7 @@ enum class ETokenType{
 	ELEFT_BRACKET,
 	ERIGHT_BRACKET,
 	ECOMMA,
+	EDOT,
 	ENUM,
 };
 
@@ -58,6 +59,7 @@ public:
 
 	int GetLineNumber() const { return lineNumber; }
 	ETokenType GetTokenType() const { return type; }
+	void SetTokenType(ETokenType t) { type = t; }
 	string GetToken() const { return token; }
 	string ToString() const{
 		string ret;

@@ -149,7 +149,7 @@ void SVM::Run(){
 			}
 		}
 		case Opcode::RET:{
-			Value ret = stack[sp - 1]; 
+			Value ret = stack[sp - 1];
 			int numRetVariable = (operand & 0xffff0000) >> 16;
 			int numParams = operand & 0x0000ffff;
 			int base = cp + numParams;
@@ -183,6 +183,51 @@ void SVM::Run(){
 		case Opcode::RESERVE:
 			sp += operand;
 			break;
+		case Opcode::GTFILED:{
+			Value key = stack[sp - 1];
+			Value table = stack[sp - 2];
+			if (!table.IsTable()){
+				Error::GetInstance()->ProcessError("尝试对非Table对象使用[.]");
+			}
+			if (!key.IsString()){
+				Error::GetInstance()->ProcessError("key必须为string");
+			}
+
+			Table* t = reinterpret_cast<Table*>(table.GetTable());
+			string s = key.GetString();
+			if (t->kv.find(s) == t->kv.end()){
+				t->kv[s] = Value();
+			}
+
+			if (!operand){
+				stack[sp - 2] = t->kv[s];
+				sp--;
+			}
+
+			break;
+		}
+		case Opcode::SETTABLE:{
+			Table* t = new Table();
+			stack[sp++].SetTable((int)t);
+
+			break;
+		}
+		case Opcode::STFILED:{
+			Value key = stack[sp - 1];
+			Value table = stack[sp - 2];
+			Value value = stack[sp - 3];
+			if (!table.IsTable()){
+				Error::GetInstance()->ProcessError("尝试对非Table对象使用[.]");
+			}
+			if (!key.IsString()){
+				Error::GetInstance()->ProcessError("key必须为string");
+			}
+			Table* t = reinterpret_cast<Table*>(table.GetTable());
+			t->kv[key.GetString()] = value;
+
+			sp -= 3;
+			break;
+		}
 		case Opcode::NEG:
 			stack[sp - 1] = -stack[sp - 1];
 
@@ -315,7 +360,10 @@ string SVM::ShowCode(){
 		"NE",
 		"OR",
 		"AND",
+		"SETTABLE",
+		"STFILED",
 		"NOP",
+		"GTFILED",
 		"MOVE",
 		"JZ",
 		"JUMP",

@@ -3,7 +3,10 @@
 #include "error.h"
 
 #include <time.h>
-#include <sys\stat.h>
+#include <stdio.h>
+#if WIN32
+#include <windows.h>
+#endif
 
 SABER_NAMESPACE_BEGIN
 
@@ -287,6 +290,19 @@ static int osexit(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int osleep(SVM* svm, int numParams){
+	checkParamsNum("sleep", numParams, 1);
+	Value v = svm->PopStack();
+	checkInteger("sleep", v);
+
+	int t = v.GetInteger();
+#if WIN32
+	Sleep(t);
+#endif
+
+	return numParams;
+}
+
 static int type(SVM* svm, int numParams){
 	checkParamsNum("type", numParams, 1);
 
@@ -565,8 +581,26 @@ static int close(SVM* svm, int numParams){
 	return numParams;
 }
 
-static RegisterFunction native[] = {
+static RegisterFunction basic[] = {
 	{ "print", print },
+	{ "type", type },
+	{ "", nullptr },
+};
+
+void registerBasic(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	for (int i = 0;; ++i){
+		string name = basic[i].name;
+		if (name == "") break;
+
+		Value function;
+		function.SetNativeFunction(basic[i].f);
+		int idx = svm->AddGlobal(function);
+		SymbolInfo si = { function, idx };
+		e->SetSymbol(name, si);
+	}
+}
+
+static RegisterFunction math[] = {
 	{ "sin", sin },
 	{ "asin", asin },
 	{ "cos", cos },
@@ -580,10 +614,52 @@ static RegisterFunction native[] = {
 	{ "exp", exp },
 	{ "sqrt", sqrt },
 	{ "pow", pow },
+	{ "", nullptr },
+};
+
+void registerMath(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	Value table;
+	Table* t = new Table();
+	table.SetTable((int)t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	e->SetSymbol("math", si);
+	for (int i = 0;; ++i){
+		string name = math[i].name;
+		if (name == "") break;
+
+		Value function;
+		function.SetNativeFunction(math[i].f);
+		t->kv[name] = function;
+	}
+}
+
+static RegisterFunction os[] = {
 	{ "gettime", gettime },
 	{ "getclock", getclock },
 	{ "exit", osexit },
-	{ "type", type },
+	{ "sleep", osleep },
+	{ "", nullptr },
+};
+
+void registerOs(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	Value table;
+	Table* t = new Table();
+	table.SetTable((int)t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	e->SetSymbol("os", si);
+	for (int i = 0;; ++i){
+		string name = os[i].name;
+		if (name == "") break;
+
+		Value function;
+		function.SetNativeFunction(os[i].f);
+		t->kv[name] = function;
+	}
+}
+
+static RegisterFunction str[] = {
 	{ "len", len },
 	{ "substr", substr },
 	{ "findfirst", findfirst },
@@ -591,6 +667,27 @@ static RegisterFunction native[] = {
 	{ "findsub", findsub },
 	{ "insert", insert },
 	{ "reverse", reverse },
+	{ "", nullptr },
+};
+
+void registerStr(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	Value table;
+	Table* t = new Table();
+	table.SetTable((int)t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	e->SetSymbol("string", si);
+	for (int i = 0;; ++i){
+		string name = str[i].name;
+		if (name == "") break;
+
+		Value function;
+		function.SetNativeFunction(str[i].f);
+		t->kv[name] = function;
+	}
+}
+
+static RegisterFunction io[] = {
 	{ "fexist", fexist },
 	{ "open", open },
 	{ "read", read },
@@ -599,17 +696,29 @@ static RegisterFunction native[] = {
 	{ "", nullptr },
 };
 
-void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+void registerIo(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	Value table;
+	Table* t = new Table();
+	table.SetTable((int)t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	e->SetSymbol("io", si);
 	for (int i = 0;; ++i){
-		string name = native[i].name;
+		string name = io[i].name;
 		if (name == "") break;
 
 		Value function;
-		function.SetNativeFunction(native[i].f);
-		int idx = svm->AddGlobal(function);
-		SymbolInfo si = { function, idx };
-		e->SetSymbol(name, si);
+		function.SetNativeFunction(io[i].f);
+		t->kv[name] = function;
 	}
+}
+
+void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	registerBasic(e, svm);
+	registerMath(e, svm);
+	registerOs(e, svm);
+	registerStr(e, svm);
+	registerIo(e, svm);
 }
 
 SABER_NAMESPACE_END

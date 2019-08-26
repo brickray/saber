@@ -32,6 +32,7 @@ class Astree{
 protected:
 	Token* token = nullptr;
 	vector<shared_ptr<Astree>> children;
+	bool istable = false;
 
 public:
 	virtual ~Astree(){};
@@ -39,8 +40,26 @@ public:
 	void SetToken(Token* tok) { token = tok; }
 	Token* GetToken() { return token; }
 	int GetNumChildren() const { return children.size(); }
-	shared_ptr<Astree > GetChild(int n) { return children[n]; }
+	int GetSubtreeNumNodes() const {
+		int ret = 0;
+		int size = GetNumChildren();
+		ret += size;
+		for (int i = 0; i < size; ++i){
+			ret += GetChild(i)->GetSubtreeNumNodes();
+		}
+
+		return ret;
+	}
+	void GetSubtreeNodes(vector<shared_ptr<Astree>>& c){
+		for (int i = 0; i < GetNumChildren(); ++i){
+			c.push_back(GetChild(i));
+			GetChild(i)->GetSubtreeNodes(c);
+		}
+	}
+	shared_ptr<Astree > GetChild(int n) const { return children[n]; }
 	void AddChild(shared_ptr<Astree>& ast){ children.push_back(ast); }
+	void RemoveAllChild() { children.clear(); }
+	void SetTable(bool t) { istable = t; }
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc) = 0;
 
