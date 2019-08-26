@@ -498,12 +498,18 @@ bool SyntaxParse::matchFor(shared_ptr<Astree>& astree){
 	astFor->AddChild(cond);
 	shared_ptr<Astree> step = shared_ptr<Astree>(new AstStatement());
 	if (match(",")){
+		//normal
 		if(matchExpr(step)) astFor->AddChild(step);
 		else{
 			Error::GetInstance()->ProcessError("行数:%d, for语句语法错误,缺少step条件", tok->GetLineNumber());
 			return false;
 		}
 	}
+	else if (match("in")){
+		//generic
+		
+	}
+
 	if (!match("do")){
 		Error::GetInstance()->ProcessError("行数:%d, for语句语法错误,缺少关键字[do]", tok->GetLineNumber());
 		return false;

@@ -38,6 +38,8 @@ struct Table{
 	hash_map<string, Value> kv;
 };
 
+typedef hash_map<string, Value>::iterator TableIteration;
+
 class Value{
 private:
 	SValue value;

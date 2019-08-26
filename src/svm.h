@@ -44,14 +44,19 @@ public:
 	void PushInt(int i);
 	void PushFloat(float f);
 	void PushString(string s);
+	void PushFunc(int i);
+	void PushNativeFunc(SFunc f);
 	void PushLightUData(int i);
+	void PushTable(int i);
 	Value PopStack();
 
 	void Run();
+	void CallScript(int numParams);
 
 	string ShowCode();
 
 private:
+	void execute();
 	bool isStack(int idx);
 	bool isGlobal(int idx);
 	int encodeGlobalIndex(int idx);
