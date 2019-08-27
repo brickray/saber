@@ -6,6 +6,7 @@
 
 SABER_NAMESPACE_BEGIN
 
+class SState;
 class SVM{
 public:
 	struct Instruction{
@@ -30,11 +31,14 @@ protected:
 	int sp;	//’ª∂•÷∏’Î
 	int cp; //∫Ø ˝’ª÷∏’Î
 
+	SState* S;
+
 public:
-	SVM();
+	SVM(SState* s);
 
 	int AddCode(Instruction c);
 	void RemoveLastCode();
+	Instruction GetLastCode();
 	Instruction GetCode(int idx);
 	void SetCode(int idx, Instruction c);
 	int AddGlobal(Value v);
@@ -53,6 +57,7 @@ public:
 	void Run();
 	void CallScript(int numParams);
 
+	SState* GetSState() const { return S; }
 	string ShowCode();
 
 private:

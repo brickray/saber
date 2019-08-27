@@ -1,4 +1,5 @@
 #include "nativeFunc.h"
+#include "sstate.h"
 #include "astree.h"
 #include "error.h"
 
@@ -72,6 +73,7 @@ void checkTable(string func, Value& v, int idx = 1){
 	}
 }
 
+//-----------------------------------basic lib--------------------
 static int print(SVM* svm, int numParams){
 	string ret;
 	vector<string> temp(numParams);
@@ -84,6 +86,60 @@ static int print(SVM* svm, int numParams){
 	}
 
 	printf("%s\n", ret.c_str());
+
+	return numParams;
+}
+
+static int type(SVM* svm, int numParams){
+	checkParamsNum("type", numParams, 1);
+
+	Value v = svm->PopStack();
+
+	svm->PushString(v.GetTypeString());
+
+	return numParams;
+}
+
+static int load(SVM* svm, int numParams){
+	checkParamsNum("load", numParams);
+	Value str = svm->PopStack();
+	checkString("load", str);
+
+	SVM::Instruction nop(Opcode::NOP);
+	int idx = svm->AddCode(nop);
+	SState* S = svm->GetSState();
+	S->GetLexer()->Parse(str.GetString());
+	S->GetParser()->Parse(*S->GetLexer());
+	shared_ptr<Environment> e = S->GetEnvironment();
+	shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
+	local->SetOutter(e);
+	S->GetParser()->Compile(local, S->GetSVM());
+	SVM::Instruction ret(Opcode::RET, 0);
+	SVM::Instruction last = svm->GetLastCode();
+	if (last.opcode != Opcode::RET){
+		svm->AddCode(ret);
+	}
+
+	Value func;
+	func.SetFunction(idx);
+	svm->PushStack(func);
+
+	return numParams;
+}
+
+static int test(SVM* svm, int numParams){
+	if (numParams == 1){
+		svm->CallScript(0);
+	}
+	else{
+		Value v, s;
+		v.SetNativeFunction(print);
+		s.SetString("it's just a test");
+
+		svm->PushStack(s);
+		svm->PushStack(v);
+		svm->CallScript(1);
+	}
 
 	return numParams;
 }
@@ -317,16 +373,6 @@ static int osleep(SVM* svm, int numParams){
 #if WIN32
 	Sleep(t);
 #endif
-
-	return numParams;
-}
-
-static int type(SVM* svm, int numParams){
-	checkParamsNum("type", numParams, 1);
-
-	Value v = svm->PopStack();
-	
-	svm->PushString(v.GetTypeString());
 
 	return numParams;
 }
@@ -675,28 +721,12 @@ static int tforeach(SVM* svm, int numParams){
 	return numParams;
 }
 
-static int test(SVM* svm, int numParams){
-	if (numParams == 1){
-		svm->CallScript(0);
-	}
-	else{
-		Value v, s;
-		v.SetNativeFunction(print);
-		s.SetString("it's just a test");
-
-		svm->PushStack(s);
-		svm->PushStack(v);
-		svm->CallScript(1);
-	}
-
-	return numParams;
-}
-
 //------------------------------func register-------------------
 
 static RegisterFunction basic[] = {
 	{ "print", print },
 	{ "type", type },
+	{ "load", load },
 //	{ "test", test },
 	{ "", nullptr },
 };

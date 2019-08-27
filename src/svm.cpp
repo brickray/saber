@@ -4,7 +4,9 @@
 
 SABER_NAMESPACE_BEGIN
 
-SVM::SVM(){
+SVM::SVM(SState* s){
+	S = s;
+
 	code.reserve(64);
 	stack.resize(STACK_SIZE);
 	global.reserve(64);
@@ -28,6 +30,10 @@ int SVM::AddCode(Instruction c){
 
 void SVM::RemoveLastCode(){
 	code.pop_back();
+}
+
+SVM::Instruction SVM::GetLastCode(){
+	return code[code.size() - 1];
 }
 
 SVM::Instruction SVM::GetCode(int idx){
@@ -107,8 +113,11 @@ Value SVM::PopStack(){
 }
 
 void SVM::Run(){
-	int numCode = code.size();
-	while (ip < numCode){
+	//程序末尾加入结束命令
+	SVM::Instruction exit(Opcode::EXIT);
+	AddCode(exit);
+	
+	while (ip < code.size()){
 		execute();
 	}
 }
@@ -284,6 +293,9 @@ void SVM::execute(){
 		sp -= 3;
 		break;
 	}
+	case Opcode::EXIT:
+		ip = code.size();
+		break;
 	case Opcode::NEG:
 		stack[sp - 1] = -stack[sp - 1];
 
@@ -417,6 +429,7 @@ string SVM::ShowCode(){
 		"AND",
 		"SETTABLE",
 		"STFILED",
+		"EXIT",
 		"NOP",
 		"GTFILED",
 		"MOVE",

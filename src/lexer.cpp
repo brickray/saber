@@ -4,13 +4,12 @@
 SABER_NAMESPACE_BEGIN
 
 Lexer::Lexer(){
-	ptr = 0;
-	lineNo = 0;
-	tokenPtr = 0;
+	init();
 }
 
 void Lexer::Parse(string c){
 	code = c;
+	init();
 
 	parse();
 }
@@ -29,6 +28,13 @@ Token* Lexer::PrevToken(){
 
 void Lexer::Back(){
 	--tokenPtr;
+}
+
+void Lexer::init(){
+	ptr = 0;
+	lineNo = 0;
+	tokenPtr = 0;
+	tokens.clear();
 }
 
 void Lexer::parse(){

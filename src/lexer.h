@@ -90,6 +90,7 @@ public:
 	bool IsEnd() const { return tokenPtr >= tokens.size(); }
 
 private:
+	void init();
 	void parse();
 	string readLine();
 	void parseLine(string line);

@@ -7,7 +7,7 @@ void SState::Init(){
 	preprocessor = shared_ptr<Preprocessor>(new Preprocessor());
 	lexer = shared_ptr<Lexer>(new Lexer());
 	parse = shared_ptr<SyntaxParse>(new SyntaxParse());
-	svm = shared_ptr<SVM>(new SVM());
+	svm = shared_ptr<SVM>(new SVM(this));
 	env = shared_ptr<Environment>(new Environment());
 	
 	NativeFunc::Register(env, svm);
@@ -19,8 +19,8 @@ void SState::Run(string code){
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
 
-	if (sc) ShowCode();
 	svm->Run();
+	if (sc) ShowCode();
 }
 
 void SState::ShowCode(bool t){

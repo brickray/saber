@@ -47,6 +47,7 @@ shared_ptr<Astree> RotateBTree(shared_ptr<Astree>& root){
 }
 
 void SyntaxParse::Parse(Lexer& lex){
+	astProgram = shared_ptr<Astree>(new AstProgram());
 	lexer = lex;
 
 	int idx = 0;

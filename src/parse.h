@@ -62,7 +62,7 @@ private:
 	shared_ptr<Astree> astProgram;
 
 public:
-	SyntaxParse(){ astProgram = shared_ptr<Astree>(new AstProgram()); }
+	SyntaxParse(){}
 
 	void Parse(Lexer& lexer);
 	void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
