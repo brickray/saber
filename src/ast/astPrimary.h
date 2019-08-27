@@ -14,18 +14,27 @@ public:
 		switch (type){
 		case ETokenType::ENUMBER:{
 			string tok = token->GetToken();
-			if (tok.find('.') != -1){
-				value.SetType(EValueType::EFLOAT);
-				float v = atof(tok.c_str());
-				value.SetFloat(v);
+			int idx;
+			if (e->HasNumberSymbol(tok)){
+				idx = e->GetNumberSymbol(tok).address;
 			}
 			else{
-				value.SetType(EValueType::EINTEGER);
-				int v = atoi(tok.c_str());
-				value.SetInt(v);
-			}
+				if (tok.find('.') != -1){
+					value.SetType(EValueType::EFLOAT);
+					float v = atof(tok.c_str());
+					value.SetFloat(v);
+				}
+				else{
+					value.SetType(EValueType::EINTEGER);
+					int v = atoi(tok.c_str());
+					value.SetInt(v);
+				}
 
-			int idx = svm->AddConstant(value);
+				idx = svm->AddConstant(value);
+				SymbolInfo si = { value, idx, false };
+				e->SetNumberSymbol(tok, si);
+			}
+			
 			SVM::Instruction ins(Opcode::PUSH, idx);
 			svm->AddCode(ins);
 			break;
@@ -57,9 +66,18 @@ public:
 			Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
 			break;
 		case ETokenType::ESTRING:
-			value.SetString(token->GetToken());
+			string str = token->GetToken();
+			int idx;
+			if (e->HasStringSymbol(str)){
+				idx = e->GetStringSymbol(str).address;
+			}
+			else{
+				value.SetString(str);
+				idx = svm->AddConstant(value);
+				SymbolInfo si = { value, idx, false };
+				e->SetStringSymbol(str, si);
+			}
 
-			int idx = svm->AddConstant(value);
 			SVM::Instruction ins(Opcode::PUSH, idx);
 			svm->AddCode(ins);
 			break;
