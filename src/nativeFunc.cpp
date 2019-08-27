@@ -671,6 +671,188 @@ static int sforeach(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int format(SVM* svm, int numParams){
+	vector<Value> p(numParams);
+	for (int i = 0; i < numParams;++i)
+		p[numParams - i - 1] = svm->PopStack();
+	checkString("string.format", p[0]);
+
+	string s = p[0].GetString();
+	string ret;
+	int np = 1;
+	for (int i = 0; i < s.size(); ++i){
+		char c = s[i];
+		int precise = 0;
+	label:
+		if (c == '%'){
+			char next = s[++i];
+			switch(next){
+			case '%':
+				ret += '%';
+				break;
+			case 'c':
+			case 'C':{
+				Value v = p[np++];
+				if (!v.IsInteger()){
+					Error::GetInstance()->ProcessError("格式化选项[%%c]需要integer类型的参数");
+				}
+
+				char cc = v.GetInteger();
+				ret += cc;
+				break;
+			}
+			case 'd':{
+				Value v = p[np++];
+				if (!v.IsInteger()){
+					Error::GetInstance()->ProcessError("格式化选项[%%d]需要integer类型的参数");
+				}
+
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + "d";
+				_snprintf(buf, sizeof(buf), f.c_str(), v.GetInteger());
+				ret += buf;
+				break;
+			}
+			case 'u':{
+				Value v = p[np++];
+				if (!v.IsInteger()){
+					Error::GetInstance()->ProcessError("格式化选项[%%u]需要integer类型的参数");
+				}
+
+				unsigned int i = v.GetInteger();
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + "u";
+				_snprintf(buf, sizeof(buf), f.c_str(), i);
+				ret += buf;
+				break;
+			}
+			case 'x':
+			case 'X':{
+				Value v = p[np++];
+				if (!v.IsInteger()){
+					Error::GetInstance()->ProcessError("格式化选项[%%x]需要integer类型的参数");
+				}
+
+				unsigned int i = v.GetInteger();
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + next;
+				_snprintf(buf, sizeof(buf), f.c_str(), i);
+
+				ret += buf;
+				break;
+			}
+			case 'o':{
+				Value v = p[np++];
+				if (!v.IsInteger()){
+					Error::GetInstance()->ProcessError("格式化选项[%%o]需要integer类型的参数");
+				}
+
+				unsigned int i = v.GetInteger();
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + "o";
+				_snprintf(buf, sizeof(buf), f.c_str(), i);
+				ret += buf;
+				break;
+			}
+			case 's':{
+				Value v = p[np++];
+				if (!v.IsString()){
+					Error::GetInstance()->ProcessError("格式化选项[%%s]需要string类型的参数");
+				}
+
+				ret += v.GetString();
+				break;
+			}
+			case 'e':
+			case 'E':{
+				Value v = p[np++];
+				if (!v.IsNumber()){
+					Error::GetInstance()->ProcessError("格式化选项[%%e]需要number类型的参数");
+				}
+
+				float value;
+				if (v.IsInteger()) value = v.GetInteger();
+				else value = v.GetFloat();
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + next;
+				_snprintf(buf, sizeof(buf), f.c_str(), value);
+
+				ret += buf;
+				break;
+			}
+			case 'g':
+			case 'G':{
+				Value v = p[np++];
+				if (!v.IsNumber()){
+					Error::GetInstance()->ProcessError("格式化选项[%%g]需要number类型的参数");
+				}
+
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + next;
+				_snprintf(buf, sizeof(buf), f.c_str(), v.IsInteger() ? v.GetInteger() : v.GetFloat());
+
+				ret += buf;
+				break;
+			}
+			case 'f':{
+				Value v = p[np++];
+				if (!v.IsNumber()){
+					Error::GetInstance()->ProcessError("格式化选项[%%f]需要number类型的参数");
+				}
+
+				float value;
+				if (v.IsInteger()) value = v.GetInteger();
+				else value = v.GetFloat();
+
+				char buf[256] = { 0 };
+				string f = "%." + to_string(precise) + "f";
+				_snprintf(buf, sizeof(buf), f.c_str(), value);
+				ret += buf;
+
+				break;
+			}
+			case '.':{
+				char number[4] = { 0 };
+				char n1 = s[++i];
+				if (isdigit(n1)){
+					number[0] = n1;
+					char n2 = s[++i];
+					if (isdigit(n2)){
+						number[1] = n2;
+					}
+					else{
+						i--;
+					}
+				}
+				else{
+					number[0] = '0';
+					i--;
+				}
+
+				precise = atoi(number);
+				if (precise > 50){
+					Error::GetInstance()->ProcessError("格式化精度超过限制最大为50");
+				}
+
+				goto label;
+
+				break;
+			}
+			default:
+				Error::GetInstance()->ProcessError("错误的格式化选项[%%%c]", next);
+				break;
+			}
+		}
+		else{
+			ret += c;
+		}
+	}
+
+	svm->PushString(ret);
+
+	return numParams;
+}
+
 //------------------------------io lib-------------------------
 static int fexist(SVM* svm, int numParams){
 	Value fileV, modeV;
@@ -927,6 +1109,7 @@ static RegisterFunction str[] = {
 	{ "reverse", reverse },
 	{ "at", at },
 	{ "foreach", sforeach },
+	{ "format", format },
 	{ "", nullptr },
 };
 
