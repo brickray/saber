@@ -285,6 +285,36 @@ static int log(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int log2(SVM* svm, int numParams){
+	checkParamsNum("math.log2", numParams);
+	Value v = svm->PopStack();
+	checkNumber("math.log2", v);
+
+	static float lg2 = logf(2);
+	float ret;
+	if (v.IsFloat()) ret = logf(v.GetFloat()) / lg2;
+	else if (v.IsInteger()) ret = logf(v.GetInteger()) / lg2;
+
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+static int log10(SVM* svm, int numParams){
+	checkParamsNum("math.log10", numParams);
+	Value v = svm->PopStack();
+	checkNumber("math.log10", v);
+
+	static float lg10 = logf(10);
+	float ret;
+	if (v.IsFloat()) ret = logf(v.GetFloat()) / lg10;
+	else if (v.IsInteger()) ret = logf(v.GetInteger()) / lg10;
+
+	svm->PushFloat(ret);
+
+	return numParams;
+}
+
 static int exp(SVM* svm, int numParams){
 	checkParamsNum("math.exp", numParams);
 	Value v = svm->PopStack();
@@ -328,6 +358,64 @@ static int pow(SVM* svm, int numParams){
 
 	float ret = powf(b, e);
 	svm->PushFloat(ret);
+
+	return numParams;
+}
+
+static int floor(SVM* svm, int numParams){
+	checkParamsNum("math.floor", numParams);
+	Value n = svm->PopStack();
+	checkNumber("math.floor", n);
+
+	if (n.IsInteger()){
+		svm->PushStack(n);
+	}
+	else{
+		float f = n.GetFloat();
+		f = floorf(f);
+		n.SetFloat(f);
+		svm->PushStack(n);
+	}
+
+	return numParams;
+}
+
+static int ceil(SVM* svm, int numParams){
+	checkParamsNum("math.ceil", numParams);
+	Value n = svm->PopStack();
+	checkNumber("math.ceil", n);
+
+	if (n.IsInteger()){
+		svm->PushStack(n);
+	}
+	else{
+		float f = n.GetFloat();
+		f = ceilf(f);
+		n.SetFloat(f);
+		svm->PushStack(n);
+	}
+
+	return numParams;
+}
+
+static int mmax(SVM* svm, int numParams){
+	checkParamsNum("math.max", numParams, 2);
+	Value v2 = svm->PopStack();
+	Value v1 = svm->PopStack();
+
+	v1 = (v1 > v2).GetBoolean() ? v1 : v2;
+	svm->PushStack(v1);
+
+	return numParams;
+}
+
+static int mmin(SVM* svm, int numParams){
+	checkParamsNum("math.min", numParams, 2);
+	Value v2 = svm->PopStack();
+	Value v1 = svm->PopStack();
+
+	v1 = (v1 < v2).GetBoolean() ? v1 : v2;
+	svm->PushStack(v1);
 
 	return numParams;
 }
@@ -534,6 +622,26 @@ static int reverse(SVM* svm, int numParams){
 	}
 	
 	svm->PushString(ret);
+
+	return numParams;
+}
+
+static int at(SVM* svm, int numParams){
+	checkParamsNum("string.at", numParams, 2);
+	Value p = svm->PopStack();
+	Value strV = svm->PopStack();
+	checkString("string.at", strV);
+	checkInteger("string.at", p, 2);
+
+	string str = strV.GetString();
+	int p0 = p.GetInteger();
+	if (p0 >= str.length()){
+		Error::GetInstance()->ProcessError("索引[%d]需小于字符串长度[%d]", p0, str.length());
+	}
+
+	char t[2] = { 0 };
+	t[0] = str[p0];
+	svm->PushString(t);
 
 	return numParams;
 }
@@ -755,9 +863,15 @@ static RegisterFunction math[] = {
 	{ "degree", degree },
 	{ "abs", abs },
 	{ "log", log },
+	{ "log2", log2 },
+	{ "log10", log10 },
 	{ "exp", exp },
 	{ "sqrt", sqrt },
 	{ "pow", pow },
+	{ "floor", floor },
+	{ "ceil", ceil },
+	{ "max", mmax },
+	{ "min", mmin },
 	{ "", nullptr },
 };
 
@@ -811,6 +925,7 @@ static RegisterFunction str[] = {
 	{ "findsub", findsub },
 	{ "insert", insert },
 	{ "reverse", reverse },
+	{ "at", at },
 	{ "foreach", sforeach },
 	{ "", nullptr },
 };

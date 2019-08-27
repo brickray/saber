@@ -19,8 +19,8 @@ void SState::Run(string code){
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
 
-	svm->Run();
 	if (sc) ShowCode();
+	svm->Run();
 }
 
 void SState::ShowCode(bool t){

@@ -116,6 +116,10 @@ bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
 			astReturn->AddChild(stat);
 			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
 		}
+		else if (matchTable(stat)){
+			astReturn->AddChild(stat);
+			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
+		}
 		astree->AddChild(astReturn);
 
 		return true;

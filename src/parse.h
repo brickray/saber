@@ -41,9 +41,9 @@
 // if         : 'if' expr 'then' block (('elif' expr 'then' block) * | ('else' block)) 'end'
 // while      : 'while' expr 'do' blcok 'end'
 // for        : 'for' expr ',' expr (',' expr) 'do' block 'end'
-// def        : 'def' identifier '(' identifier *')' block ('return' (expr | closure)) 'end'
+// def        : 'def' identifier '(' identifier *')' block ('return' (expr | closure | table)) 'end'
 // func       : identifier '(' expr* ')' 
-// closure    : 'def' '(' identifier *')' block ('return' (expr | closure)) 'end'
+// closure    : 'def' '(' identifier *')' block ('return' (expr | closure | table)) 'end'
 // table      : '{' assignexpr* '}'
 // statement  : if
 //			  | while

@@ -493,6 +493,30 @@ public:
 		return va;
 	}
 
+	Value operator||(Value& v){
+		bool t1, t2;
+		if (IsFloat()) t1 = GetFloat() != 0;
+		else t1 = GetBoolean();
+		if (v.IsFloat()) t2 = v.GetFloat() != 0;
+		else t2 = v.GetBoolean();
+
+		Value ret;
+		ret.SetBool(t1 || t2);
+		return ret;
+	}
+
+	Value operator&&(Value& v){
+		bool t1, t2;
+		if (IsFloat()) t1 = GetFloat() != 0;
+		else t1 = GetBoolean();
+		if (v.IsFloat()) t2 = v.GetFloat() != 0;
+		else t2 = v.GetBoolean();
+
+		Value ret;
+		ret.SetBool(t1 && t2);
+		return ret;
+	}
+
 	string ToString(){
 		string ret;
 		if (IsBoolean()){

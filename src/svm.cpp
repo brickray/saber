@@ -356,25 +356,13 @@ void SVM::execute(){
 		sp--;
 		break;
 	case Opcode::OR:{
-		bool t1, t2;
-		if (stack[sp - 1].IsFloat()) t1 = stack[sp - 1].GetFloat() != 0;
-		else t1 = stack[sp - 1].GetBoolean();
-		if (stack[sp - 2].IsFloat()) t2 = stack[sp - 2].GetFloat() != 0;
-		else t2 = stack[sp - 2].GetBoolean();
-
-		stack[sp - 2].SetBool(t1 || t2);
+		stack[sp - 2] = stack[sp - 2] || stack[sp - 1];
 
 		sp--;
 		break;
 	}
 	case Opcode::AND:{
-		bool t1, t2;
-		if (stack[sp - 1].IsFloat()) t1 = stack[sp - 1].GetFloat() != 0;
-		else t1 = stack[sp - 1].GetBoolean();
-		if (stack[sp - 2].IsFloat()) t2 = stack[sp - 2].GetFloat() != 0;
-		else t2 = stack[sp - 2].GetBoolean();
-
-		stack[sp - 2].SetBool(t1 && t2);
+		stack[sp - 2] = stack[sp - 2] && stack[sp - 1];
 
 		sp--;
 		break;

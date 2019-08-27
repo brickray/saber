@@ -103,9 +103,10 @@ void Lexer::parseLine(string line){
 			else
 				type = ETokenType::EIDENTIFIER;
 		}
-		else if (c == '\"'){
+		else if (c == '\"' || c == '\''){
+			char quote = c;
 			c = line[++p];
-			while (c != '\"'){
+			while (c != quote){
 				if (c == '\\'){
 					char next = line[++p];
 					switch (next){
@@ -135,6 +136,12 @@ void Lexer::parseLine(string line){
 						break;
 					case '?':
 						tok += '\?';
+						break;
+					case '\"':
+						tok += '\"';
+						break;
+					case '\'':
+						tok += '\'';
 						break;
 					default:
 						tok += c;
