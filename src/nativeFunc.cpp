@@ -492,6 +492,31 @@ static int reverse(SVM* svm, int numParams){
 	return numParams;
 }
 
+static int sforeach(SVM* svm, int numParams){
+	checkParamsNum("string.foreach", numParams, 2);
+	Value str, func;
+	func = svm->PopStack();
+	str = svm->PopStack();
+	checkString("string.foreach", str);
+	checkFunction("string.foreach", func, 2);
+
+	string s = str.GetString();
+	char t[2] = { 0 };
+	for (int i = 0; i < s.size(); ++i){
+		Value idx, value;
+		idx.SetInt(i);
+		t[0] = s[i];
+		value.SetString(t);
+
+		svm->PushStack(idx);
+		svm->PushStack(value);
+		svm->PushStack(func);
+		svm->CallScript(2);
+	}
+	
+	return numParams;
+}
+
 //------------------------------io lib-------------------------
 static int fexist(SVM* svm, int numParams){
 	Value fileV, modeV;
@@ -626,7 +651,7 @@ static int tlength(SVM* svm, int numParams){
 	return numParams;
 }
 
-static int foreach(SVM* svm, int numParams){
+static int tforeach(SVM* svm, int numParams){
 	checkParamsNum("table.foreach", numParams, 2);
 	Value table, func;
 	func = svm->PopStack();
@@ -756,6 +781,7 @@ static RegisterFunction str[] = {
 	{ "findsub", findsub },
 	{ "insert", insert },
 	{ "reverse", reverse },
+	{ "foreach", sforeach },
 	{ "", nullptr },
 };
 
@@ -805,7 +831,7 @@ void registerIo(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 static RegisterFunction tb[] = {
 	{ "remove", remove },
 	{ "len", tlength },
-	{ "foreach", foreach },
+	{ "foreach", tforeach },
 	{ "", nullptr },
 };
 

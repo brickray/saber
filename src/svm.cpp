@@ -122,7 +122,8 @@ void SVM::CallScript(int numParams){
 	else if (func.IsFunction()){
 		Value eip, esp;
 		int ncp = sp - numParams;
-		eip.SetInt(ip + 1);
+		int nextip = ip + 1;
+		eip.SetInt(nextip);
 		stack[sp++] = eip;
 		esp.SetInt(ncp);
 		stack[sp++] = esp;
@@ -131,7 +132,13 @@ void SVM::CallScript(int numParams){
 
 		ip = func.GetFunction();
 
-		execute();
+		while (true){
+			execute();
+			if (ip == nextip){
+				ip--;
+				break;
+			}
+		}
 	}
 	else{
 		Error::GetInstance()->ProcessError("尝试对[%s]值进行函数调用\n", func.GetTypeString().c_str());
