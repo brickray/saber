@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <sstream>
+#include <time.h>
 #include "sstate.h"
 
 SABER_NAMESPACE_USING
@@ -19,7 +20,19 @@ void main(){
 	SState state;
 	state.ShowCode(true);
 	state.Init();
-	state.Run(code);
+	state.Compile(code);
+	state.Run();
+
+	state.PushInt(10);
+	state.PushInt(2);
+	state.PushFloat(0.5);
+	for (int i = 0; i < 100; ++i){
+		state.PushInt(5);
+	}
+	state.PushFunction("add");
+	state.CallScript(103);
+	Value ret = state.PopStack();
+	printf("%s\n", ret.ToString().c_str());
 
 	getchar();
 }

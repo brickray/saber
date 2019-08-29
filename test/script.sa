@@ -1,71 +1,54 @@
-
-i = 10;
-b = 3;
-
-
-while i > 5 do
-	if i > 7 then
-		print(i)
-	else
-		break
-	end
-
-	i = i - 1;
-end
-
-time = gettime();
-print(time);
-
-for i = 0, i < 11, i += 1 do
-	if i == 10 then
-		if b == 5 then
-			print("i == 10 b == 5")
-		elif b == 3 then
-			print("i == 10 b == 3")
-		end
-	elif i == 5 then
-		print("elif i == 5")
-	elif i == 3 then
-		print("elif i == 3")
-	else
-		print("else")
-	end
-end
-
-print(5*4 + 1 > 4*5);
-
-n = 10
-
-a= 100
 def fib(a)
 	if a == 1 || a == 0 then
 		return 1
 	end
 
-	return fib(a - 1) + fib(a-2)
-	
+	return fib(a - 1) + fib(a - 2)
 end
 
-print(fib(7))
-print(n a b)
+tb = {} //create a table
+tb.fib = fib //fibonacci
+tb.fibp = 10
+tb.iter = def (key, value) print(key, value) end //table iteration function
+tb[2] = 3
 
-/*i = 0
-while true do
-	while i < 10 do
-		i = i+1
-	    if i > 5 then
-			continue
-		end
+print(tb.fib(tb.fibp), table.len(tb))
+table.foreach(tb, tb.iter) //traverse table
 
-		print(i)
-	end
+str = "asdfasdfasf"
+string.foreach(str, tb.iter)
 
-	if i > 8 then
-	    break
+func = load("a = 5 if a == 5 then return 'return 3' else return 'return 7' end")
+iter = def (k,v) if v == "a" then print("haha") else print("hihi") end end
+print(func())
+string.foreach(str, iter)
+print(-5*10.5)
+
+def AA(n1, ...)
+	local a = 4
+	local b = 11
+	local c = 44
+	print(args.num, a+b+c, n1)
+	table.foreach(args, tb.iter)
+	local i
+	for i = 0, i < args.num, i += 1 do
+		print(args[tb[2]])
 	end
 end
 
-n = -n
-print(-(n*(5+8))/2)
-*/
+AA("SSS", "BBB", 1,2,3,4,5,6,7,8)
+AA("SSS", "BBB")
 
+if true then
+	print("asdf")
+end
+
+def add (a, ...)
+	local ret = a
+	local i
+	for i = 0, i < args.num, i+=1 do
+		ret += args[i]
+	end
+
+	return ret
+end

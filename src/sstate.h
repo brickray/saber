@@ -23,9 +23,18 @@ public:
 	SState(){}
 
 	void Init();
-	void Run(string code);
+	void Compile(string code);
+	void Run();
 	void ShowCode(bool t);
 	void ShowCode() const;
+
+	void PushBool(bool b);
+	void PushInt(int i);
+	void PushFloat(float f);
+	void PushString(string s);
+	void PushFunction(string str);
+	void CallScript(int nps);
+	Value PopStack();
 
 	void Register(RegisterFunction func[]);
 

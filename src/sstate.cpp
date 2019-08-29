@@ -13,13 +13,16 @@ void SState::Init(){
 	NativeFunc::Register(env, svm);
 }
 
-void SState::Run(string code){
+void SState::Compile(string code){
 	string afterProcess = preprocessor->Process(code);
 	lexer->Parse(afterProcess);
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
 
 	if (sc) ShowCode();
+}
+
+void SState::Run(){
 	svm->Run();
 }
 
@@ -29,6 +32,39 @@ void SState::ShowCode(bool t){
 
 void SState::ShowCode() const{
 	printf("%s\n", svm->ShowCode().c_str());
+}
+
+void SState::PushBool(bool b){
+	svm->PushBool(b);
+}
+
+void SState::PushInt(int i){
+	svm->PushInt(i);
+}
+
+void SState::PushFloat(float f){
+	svm->PushFloat(f);
+}
+
+void SState::PushString(string s){
+	svm->PushString(s);
+}
+
+void SState::PushFunction(string str){
+	if (env->HasSymbol(str)){
+		SymbolInfo si = env->GetSymbol(str);
+		if (si.value.IsFunction()){
+			svm->PushFunc(si.value.GetFunction());
+		}
+	}
+}
+
+void SState::CallScript(int nps){
+	svm->CallScript(nps);
+}
+
+Value SState::PopStack(){
+	return svm->PopStack();
 }
 
 void SState::Register(RegisterFunction func[]){
