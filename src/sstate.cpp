@@ -80,4 +80,21 @@ void SState::Register(RegisterFunction func[]){
 	}
 }
 
+void SState::RegisterLib(string name, RegisterFunction func[]){
+	Value table;
+	Table* t = new Table();
+	table.SetTable((int)t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	env->SetSymbol(name, si);
+	for (int i = 0;; ++i){
+		string name = func[i].name;
+		if (name == "") break;
+
+		Value function;
+		function.SetNativeFunction(func[i].f);
+		t->kv[name] = function;
+	}
+}
+
 SABER_NAMESPACE_END

@@ -37,6 +37,7 @@ public:
 	Value PopStack();
 
 	void Register(RegisterFunction func[]);
+	void RegisterLib(string name, RegisterFunction func[]);
 
 	shared_ptr<Lexer> GetLexer() const { return lexer; }
 	shared_ptr<SyntaxParse> GetParser() const { return parse; }

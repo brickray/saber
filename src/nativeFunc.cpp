@@ -1,7 +1,7 @@
 #include "nativeFunc.h"
 #include "sstate.h"
 #include "astree.h"
-#include "error.h"
+#include "saber.h"
 
 #include <time.h>
 #include <stdio.h>
@@ -10,68 +10,6 @@
 #endif
 
 SABER_NAMESPACE_BEGIN
-
-void checkParamsNum(string func, int numParams, int expect = 1){
-	if (numParams != expect){
-		Error::GetInstance()->ProcessError("%s函数只接收%d个参数\n", func.c_str(), expect);
-	}
-
-	return;
-}
-
-void checkBoolean(string func, Value& v, int idx = 1){
-	if (!v.IsBoolean()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为boolean\n", func.c_str(), idx);
-	}
-}
-
-void checkNumber(string func, Value& v, int idx = 1){
-	if (!v.IsNumber()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为number\n", func.c_str(), idx);
-	}
-}
-
-void checkInteger(string func, Value& v, int idx = 1){
-	if (!v.IsInteger()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为integer\n", func.c_str(), idx);
-	}
-}
-
-void checkFloat(string func, Value& v, int idx = 1){
-	if (!v.IsFloat()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为float\n", func.c_str(), idx);
-	}
-}
-
-void checkString(string func, Value& v, int idx = 1){
-	if (!v.IsString()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为string\n", func.c_str(), idx);
-	}
-}
-
-void checkFunction(string func, Value& v, int idx = 1){
-	if (!v.IsFunction()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为function\n", func.c_str(), idx);
-	}
-}
-
-void checkNativeFunction(string func, Value& v, int idx = 1){
-	if (!v.IsNativeFunction()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为nativefunction\n", func.c_str(), idx);
-	}
-}
-
-void checkLightUData(string func, Value& v, int idx = 1){
-	if (!v.IsLightUData()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为lightudata\n", func.c_str(), idx);
-	}
-}
-
-void checkTable(string func, Value& v, int idx = 1){
-	if (!v.IsTable()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为table\n", func.c_str(), idx);
-	}
-}
 
 //-----------------------------------basic lib--------------------
 static int print(SVM* svm, int numParams){

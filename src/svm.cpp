@@ -287,7 +287,9 @@ void SVM::execute(){
 		}
 		else{
 			if (isStack(operand)){
-				int fp = nps[nps.size() - 1].fp;
+				int fp;
+				if (nps.size() == 0) fp = 0;
+				else fp = nps[nps.size() - 1].fp;
 				int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
 	
 				src = stack[o];
