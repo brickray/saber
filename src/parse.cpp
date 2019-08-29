@@ -4,15 +4,12 @@
 SABER_NAMESPACE_BEGIN
 
 void Back(Lexer& lexer, shared_ptr<Astree>& astree){
-	int size = astree->GetSubtreeNumNodes() + 1;
-	for (int i = 0; i < size; ++i)
-		lexer.Back();
-
 	vector<shared_ptr<Astree>> childs;
 	astree->GetSubtreeNodes(childs);
 	for (int i = 0; i < childs.size(); ++i){
-		if (childs[i]->GetToken()->GetTokenType() == ETokenType::ESTRING){
-			childs[i]->GetToken()->SetTokenType(ETokenType::EIDENTIFIER);
+		Token* tok = childs[i]->GetToken();
+		if (tok && tok->GetTokenType() == ETokenType::ESTRING){
+			tok->SetTokenType(ETokenType::EIDENTIFIER);
 		}
 	}
 }
@@ -22,7 +19,7 @@ shared_ptr<Astree> RotateBTree(shared_ptr<Astree>& root){
 
 	bool first = true;
 	shared_ptr<Astree> node = root, ret = root, temp;
-	while (node->GetNumChildren()){
+	while (node->GetNumChildren() &&  node->GetToken()){
 		shared_ptr<Astree> left = node->GetChild(0);
 		shared_ptr<Astree> right = node->GetChild(1);
 		node->RemoveAllChild();
@@ -174,7 +171,7 @@ bool SyntaxParse::matchPrimary(shared_ptr<Astree>& astree){
 bool SyntaxParse::matchLValue(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
 	if (!matchIdentifier(name)) return false;
-	bool d = astree->GetToken() ? astree->GetToken()->GetToken() == "." : false;
+	bool d = astree->GetToken() ? (astree->GetToken()->GetToken() == ".") : false;
 	if (d) name->GetToken()->SetTokenType(ETokenType::ESTRING);
 	Token* tok;
 	if (match(".", &tok)){
@@ -184,6 +181,24 @@ bool SyntaxParse::matchLValue(shared_ptr<Astree>& astree){
 		if (matchLValue(dot)){
 			if (d) astree->AddChild(dot);
 			else astree = dot;
+
+			return true;
+		}
+
+		return false;
+	}
+	else if (match("[", &tok)){
+		shared_ptr<Astree> dot = shared_ptr<Astree>(new AstDot());
+		dot->SetToken(tok);
+		dot->AddChild(name);
+		if (matchExpr(dot)){
+			if (d) astree->AddChild(dot);
+			else astree = dot;
+
+			if (!match("]")){
+				Error::GetInstance()->ProcessError("行数:%d, table语法错误，缺少']'", tok->GetLineNumber());
+				return false;
+			}
 
 			return true;
 		}
@@ -363,10 +378,12 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 	}
 
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+	int p = lexer.GetTkptr();
 	if (matchLValue(name)){
 		Token* tok;
 		if (match("=", &tok)){
-			bool istable = name->GetToken()->GetToken() == ".";
+			bool istable = name->GetToken()->GetToken() == "." ||
+				name->GetToken()->GetToken() == "[";
 			name = RotateBTree(name);
 			shared_ptr<Astree> g = shared_ptr<Astree>(new AstGlobal());
 			g->SetTable(istable);
@@ -396,6 +413,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 		}
 
 		Back(lexer, name);
+		lexer.SetTkptr(p);
 	}
 
 	return matchAndorExpr(astree);
@@ -556,9 +574,17 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 
 	bool first = true;
 	do{
+		Token* tdot;
 		shared_ptr<Astree> param = shared_ptr<Astree>(new AstPrimary());
 		if (matchIdentifier(param)){
 			def->AddChild(param);
+		}
+		else if (match("...", &tdot)){
+			shared_ptr<Astree> args = shared_ptr<Astree>(new AstPrimary());
+			args->SetToken(tdot);
+			def->AddChild(args);
+			dynamic_cast<AstDef*>(def.get())->SetVariable();
+			break;
 		}
 		else{
 			if (first) break;
@@ -597,14 +623,17 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> func = shared_ptr<Astree>(new AstFunc());
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+	int p = lexer.GetTkptr();
 	if (!matchLValue(name)) return false;
 	
 	Token* tok;
 	if (!match("(", &tok)){
 		Back(lexer, name);
+		lexer.SetTkptr(p);
 		return false;
 	}
-	bool istable = name->GetToken()->GetToken() == ".";
+	bool istable = name->GetToken()->GetToken() == "." ||
+		name->GetToken()->GetToken() == "[";
 	func->SetTable(istable);
 
 	name = RotateBTree(name);
@@ -651,9 +680,17 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 
 	bool first = true;
 	do{
+		Token* tdot;
 		shared_ptr<Astree> param = shared_ptr<Astree>(new AstPrimary());
 		if (matchIdentifier(param)){
 			closure->AddChild(param);
+		}
+		else if (match("...", &tdot)){
+			shared_ptr<Astree> args = shared_ptr<Astree>(new AstPrimary());
+			args->SetToken(tdot);
+			closure->AddChild(args);
+			dynamic_cast<AstClosure*>(closure.get())->SetVariable();
+			break;
 		}
 		else{
 			if (first) break;

@@ -19,7 +19,11 @@ string Preprocessor::comments(string& code){
 		if (c == '/'){
 			if (code[i + 1] == '/'){
 				for (int j = i + 2; j < size; ++j){
-					if (code[j] == '\n' || j == size - 1){
+					if (code[j] == '\n'){
+						i = j - 1;
+						break;
+					}
+					else if (j == size - 1){
 						i = j;
 						break;
 					}

@@ -17,7 +17,8 @@ public:
 			return;
 		}
 		
-		int func = e->GetSymbol(funcName).address;
+		SymbolInfo si = e->GetSymbol(funcName);
+		int func = si.address;
 		for (int j = 1; j < children.size(); ++j){
 			int numParams = children[j]->GetNumChildren();
 			for (int i = 0; i < numParams; ++i){
@@ -34,9 +35,16 @@ public:
 					svm->AddCode(push);
 				}
 			}
+			else{
+				if (j == 1){
+					children[0]->Compile(e, svm, bc);
+				}
+				else{
+					SVM::Instruction push(Opcode::PUSH, -numParams, true);
+					svm->AddCode(push);
+				}
+			}
 
-			if (j == 1 && istable)
-				children[0]->Compile(e, svm, bc);
 			SVM::Instruction call(Opcode::CALL, numParams);
 			svm->AddCode(call);
 		}

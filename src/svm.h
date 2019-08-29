@@ -14,10 +14,17 @@ public:
 		bool relative;
 		char padding0;
 		char padding1;
-		int operand;
+		union{
+			int operand;
+			float operandf;
+		};
 
 		Instruction(char opc, int ope = 0, bool r = false)
 		:opcode(opc), operand(ope), relative(r){}
+
+
+		Instruction(char opc, float ope)
+			:opcode(opc), operandf(ope), relative(false){}
 	};
 
 protected:
@@ -26,10 +33,17 @@ protected:
 	vector<Value> stack;
 	vector<Value> constant;
 	vector<Value> global;
+	struct CallInfo{
+		int ap;
+		int fp;
+		int offset;
+	};
+	vector<CallInfo> nps;
 
 	int ip; //代码计数器
 	int sp;	//栈顶指针
 	int cp; //函数栈指针
+	int offset;
 
 	SState* S;
 
@@ -68,6 +82,8 @@ private:
 	int decodeGlobalIndex(int idx);
 	int encodeConstantIndex(int idx);
 	int decodeConstantIndex(int idx);
+
+	void constructTDot(Table* t, int fp, int ap);
 };
 
 SABER_NAMESPACE_END

@@ -16,6 +16,7 @@ enum class ETokenType{
 	ERIGHT_BRACKET,
 	ECOMMA,
 	EDOT,
+	ETDOT,
 	ENUM,
 };
 
@@ -29,6 +30,8 @@ static string tokenTypeString[int(ETokenType::ENUM)] = {
 	"left bracket",
 	"right bracket",
 	"comma",
+	"dot",
+	"tdot",
 };
 
 static hash_set<string> reserved = {
@@ -61,6 +64,7 @@ public:
 	ETokenType GetTokenType() const { return type; }
 	void SetTokenType(ETokenType t) { type = t; }
 	string GetToken() const { return token; }
+	void SetToken(string s) { token = s; }
 	string ToString() const{
 		string ret;
 		ret += "token = [" + token + "]";
@@ -88,6 +92,8 @@ public:
 	Token* PrevToken();
 	void Back();
 	bool IsEnd() const { return tokenPtr >= tokens.size(); }
+	int GetTkptr() const { return tokenPtr; }
+	void SetTkptr(int p) { tokenPtr = p; }
 
 private:
 	void init();

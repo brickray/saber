@@ -189,12 +189,12 @@ void Lexer::parseLine(string line){
 			c = line[++p];
 			continue;
 		}
-		else if (c == '(' || c == '{'){
+		else if (c == '(' || c == '{' || c == '['){
 			tok += c;
 			c = line[++p];
 			type = ETokenType::ELEFT_BRACKET;
 		}
-		else if (c == ')' || c == '}'){
+		else if (c == ')' || c == '}' || c == ']'){
 			tok += c;
 			c = line[++p];
 			type = ETokenType::ERIGHT_BRACKET;
@@ -207,7 +207,21 @@ void Lexer::parseLine(string line){
 		else if (c == '.'){
 			tok += c;
 			c = line[++p];
-			type = ETokenType::EDOT;
+			if (c == '.'){
+				tok += c;
+				c = line[++p];
+				if (c == '.'){
+					tok += c;
+					c = line[++p];
+					type = ETokenType::ETDOT;
+				}
+				else{
+					Error::GetInstance()->ProcessError("行数[%d], 错误的标识符[..]", lineNo);
+				}
+			}
+			else{
+				type = ETokenType::EDOT;
+			}
 		}
 		else if (c == '\0' || c == '\t'){
 			if (p < size) c = line[++p];

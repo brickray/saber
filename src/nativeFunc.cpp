@@ -87,7 +87,7 @@ static int print(SVM* svm, int numParams){
 
 	printf("%s\n", ret.c_str());
 
-	return numParams;
+	return 0;
 }
 
 static int type(SVM* svm, int numParams){
@@ -97,7 +97,7 @@ static int type(SVM* svm, int numParams){
 
 	svm->PushString(v.GetTypeString());
 
-	return numParams;
+	return 1;
 }
 
 static int load(SVM* svm, int numParams){
@@ -124,7 +124,7 @@ static int load(SVM* svm, int numParams){
 	func.SetFunction(idx);
 	svm->PushStack(func);
 
-	return numParams;
+	return 1;
 }
 
 static int test(SVM* svm, int numParams){
@@ -141,7 +141,7 @@ static int test(SVM* svm, int numParams){
 		svm->CallScript(1);
 	}
 
-	return numParams;
+	return 0;
 }
 
 //------------------------------------math lib---------------------
@@ -156,7 +156,7 @@ static int sin(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int asin(SVM* svm, int numParams){
@@ -170,7 +170,7 @@ static int asin(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int cos(SVM* svm, int numParams){
@@ -184,7 +184,7 @@ static int cos(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int acos(SVM* svm, int numParams){
@@ -198,7 +198,7 @@ static int acos(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int tan(SVM* svm, int numParams){
@@ -212,7 +212,7 @@ static int tan(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int atan(SVM* svm, int numParams){
@@ -226,7 +226,7 @@ static int atan(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int radians(SVM* svm, int numParams){
@@ -240,7 +240,7 @@ static int radians(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int degree(SVM* svm, int numParams){
@@ -254,7 +254,7 @@ static int degree(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int abs(SVM* svm, int numParams){
@@ -268,7 +268,7 @@ static int abs(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int log(SVM* svm, int numParams){
@@ -282,7 +282,7 @@ static int log(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int log2(SVM* svm, int numParams){
@@ -297,7 +297,7 @@ static int log2(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int log10(SVM* svm, int numParams){
@@ -312,7 +312,7 @@ static int log10(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int exp(SVM* svm, int numParams){
@@ -326,7 +326,7 @@ static int exp(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int sqrt(SVM* svm, int numParams){
@@ -340,7 +340,7 @@ static int sqrt(SVM* svm, int numParams){
 
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int pow(SVM* svm, int numParams){
@@ -359,7 +359,7 @@ static int pow(SVM* svm, int numParams){
 	float ret = powf(b, e);
 	svm->PushFloat(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int floor(SVM* svm, int numParams){
@@ -377,7 +377,7 @@ static int floor(SVM* svm, int numParams){
 		svm->PushStack(n);
 	}
 
-	return numParams;
+	return 1;
 }
 
 static int ceil(SVM* svm, int numParams){
@@ -395,7 +395,7 @@ static int ceil(SVM* svm, int numParams){
 		svm->PushStack(n);
 	}
 
-	return numParams;
+	return 1;
 }
 
 static int mmax(SVM* svm, int numParams){
@@ -406,7 +406,7 @@ static int mmax(SVM* svm, int numParams){
 	v1 = (v1 > v2).GetBoolean() ? v1 : v2;
 	svm->PushStack(v1);
 
-	return numParams;
+	return 1;
 }
 
 static int mmin(SVM* svm, int numParams){
@@ -417,7 +417,7 @@ static int mmin(SVM* svm, int numParams){
 	v1 = (v1 < v2).GetBoolean() ? v1 : v2;
 	svm->PushStack(v1);
 
-	return numParams;
+	return 1;
 }
 
 //---------------------------------os lib-------------------------
@@ -430,7 +430,7 @@ static int gettime(SVM* svm, int numParams){
 	str = str.substr(0, str.size() - 1);
 	svm->PushString(str);
 
-	return numParams;
+	return 1;
 }
 
 static int getclock(SVM* svm, int numParams){
@@ -441,7 +441,7 @@ static int getclock(SVM* svm, int numParams){
 
 	svm->PushInt(t);
 
-	return numParams;
+	return 1;
 }
 
 static int osexit(SVM* svm, int numParams){
@@ -449,7 +449,7 @@ static int osexit(SVM* svm, int numParams){
 
 	exit(0);
 	
-	return numParams;
+	return 0;
 }
 
 static int osleep(SVM* svm, int numParams){
@@ -462,7 +462,7 @@ static int osleep(SVM* svm, int numParams){
 	Sleep(t);
 #endif
 
-	return numParams;
+	return 0;
 }
 
 //------------------------------str lib------------------------
@@ -473,7 +473,7 @@ static int len(SVM* svm, int numParams){
 
 	svm->PushInt(str.GetString().length());
 
-	return numParams;
+	return 1;
 }
 
 static int substr(SVM* svm, int numParams){
@@ -491,7 +491,7 @@ static int substr(SVM* svm, int numParams){
 	string str = strV.GetString();
 	svm->PushString(str.substr(start, length));
 
-	return numParams;
+	return 1;
 }
 
 static int findfirst(SVM* svm, int numParams){
@@ -523,7 +523,7 @@ static int findfirst(SVM* svm, int numParams){
 
 	svm->PushInt(str.find_first_of(find, start));
 
-	return numParams;
+	return 1;
 }
 
 static int findlast(SVM* svm, int numParams){
@@ -555,7 +555,7 @@ static int findlast(SVM* svm, int numParams){
 
 	svm->PushInt(str.find_last_of(find, start));
 
-	return numParams;
+	return 1;
 }
 
 static int findsub(SVM* svm, int numParams){
@@ -587,7 +587,7 @@ static int findsub(SVM* svm, int numParams){
 
 	svm->PushInt(str.find(find, start));
 
-	return numParams;
+	return 1;
 }
 
 static int insert(SVM* svm, int numParams){
@@ -605,7 +605,7 @@ static int insert(SVM* svm, int numParams){
 	
 	svm->PushString(str.insert(p0, i));
 
-	return numParams;
+	return 1;
 }
 
 static int reverse(SVM* svm, int numParams){
@@ -623,7 +623,7 @@ static int reverse(SVM* svm, int numParams){
 	
 	svm->PushString(ret);
 
-	return numParams;
+	return 1;
 }
 
 static int at(SVM* svm, int numParams){
@@ -643,7 +643,7 @@ static int at(SVM* svm, int numParams){
 	t[0] = str[p0];
 	svm->PushString(t);
 
-	return numParams;
+	return 1;
 }
 
 static int sforeach(SVM* svm, int numParams){
@@ -668,7 +668,7 @@ static int sforeach(SVM* svm, int numParams){
 		svm->CallScript(2);
 	}
 	
-	return numParams;
+	return 0;
 }
 
 static int format(SVM* svm, int numParams){
@@ -848,9 +848,58 @@ static int format(SVM* svm, int numParams){
 		}
 	}
 
-	svm->PushString(ret);
+	string t;
+	for (int i = 0; i < ret.size(); ++i){
+		char c = ret[i];
+		if (c == '\\'){
+			char next = ret[++i];
+			switch (next){
+			case 'a':
+				t += '\a';
+				break;
+			case 'b':
+				t += '\b';
+				break;
+			case 'f':
+				t += '\f';
+				break;
+			case 'n':
+				t += '\n';
+				break;
+			case 'r':
+				t += '\r';
+				break;
+			case 't':
+				t += '\t';
+				break;
+			case 'v':
+				t += '\v';
+				break;
+			case '\\':
+				t += '\\';
+				break;
+			case '?':
+				t += '\?';
+				break;
+			case '\"':
+				t += '\"';
+				break;
+			case '\'':
+				t += '\'';
+				break;
+			default:
+				t += c;
+				t += next;
+			}
+		}
+		else{
+			t += c;
+		}
+	}
 
-	return numParams;
+	svm->PushString(t);
+
+	return 1;
 }
 
 //------------------------------io lib-------------------------
@@ -868,7 +917,7 @@ static int fexist(SVM* svm, int numParams){
 	if (f) svm->PushBool(true);
 	else svm->PushBool(false);
 
-	return numParams;
+	return 1;
 }
 
 static int open(SVM* svm, int numParams){
@@ -898,7 +947,7 @@ static int open(SVM* svm, int numParams){
 	
 	svm->PushLightUData(int(f));
 
-	return numParams;
+	return 1;
 }
 
 static int read(SVM* svm, int numParams){
@@ -917,7 +966,7 @@ static int read(SVM* svm, int numParams){
 	svm->PushString(str);
 	delete[] str;
 
-	return numParams;
+	return 1;
 }
 
 static int write(SVM* svm, int numParams){
@@ -945,7 +994,7 @@ static int write(SVM* svm, int numParams){
 		fwrite(s.c_str(), s.length()*sizeof(char), 1, f);
 	}
 
-	return numParams;
+	return 0;
 }
 
 static int close(SVM* svm, int numParams){
@@ -957,7 +1006,7 @@ static int close(SVM* svm, int numParams){
 	FILE* f = reinterpret_cast<FILE*>(file.GetLightUData());
 	fclose(f);
 
-	return numParams;
+	return 0;
 }
 
 //-------------------------------table lib----------------------
@@ -973,7 +1022,7 @@ static int remove(SVM* svm, int numParams){
 	if (ti != table->kv.end()) 
 		table->kv.erase(ti);
 
-	return numParams;
+	return 0;
 }
 
 static int tlength(SVM* svm, int numParams){
@@ -984,7 +1033,7 @@ static int tlength(SVM* svm, int numParams){
 	Table* table = reinterpret_cast<Table*>(t.GetTable());
 	svm->PushInt(table->kv.size());
 
-	return numParams;
+	return 1;
 }
 
 static int tforeach(SVM* svm, int numParams){
@@ -1008,7 +1057,7 @@ static int tforeach(SVM* svm, int numParams){
 		svm->CallScript(2);
 	}
 
-	return numParams;
+	return 0;
 }
 
 //------------------------------func register-------------------

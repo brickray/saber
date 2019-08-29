@@ -14,47 +14,31 @@ public:
 		switch (type){
 		case ETokenType::ENUMBER:{
 			string tok = token->GetToken();
-			int idx;
-			if (e->HasNumberSymbol(tok)){
-				idx = e->GetNumberSymbol(tok).address;
+			if (tok.find('.') != -1){
+				float v = atof(tok.c_str());
+
+				SVM::Instruction ins(Opcode::PUSHF, v);
+				svm->AddCode(ins);
 			}
 			else{
-				if (tok.find('.') != -1){
-					value.SetType(EValueType::EFLOAT);
-					float v = atof(tok.c_str());
-					value.SetFloat(v);
-				}
-				else{
-					value.SetType(EValueType::EINTEGER);
-					int v = atoi(tok.c_str());
-					value.SetInt(v);
-				}
+				int v = atoi(tok.c_str());
 
-				idx = svm->AddConstant(value);
-				SymbolInfo si = { value, idx, false };
-				e->SetNumberSymbol(tok, si);
+				SVM::Instruction ins(Opcode::PUSHI, v);
+				svm->AddCode(ins);
 			}
-			
-			SVM::Instruction ins(Opcode::PUSH, idx);
-			svm->AddCode(ins);
 			break;
 		}
-		case ETokenType::EIDENTIFIER:
-			if (token->GetToken() == "true"){
-				int idx = -1;
-				SVM::Instruction ins(Opcode::PUSH, idx);
-				svm->AddCode(ins);
-				return;
-			}
-			else if (token->GetToken() == "false"){
-				int idx = -2;
-				SVM::Instruction ins(Opcode::PUSH, idx);
+		case ETokenType::EIDENTIFIER:{
+			string tok = token->GetToken();
+			if (tok == "true" || tok == "false"){
+				int i = tok == "true" ? 1 : 0;
+				SVM::Instruction ins(Opcode::PUSHB, i);
 				svm->AddCode(ins);
 				return;
 			}
 
-			if (e->HasSymbol(token->GetToken())){
-				int idx = e->GetSymbol(token->GetToken()).address;
+			if (e->HasSymbol(tok)){
+				int idx = e->GetSymbol(tok).address;
 
 				SVM::Instruction ins(Opcode::PUSH, idx);
 				svm->AddCode(ins);
@@ -65,7 +49,8 @@ public:
 
 			Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
 			break;
-		case ETokenType::ESTRING:
+		}
+		case ETokenType::ESTRING:{
 			string str = token->GetToken();
 			int idx;
 			if (e->HasStringSymbol(str)){
@@ -81,6 +66,7 @@ public:
 			SVM::Instruction ins(Opcode::PUSH, idx);
 			svm->AddCode(ins);
 			break;
+		}
 		}
 	}
 };
