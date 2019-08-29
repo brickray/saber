@@ -4,11 +4,11 @@ saber is a toy script language
 # Example
 ```
 def fib(a)
-	if a == 1 || a == 0 then
-		return 1
-	end
+    if a == 1 || a == 0 then
+        return 1
+    end
 
-	return fib(a - 1) + fib(a-2)
+    return fib(a - 1) + fib(a - 2)
 end
 
 tb = {} //create a table
@@ -19,10 +19,33 @@ tb.iter = def (key, value) print(key, value) end //table iteration function
 print(tb.fib(tb.fibp), table.len(tb))
 table.foreach(tb, tb.iter) //traverse table
 
+def Test(n1, ...)
+    local a = "test"
+    print(string.format("%s, %s", a, n1));
+    local i
+    for i = 0, i < args.num, i += 1 do
+	print(args[i])
+    end
+end
+
+Test("a1", "a2", "a3", 1, 2, 3, 4)
+Test("c1", "c2", 2, 3)
+
 
 //result
 --89  3
---fibp  10
---iter  function
 --fib  function
+--iter  function
+--fibp  10
+--test, a1
+--a2
+--a3
+--1
+--2
+--3
+--4
+--test, c1
+--c2
+--2
+--3
 ```
