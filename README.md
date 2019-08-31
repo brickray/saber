@@ -31,6 +31,18 @@ end
 Test("a1", "a2", "a3", 1, 2, 3, 4)
 Test("c1", "c2", 2, 3)
 
+def func()
+    print("co-body1")
+    coroutine.yield()
+    print("co-body2")
+end
+
+co = coroutine.create(func)
+coroutine.resume(co)
+print("resume1")
+coroutine.resume(co)
+print("resume2")
+
 
 //result
 --89  3
@@ -48,4 +60,8 @@ Test("c1", "c2", 2, 3)
 --c2
 --2
 --3
+--co-body1
+--resume1
+--co-body2
+--resume2
 ```
