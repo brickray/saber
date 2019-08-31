@@ -43,6 +43,17 @@ public:
 		return SymbolInfo();
 	}
 
+	SymbolInfo GetSymbol(string symbol, int& level){
+		if (hasSymbol(symbol)) return getSymbol(symbol);
+
+		if (outter){
+			level++;
+			return outter->GetSymbol(symbol, level);
+		}
+
+		return SymbolInfo();
+	}
+
 	SymbolInfo GetSymbol(string symbol, bool& local){
 		if (hasSymbol(symbol)){
 			SymbolInfo si = getSymbol(symbol);

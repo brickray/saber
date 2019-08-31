@@ -7,15 +7,16 @@
 SABER_NAMESPACE_BEGIN
 
 enum EValueType{
-	EBOOLEAN    = 1,
-	EINTEGER    = 2,
-	EFLOAT      = 4,
-	ESTRING     = 8,
-	EFUNC       = 16,
-	ENATIVEFUNC = 32,
-	ELIGHTUDATA = 64,
-	ETABLE      = 128,
-	ENULL       = 256,
+	EBOOLEAN    = 1 << 0,
+	EINTEGER    = 1 << 1,
+	EFLOAT      = 1 << 2,
+	ESTRING     = 1 << 3,
+	EFUNC       = 1 << 4,
+	ENATIVEFUNC = 1 << 5,
+	ELIGHTUDATA = 1 << 6,
+	ETABLE      = 1 << 7,
+	ECOROUTINE  = 1 << 8,
+	ENULL       = 1 << 9,
 	ENUMBER     = EINTEGER | EFLOAT,
 };
 
@@ -23,12 +24,29 @@ class Environment;
 class Astree;
 class SVM;
 typedef int(*SFunc)(SVM* vm, int numParams);
+
+enum class ECoroutineStatus{
+	ESTART     = 0,
+	ESUSPENDED = 1,
+	ERUNING    = 2,
+	EDEAD      = 3,
+};
+
+struct Coroutine{
+	ECoroutineStatus status;
+	int ip;
+//	int sp;
+	int cp;
+	int offset;
+};
+
 struct SValue{
 	union{
-		bool   bValue;
-		int    iValue;
-		float  fValue;
-		SFunc sfunc;
+		bool       bValue;
+		int        iValue;
+		float      fValue;
+		SFunc      sfunc;
+		Coroutine* co;
 	};
 	string sValue;
 };
@@ -60,6 +78,7 @@ public:
 		else if (IsString()) ret = "string";
 		else if (IsLightUData()) ret = "lightudata";
 		else if (IsTable()) ret = "table";
+		else if (IsCoroutine()) ret = "coroutine";
 		else if (IsNull()) ret = "null";
 
 		return ret;
@@ -72,6 +91,7 @@ public:
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; }
 	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; }
 	void SetTable(int i) { type = EValueType::ETABLE; value.iValue = i; }
+	void SetCoroutine(Coroutine* co) { type = EValueType::ECOROUTINE; value.co = co; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -81,6 +101,7 @@ public:
 	bool IsNativeFunction() const { return type == EValueType::ENATIVEFUNC; }
 	bool IsLightUData() const { return type == EValueType::ELIGHTUDATA; }
 	bool IsTable() const { return type == EValueType::ETABLE; }
+	bool IsCoroutine() const { return type == EValueType::ECOROUTINE; }
 	bool IsNull() const { return type == EValueType::ENULL; }
 	bool GetBoolean() const { return value.bValue; }
 	int GetInteger() const { return value.iValue; }
@@ -90,6 +111,7 @@ public:
 	SFunc GetNativeFunction() const { return value.sfunc; }
 	int GetLightUData() const { return value.iValue; }
 	int GetTable() const { return value.iValue; }
+	Coroutine* GetCoroutine() const { return value.co; }
 
 	Value operator-(){
 		Value va;
@@ -537,6 +559,9 @@ public:
 		}
 		else if (IsTable()){
 			ret = "table";
+		}
+		else if (IsCoroutine()){
+			ret = "coroutine";
 		}
 		else if (IsNull()){
 			ret = "null";

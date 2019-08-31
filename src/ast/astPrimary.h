@@ -38,9 +38,11 @@ public:
 			}
 
 			if (e->HasSymbol(tok)){
-				int idx = e->GetSymbol(tok).address;
+				int level = 0;
+				int idx = e->GetSymbol(tok, level).address;
 
-				SVM::Instruction ins(Opcode::PUSH, idx);
+				int p = idx | (level << 24);
+				SVM::Instruction ins(Opcode::PUSH, p);
 				svm->AddCode(ins);
 
 				bc.nearst = idx;

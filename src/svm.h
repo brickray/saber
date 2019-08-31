@@ -27,6 +27,13 @@ public:
 			:opcode(opc), operandf(ope), relative(false){}
 	};
 
+	struct Register{
+		int ip;
+		int sp;
+		int cp;
+		int offset;
+	};
+
 protected:
 #define STACK_SIZE 1024
 	vector<Instruction> code;
@@ -39,6 +46,7 @@ protected:
 		int offset;
 	};
 	vector<CallInfo> nps;
+	vector<Coroutine*> co; //协程栈
 
 	int ip; //代码计数器
 	int sp;	//栈顶指针
@@ -66,18 +74,26 @@ public:
 	void PushNativeFunc(SFunc f);
 	void PushLightUData(int i);
 	void PushTable(int i);
+	void PushCoroutine(Coroutine* co); //压入到全局栈
 	Value PopStack();
 
 	void Run();
 	void CallScript(int numParams);
 
 	SState* GetSState() const { return S; }
+	Register GetRegister() const { return{ ip, sp, cp, offset }; }
+	void SetRegister(Register r) { ip = r.ip; sp = r.sp; cp = r.cp; offset = r.offset; }
+	bool IsEnd() const { return ip >= code.size(); }
+	//压入到辅助结构
+	void PushCo(Coroutine* c); 
+	Coroutine* PopCo(); 
 	string ShowCode();
 
 private:
 	void execute();
 	bool isStack(int idx);
 	bool isGlobal(int idx);
+	bool isConstant(int idx);
 	int encodeGlobalIndex(int idx);
 	int decodeGlobalIndex(int idx);
 	int encodeConstantIndex(int idx);

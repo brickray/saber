@@ -9,7 +9,7 @@ end
 tb = {} //create a table
 tb.fib = fib //fibonacci
 tb.fibp = 10
-tb.iter = def (key, value) print(key, value) end //table iteration function
+tb.iter = def (...) print(args[0], args[1]) end //table iteration function
 tb[2] = 3
 
 print(tb.fib(tb.fibp), table.len(tb))
@@ -28,10 +28,9 @@ def AA(n1, ...)
 	local a = 4
 	local b = 11
 	local c = 44
-	print(args.num, a+b+c, n1)
-	table.foreach(args, tb.iter)
+	print(args.num, n1)
 	local i
-	for i = 0, i < args.num, i += 1 do
+	for i = 0, i < args.num, i = i + 1 do
 		print(args[tb[2]])
 	end
 end
@@ -44,10 +43,10 @@ if true then
 end
 
 def add (a, ...)
-	local ret = a
-	local i
-	for i = 0, i < args.num, i+=1 do
-		ret += args[i]
+	 ret = a
+	 
+	for i = 0, i < args.num, i = i +1 do
+		ret = ret + args[i]
 	end
 
 	return ret
@@ -57,3 +56,63 @@ local t = test.create()
 test.setx(t, 1)
 test.sety(t, 2)
 print(test.add(t))
+
+/*def foo (a)
+	print("foo", a)
+	return coroutine.yield(2*a)
+end
+
+def func(a,b)
+   print("co-body1", a, b)
+   local r = foo(a+1)
+   print("co-body2", r)
+   local s = coroutine.yield(a+b)
+   print("co-body3", s)
+   return b
+end
+
+co = coroutine.create(func)
+	
+print("1----")
+print(coroutine.resume(co, 1, 10), "main")
+print("2----")
+print(coroutine.resume(co, "r"), "main")
+print("3----")
+print(coroutine.resume(co, "dd"), "main")
+print("4----")
+print(coroutine.resume(co, "x"), "main")*/
+
+def func()
+	print("co-body1")
+	coroutine.yield()
+	def A()
+		print("next-co-body1")
+		coroutine.yield()
+		print("next-co-body2")
+		coroutine.yield()
+		print("next-co-body3")
+	end
+	local co = coroutine.create(A)
+	coroutine.resume(co)
+	print("next-co-resume1")
+	coroutine.resume(co)
+	print("next-co-resume2")
+	coroutine.resume(co)
+	print("next-co-resume3")
+end
+
+co = coroutine.create(func)
+coroutine.resume(co)
+print("resume1")
+coroutine.resume(co)
+print("resume2")
+
+
+
+
+
+
+
+
+
+

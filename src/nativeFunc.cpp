@@ -998,6 +998,132 @@ static int tforeach(SVM* svm, int numParams){
 	return 0;
 }
 
+//------------------------------coroutine lib-------------------
+static int cocreate(SVM* svm, int numParams){
+	checkParamsNum("coroutine.create", numParams);
+	Value func = svm->PopStack();
+	checkFunction("coroutine.create", func);
+
+	int p = func.GetInteger();
+	Coroutine* co = new Coroutine();
+	co->ip = p;
+	co->status = ECoroutineStatus::ESTART;
+	svm->PushCoroutine(co);
+
+	return 1;
+}
+
+static int coresume(SVM* svm, int numParams){
+	checkParamsNumg("coroutine.resume", numParams);
+	vector<Value> p(numParams);
+	for (int i = 0; i < numParams; ++i)
+		p[numParams - i - 1] = svm->PopStack();
+
+	checkCoroutine("coroutine.resume", p[0]);
+
+	Coroutine* co = p[0].GetCoroutine();
+	svm->PushCo(co);
+
+	ECoroutineStatus status = co->status;
+	co->status = ECoroutineStatus::ERUNING;
+
+	SVM::Register r = svm->GetRegister();
+	if (status == ECoroutineStatus::EDEAD){
+		//当协程死亡时返回false
+		svm->PushBool(false);
+		co->status = ECoroutineStatus::EDEAD;
+		return 1;
+	}
+	else if (status == ECoroutineStatus::ESTART){
+		Value func;
+		func.SetFunction(co->ip);
+		co->ip = r.ip;
+		co->cp = r.cp;
+		co->offset = r.offset;
+		for (int i = 0; i < numParams - 1; ++i)
+			svm->PushStack(p[i + 1]);
+		svm->PushStack(func);
+		svm->CallScript(numParams - 1);
+
+		SVM::Register restore = svm->GetRegister();
+		if (!svm->IsEnd()){
+			Coroutine* co = svm->PopCo();
+			restore.ip = co->ip;
+			restore.cp = co->cp;
+			restore.offset = co->offset;
+			svm->SetRegister(restore);
+		}
+
+		co->status = ECoroutineStatus::EDEAD;
+	}
+	else if (status == ECoroutineStatus::ESUSPENDED){
+		checkParamsNuml("coroutine.resume", numParams, 2);
+
+		SVM::Register restore;
+		restore.ip = co->ip;
+		restore.sp = r.sp;
+		restore.cp = co->cp;
+		restore.offset = co->offset;
+		svm->SetRegister(restore);
+		if (numParams == 2) svm->PushStack(p[1]);
+
+		co->ip = r.ip;
+		co->cp = r.cp;
+		co->offset = r.offset;
+	}
+
+	return 0;
+}
+
+static int coyield(SVM* svm, int numParams){
+	checkParamsNuml("coroutine.yield", numParams);
+	
+	Coroutine* co = svm->PopCo();
+	co->status = ECoroutineStatus::ESUSPENDED;
+	SVM::Register r = svm->GetRegister();
+	int ip = r.ip;
+	int cp = r.cp;
+	int offset = r.offset;
+	r.ip = co->ip;
+	r.cp = co->cp;
+	r.offset = co->offset;
+	svm->SetRegister(r);
+	
+	co->ip = ip;
+	co->cp = cp;
+	co->offset = offset;
+	
+	return 0;
+}
+
+static int costatus(SVM* svm, int numParams){
+	checkParamsNum("coroutine.status", numParams);
+	Value v = svm->PopStack();
+	checkCoroutine("coroutine.status", v);
+
+	string ret;
+	Coroutine* co = v.GetCoroutine();
+	ECoroutineStatus status = co->status;
+	switch(status){
+	case ECoroutineStatus::ESTART:
+		ret = "start";
+		break;
+	case ECoroutineStatus::ERUNING:
+		ret = "runing";
+		break;
+	case ECoroutineStatus::ESUSPENDED:
+		ret = "suspended";
+		break;
+	case ECoroutineStatus::EDEAD:
+		ret = "dead";
+		break;
+	}
+
+	svm->PushString(ret);
+
+	return 1;
+}
+
 //------------------------------func register-------------------
 
 static RegisterFunction basic[] = {
@@ -1167,6 +1293,31 @@ void registerTable(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	}
 }
 
+static RegisterFunction co[] = {
+	{ "create", cocreate },
+	{ "resume", coresume },
+	{ "yield", coyield },
+	{ "status", costatus },
+	{ "", nullptr },
+};
+
+void registerCoroutine(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	Value table;
+	Table* t = new Table();
+	table.SetTable((int)t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	e->SetSymbol("coroutine", si);
+	for (int i = 0;; ++i){
+		string name = co[i].name;
+		if (name == "") break;
+
+		Value function;
+		function.SetNativeFunction(co[i].f);
+		t->kv[name] = function;
+	}
+}
+
 void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	registerBasic(e, svm);
 	registerMath(e, svm);
@@ -1174,6 +1325,7 @@ void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	registerStr(e, svm);
 	registerIo(e, svm);
 	registerTable(e, svm);
+	registerCoroutine(e, svm);
 }
 
 SABER_NAMESPACE_END

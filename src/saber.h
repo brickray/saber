@@ -15,6 +15,22 @@ inline void checkParamsNum(string func, int numParams, int expect = 1){
 	return;
 }
 
+inline void checkParamsNumg(string func, int numParams, int expect = 1){
+	if (numParams < expect){
+		Error::GetInstance()->ProcessError("%s函数参数个数需大于等于%d\n", func.c_str(), expect);
+	}
+
+	return;
+}
+
+inline void checkParamsNuml(string func, int numParams, int expect = 1){
+	if (numParams > expect){
+		Error::GetInstance()->ProcessError("%s函数参数个数需小于等于%d\n", func.c_str(), expect);
+	}
+
+	return;
+}
+
 inline void checkBoolean(string func, Value& v, int idx = 1){
 	if (!v.IsBoolean()){
 		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为boolean\n", func.c_str(), idx);
@@ -66,6 +82,12 @@ inline void checkLightUData(string func, Value& v, int idx = 1){
 inline void checkTable(string func, Value& v, int idx = 1){
 	if (!v.IsTable()){
 		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为table\n", func.c_str(), idx);
+	}
+}
+
+inline void checkCoroutine(string func, Value& v, int idx = 1){
+	if (!v.IsCoroutine()){
+		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为coroutine\n", func.c_str(), idx);
 	}
 }
 

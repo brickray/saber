@@ -103,8 +103,26 @@ void SVM::PushTable(int i){
 	PushStack(v);
 }
 
+void SVM::PushCoroutine(Coroutine* co){
+	Value v;
+	v.SetCoroutine(co);
+	PushStack(v);
+}
+
 Value SVM::PopStack(){
 	return stack[--sp];
+}
+
+void SVM::PushCo(Coroutine* c) {
+	co.push_back(c);
+}
+
+Coroutine* SVM::PopCo() {
+	if (co.size() == 0)
+		return nullptr;
+	Coroutine* c = co[co.size() - 1]; 
+	co.pop_back();
+	return c;
 }
 
 void SVM::Run(){
@@ -112,7 +130,7 @@ void SVM::Run(){
 	SVM::Instruction exit(Opcode::EXIT);
 	AddCode(exit);
 	
-	while (ip < code.size()){
+	while (!IsEnd()){
 		execute();
 	}
 }
@@ -139,24 +157,28 @@ void SVM::CallScript(int numParams){
 		esp.SetInt(ncp);
 		stack[sp++] = esp;
 		stack[sp++].SetInt(cp);
+		sp++; //variable parameters table
+
 		cp = ncp;
 		if (variable){
-			//construct ...
 			Table* t = new Table();
-			stack[sp++].SetTable(int(t));
+			stack[sp - 1].SetTable(int(t));
+			//construct ...
 			constructTDot(t, fp, numParams);
 		}
 
+		int beforeCall = nps.size();
 		nps.push_back({ numParams, fp, offset });
 		offset = numParams - fp;
 		ip = p & 0x00ffffff;
 
 		while (true){
 			execute();
-			if (ip == nextip){
+			if ((ip == nextip) && (beforeCall == nps.size())){
 				ip--;
 				break;
 			}
+			if (IsEnd()) break;
 		}
 	}
 	else{
@@ -224,11 +246,13 @@ void SVM::execute(){
 			esp.SetInt(ncp);
 			stack[sp++] = esp;
 			stack[sp++].SetInt(cp);
+			sp++; //variable parameters table
+
 			cp = ncp;
 			if (variable){
-				//construct ...
 				Table* t = new Table();
-				stack[sp++].SetTable(int(t));
+				stack[sp - 1].SetTable(int(t));
+				//construct ...
 				constructTDot(t, fp, operand);
 			}
 
@@ -260,8 +284,8 @@ void SVM::execute(){
 		ip = eip;
 		if (numRetVariable) stack[sp++] = ret;
 
+		//可变参函数
 		if (ap != fp){
-			//可变参函数
 			Table* t = reinterpret_cast<Table*>(tb);
 			delete t;
 		}
@@ -282,20 +306,50 @@ void SVM::execute(){
 	}
 	case Opcode::PUSH:{
 		Value src;
+
 		if (relative){
 			src = stack[sp - 1 + operand];
 		}
 		else{
-			if (isStack(operand)){
-				int fp;
-				if (nps.size() == 0) fp = 0;
-				else fp = nps[nps.size() - 1].fp;
-				int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
-	
-				src = stack[o];
+			if (isConstant(operand)){
+				src = constant[decodeConstantIndex(operand)];
 			}
-			else if (isGlobal(operand)) src = global[decodeGlobalIndex(operand)];
-			else src = constant[decodeConstantIndex(operand)];
+			else{
+				int level = (operand & 0xff000000) >> 24;
+				int idx = operand & 0x00ffffff;
+				if (isStack(idx)){
+					bool mp = false;
+					int ap, fp;
+					if (nps.size() == 0){
+						mp = true;
+						ap = 0;
+						fp = 0;
+					}
+					else{
+						CallInfo ci = nps[nps.size() - 1];
+						ap = ci.ap;
+						fp = ci.fp;
+					}
+					if (false){
+						Table* table = reinterpret_cast<Table*>(stack[cp + ap + 3].GetTable());
+						//find prev table
+						for (int i = 0; i < level; ++i){
+							table = reinterpret_cast<Table*>(table->kv["prev"].GetTable());
+						}
+						int o = idx + ((idx >= fp + 3) ? offset : 0);
+
+						int i = table->kv["cv" + to_string(o)].GetInteger();
+						src = stack[i];
+					}
+					else{
+						int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
+						src = stack[o];
+					}
+				}
+				else{//global
+					src = global[decodeGlobalIndex(idx)];
+				}
+			}
 		}
 
 		stack[sp++] = src;
@@ -457,6 +511,10 @@ bool SVM::isGlobal(int idx){
 	return idx >= STACK_SIZE;
 }
 
+bool SVM::isConstant(int idx){
+	return idx < 0;
+}
+
 int SVM::encodeGlobalIndex(int idx){
 	return STACK_SIZE + idx;
 }
@@ -524,7 +582,17 @@ string SVM::ShowCode(){
 		}
 		else if (code[i].opcode >= Opcode::ENUM1 && code[i].opcode < Opcode::ENUM2){
 			ret += "  ";
-			ret += to_string(code[i].operand);
+			if (c == "PUSH"){
+				if (isConstant(code[i].operand)){
+					ret += "\"" + constant[decodeConstantIndex(code[i].operand)].GetString() + "\"";
+				}
+				else{
+					ret += to_string(code[i].operand);
+				}
+			}
+			else{
+				ret += to_string(code[i].operand);
+			}
 			ret += "  ";
 			ret += to_string(code[i].relative);
 		}
