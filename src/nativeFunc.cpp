@@ -1000,13 +1000,17 @@ static int tforeach(SVM* svm, int numParams){
 
 //------------------------------coroutine lib-------------------
 struct CallInfo{
+	int cp;
 	int ap;
 	int fp;
 	int offset;
 };
-static hash_map<Coroutine*, CallInfo> ccmap = {
-	hash_map<Coroutine*, CallInfo>::value_type((Coroutine*)1, { 0, 0, 0 })
-};
+static hash_map<Coroutine*, vector<CallInfo> > ccmap;
+
+static void coinit(){
+	vector<CallInfo> top = { { 0, 0, 0, 0 } };
+	ccmap[(Coroutine*)1] = top;
+}
 
 static int cocreate(SVM* svm, int numParams){
 	checkParamsNum("coroutine.create", numParams);
@@ -1047,12 +1051,11 @@ static int coresume(SVM* svm, int numParams){
 		Value func;
 		func.SetFunction(co->ip);
 		co->ip = r.ip;
-		co->cp = r.cp;
 		int ap = numParams - 1;
+		int cp = r.sp;
 		int fp = (func.GetInteger() & 0x7f000000) >> 24;
 		int offset = ap - fp;
-		CallInfo ci = { ap, fp, offset };
-		ccmap[co] = ci;
+		ccmap[co].push_back({ cp, ap, fp, offset });
 
 		for (int i = 0; i < numParams - 1; ++i)
 			svm->PushStack(p[i + 1]);
@@ -1062,11 +1065,12 @@ static int coresume(SVM* svm, int numParams){
 	else if (status == ECoroutineStatus::ESUSPENDED){
 		checkParamsNuml("coroutine.resume", numParams, 2);
 
-		CallInfo ci = ccmap[co];
+		CallInfo ci = ccmap[co][ccmap[co].size() - 1];
+		ccmap[co].pop_back();
 		SVM::Register restore;
 		restore.ip = co->ip;
 		restore.sp = r.sp;
-		restore.cp = co->cp;
+		restore.cp = ci.cp;
 		restore.offset = ci.offset;
 		restore.fp = ci.fp;
 		restore.ap = ci.ap;
@@ -1075,9 +1079,14 @@ static int coresume(SVM* svm, int numParams){
 
 		Value vip;
 		vip.SetInt(r.ip + 1);
-		svm->SetStack(co->cp + ci.ap, vip);
+		if (ccmap[co].size() >= 1 && ccmap[co][0].cp == ci.cp)
+			svm->SetStack(ci.cp + ci.ap, vip);
 		co->ip = r.ip;
-		co->cp = r.cp;
+	}
+	else if (status == ECoroutineStatus::ERUNING){
+		co->status = ECoroutineStatus::EDEAD;
+		svm->PushBool(false);
+		return 1;
 	}
 
 	return 0;
@@ -1091,23 +1100,26 @@ static int coyield(SVM* svm, int numParams){
 	co->status = ECoroutineStatus::ESUSPENDED;
 	SVM::Register r = svm->GetRegister();
 	CallInfo ci;
-	if (svm->GetCoSize() == 0) ci = ccmap[(Coroutine*)1];
+	if (svm->GetCoSize() == 0) ci = ccmap[(Coroutine*)1][0];
 	else{
 		Coroutine* p = svm->PopCo();
-		ci = ccmap[p];
+		ci = ccmap[p][ccmap[p].size() - 1];
 		svm->PushCo(p);
 	}
 	int ip = r.ip;
 	int cp = r.cp;
+	int offset = r.offset;
+	int ap = r.ap;
+	int fp = r.fp;
 	r.ip = co->ip;
-	r.cp = co->cp;
+	r.cp = ci.cp;
 	r.offset = ci.offset;
 	r.fp = ci.fp;
 	r.ap = ci.ap;
 	svm->SetRegister(r);
 	
 	co->ip = ip;
-	co->cp = cp;
+	ccmap[co].push_back({ cp, ap, fp, offset });
 
 	return 0;
 }
@@ -1293,6 +1305,8 @@ static RegisterFunction tb[] = {
 };
 
 void registerTable(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	coinit();
+
 	Value table;
 	Table* t = new Table();
 	table.SetTable((int)t);
