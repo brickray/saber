@@ -16,6 +16,8 @@ public:
 	static void Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
 };
 
+extern void cocallback(SVM* svm);
+
 SABER_NAMESPACE_END
 
 #endif

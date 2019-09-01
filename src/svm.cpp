@@ -1,6 +1,7 @@
 #include "svm.h"
 #include "opcode.h"
 #include "error.h"
+#include "nativeFunc.h"
 
 SABER_NAMESPACE_BEGIN
 
@@ -150,7 +151,7 @@ void SVM::CallScript(int numParams){
 	else if (func.IsFunction()){
 		int p = func.GetFunction();
 		int nfp = (p & 0x7f000000) >> 24;
-		bool variable = (p & 0x80000000) >> 31;
+		bool variable = p & 0x80000000;
 		int nap = numParams;
 		if ((!variable) && (nfp != numParams)){
 			Error::GetInstance()->ProcessError("形参和实参数量不匹配");
@@ -238,7 +239,7 @@ void SVM::execute(){
 		else if (func.IsFunction()){
 			int p = func.GetFunction();
 			int nfp = (p & 0x7f000000) >> 24;
-			bool variable = (p & 0x80000000) >> 31;
+			bool variable = p & 0x80000000;
 			int nap = operand;
 			if ((!variable) && (nfp != operand)){
 				Error::GetInstance()->ProcessError("形参和实参数量不匹配");
@@ -283,6 +284,8 @@ void SVM::execute(){
 		int ocp     = stack[base + 2].GetInteger();
 		int esp     = stack[base + 1].GetInteger();
 		int eip     = stack[base + 0].GetInteger();
+		bool isCoroutine = eip & 0x80000000;
+		eip = eip & 0x7fffffff;
 
 		//可变参函数
 		if (ap != fp){
@@ -297,6 +300,8 @@ void SVM::execute(){
 		sp     = esp;
 		ip     = eip;
 		if (numRetVariable) stack[sp++] = ret;
+
+		if (isCoroutine) cocallback(this);
 
 		return;
 	}

@@ -1012,6 +1012,12 @@ static void coinit(){
 	ccmap[(Coroutine*)1] = top;
 }
 
+void cocallback(SVM* svm){
+	Coroutine* co = svm->PopCo();
+	co->status = ECoroutineStatus::EDEAD;
+	ccmap.erase(ccmap.find(co));
+}
+
 static int cocreate(SVM* svm, int numParams){
 	checkParamsNum("coroutine.create", numParams);
 	Value func = svm->PopStack();
@@ -1043,6 +1049,7 @@ static int coresume(SVM* svm, int numParams){
 	SVM::Register r = svm->GetRegister();
 	if (status == ECoroutineStatus::EDEAD){
 		//当协程死亡时返回false
+		svm->PopCo();
 		svm->PushBool(false);
 		co->status = ECoroutineStatus::EDEAD;
 		return 1;
@@ -1078,15 +1085,10 @@ static int coresume(SVM* svm, int numParams){
 		if (numParams == 2) svm->PushStack(p[1]);
 
 		Value vip;
-		vip.SetInt(r.ip + 1);
+		vip.SetInt((r.ip + 1) | (1 << 31));//协程标志
 		if (ccmap[co].size() >= 1 && ccmap[co][0].cp == ci.cp)
 			svm->SetStack(ci.cp + ci.ap, vip);
 		co->ip = r.ip;
-	}
-	else if (status == ECoroutineStatus::ERUNING){
-		co->status = ECoroutineStatus::EDEAD;
-		svm->PushBool(false);
-		return 1;
 	}
 
 	return 0;
