@@ -32,6 +32,8 @@ public:
 		int sp;
 		int cp;
 		int offset;
+		int ap;
+		int fp;
 	};
 
 protected:
@@ -40,18 +42,26 @@ protected:
 	vector<Value> stack;
 	vector<Value> constant;
 	vector<Value> global;
-	struct CallInfo{
-		int ap;
-		int fp;
-		int offset;
-	};
-	vector<CallInfo> nps;
 	vector<Coroutine*> co; //协程栈
 
+	/*call stack
+	 | param  |    parameters
+	 |   ip   |
+	 |   sp   |
+	 |   cp   |
+	 |   tb   |
+	 | offset |
+	 |   ap   |    number of actual param
+	 |   fp   |    number of formal param
+	 | localp |    local variable
+	 |        | -> stack top
+	*/
 	int ip; //代码计数器
 	int sp;	//栈顶指针
 	int cp; //函数栈指针
 	int offset;
+	int ap;
+	int fp;
 
 	SState* S;
 
@@ -65,6 +75,7 @@ public:
 	void SetCode(int idx, Instruction c);
 	int AddGlobal(Value v);
 	int AddConstant(Value v);
+	void SetStack(int i, Value v);
 	void PushStack(Value v);
 	void PushBool(bool b);
 	void PushInt(int i);
@@ -81,12 +92,13 @@ public:
 	void CallScript(int numParams);
 
 	SState* GetSState() const { return S; }
-	Register GetRegister() const { return{ ip, sp, cp, offset }; }
-	void SetRegister(Register r) { ip = r.ip; sp = r.sp; cp = r.cp; offset = r.offset; }
+	Register GetRegister() const { return{ ip, sp, cp, offset, ap, fp }; }
+	void SetRegister(Register r) { ip = r.ip; sp = r.sp; cp = r.cp; offset = r.offset; ap = r.ap; fp = r.fp; }
 	bool IsEnd() const { return ip >= code.size(); }
 	//压入到辅助结构
 	void PushCo(Coroutine* c); 
 	Coroutine* PopCo(); 
+	int GetCoSize() const { return co.size(); }
 	string ShowCode();
 
 private:

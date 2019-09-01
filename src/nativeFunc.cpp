@@ -999,6 +999,15 @@ static int tforeach(SVM* svm, int numParams){
 }
 
 //------------------------------coroutine lib-------------------
+struct CallInfo{
+	int ap;
+	int fp;
+	int offset;
+};
+static hash_map<Coroutine*, CallInfo> ccmap = {
+	hash_map<Coroutine*, CallInfo>::value_type((Coroutine*)1, { 0, 0, 0 })
+};
+
 static int cocreate(SVM* svm, int numParams){
 	checkParamsNum("coroutine.create", numParams);
 	Value func = svm->PopStack();
@@ -1039,37 +1048,36 @@ static int coresume(SVM* svm, int numParams){
 		func.SetFunction(co->ip);
 		co->ip = r.ip;
 		co->cp = r.cp;
-		co->offset = r.offset;
+		int ap = numParams - 1;
+		int fp = (func.GetInteger() & 0x7f000000) >> 24;
+		int offset = ap - fp;
+		CallInfo ci = { ap, fp, offset };
+		ccmap[co] = ci;
+
 		for (int i = 0; i < numParams - 1; ++i)
 			svm->PushStack(p[i + 1]);
 		svm->PushStack(func);
 		svm->CallScript(numParams - 1);
-
-		SVM::Register restore = svm->GetRegister();
-		if (!svm->IsEnd()){
-			Coroutine* co = svm->PopCo();
-			restore.ip = co->ip;
-			restore.cp = co->cp;
-			restore.offset = co->offset;
-			svm->SetRegister(restore);
-		}
-
-		co->status = ECoroutineStatus::EDEAD;
 	}
 	else if (status == ECoroutineStatus::ESUSPENDED){
 		checkParamsNuml("coroutine.resume", numParams, 2);
 
+		CallInfo ci = ccmap[co];
 		SVM::Register restore;
 		restore.ip = co->ip;
 		restore.sp = r.sp;
 		restore.cp = co->cp;
-		restore.offset = co->offset;
+		restore.offset = ci.offset;
+		restore.fp = ci.fp;
+		restore.ap = ci.ap;
 		svm->SetRegister(restore);
 		if (numParams == 2) svm->PushStack(p[1]);
 
+		Value vip;
+		vip.SetInt(r.ip + 1);
+		svm->SetStack(co->cp + ci.ap, vip);
 		co->ip = r.ip;
 		co->cp = r.cp;
-		co->offset = r.offset;
 	}
 
 	return 0;
@@ -1079,20 +1087,28 @@ static int coyield(SVM* svm, int numParams){
 	checkParamsNuml("coroutine.yield", numParams);
 	
 	Coroutine* co = svm->PopCo();
+	if (!co) return 0;
 	co->status = ECoroutineStatus::ESUSPENDED;
 	SVM::Register r = svm->GetRegister();
+	CallInfo ci;
+	if (svm->GetCoSize() == 0) ci = ccmap[(Coroutine*)1];
+	else{
+		Coroutine* p = svm->PopCo();
+		ci = ccmap[p];
+		svm->PushCo(p);
+	}
 	int ip = r.ip;
 	int cp = r.cp;
-	int offset = r.offset;
 	r.ip = co->ip;
 	r.cp = co->cp;
-	r.offset = co->offset;
+	r.offset = ci.offset;
+	r.fp = ci.fp;
+	r.ap = ci.ap;
 	svm->SetRegister(r);
 	
 	co->ip = ip;
 	co->cp = cp;
-	co->offset = offset;
-	
+
 	return 0;
 }
 

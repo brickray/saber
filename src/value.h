@@ -37,7 +37,6 @@ struct Coroutine{
 	int ip;
 //	int sp;
 	int cp;
-	int offset;
 };
 
 struct SValue{

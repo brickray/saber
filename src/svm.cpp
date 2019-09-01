@@ -15,6 +15,8 @@ SVM::SVM(SState* s){
 	sp = 0;
 	cp = 0;
 	offset = 0;
+	ap = 0;
+	fp = 0;
 }
 
 int SVM::AddCode(Instruction c){
@@ -49,6 +51,10 @@ int SVM::AddConstant(Value v){
 	constant.push_back(v);
 
 	return encodeConstantIndex(constant.size() - 1);
+}
+
+void SVM::SetStack(int i, Value v){
+	stack[i] = v;
 }
 
 void SVM::PushStack(Value v){
@@ -143,38 +149,39 @@ void SVM::CallScript(int numParams){
 	}
 	else if (func.IsFunction()){
 		int p = func.GetFunction();
-		int fp = (p & 0x7f000000) >> 24;
+		int nfp = (p & 0x7f000000) >> 24;
 		bool variable = (p & 0x80000000) >> 31;
-		if ((!variable) && (fp != numParams)){
+		int nap = numParams;
+		if ((!variable) && (nfp != numParams)){
 			Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 		}
 
-		Value eip, esp;
-		int ncp = sp - numParams;
+		int ncp = sp - nap;
 		int nextip = ip + 1;
-		eip.SetInt(nextip);
-		stack[sp++] = eip;
-		esp.SetInt(ncp);
-		stack[sp++] = esp;
+		stack[sp++].SetInt(nextip);
+		stack[sp++].SetInt(ncp);
 		stack[sp++].SetInt(cp);
 		sp++; //variable parameters table
+		stack[sp++].SetInt(offset);
+		stack[sp++].SetInt(ap);
+		stack[sp++].SetInt(fp);
 
+		fp = nfp;
+		ap = nap;
+		offset = ap - fp;
 		cp = ncp;
 		if (variable){
 			Table* t = new Table();
-			stack[sp - 1].SetTable(int(t));
+			stack[sp - 4].SetTable(int(t));
 			//construct ...
-			constructTDot(t, fp, numParams);
+			constructTDot(t, fp, ap);
 		}
 
-		int beforeCall = nps.size();
-		nps.push_back({ numParams, fp, offset });
-		offset = numParams - fp;
 		ip = p & 0x00ffffff;
 
 		while (true){
 			execute();
-			if ((ip == nextip) && (beforeCall == nps.size())){
+			if (ip == nextip){
 				ip--;
 				break;
 			}
@@ -195,9 +202,6 @@ void SVM::execute(){
 	switch (op){
 	case Opcode::MOVE:
 		if (isStack(operand)){
-			int fp;
-			if (nps.size() == 0) fp = 0;
-			else fp = nps[nps.size() - 1].fp;
 			int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
 			stack[o] = stack[sp - 1];
 		}
@@ -233,31 +237,33 @@ void SVM::execute(){
 		}
 		else if (func.IsFunction()){
 			int p = func.GetFunction();
-			int fp = (p & 0x7f000000) >> 24;
+			int nfp = (p & 0x7f000000) >> 24;
 			bool variable = (p & 0x80000000) >> 31;
-			if ((!variable) && (fp != operand)){
+			int nap = operand;
+			if ((!variable) && (nfp != operand)){
 				Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 			}
 
-			Value eip, esp;
-			int ncp = sp - operand;
-			eip.SetInt(ip + 1);
-			stack[sp++] = eip;
-			esp.SetInt(ncp);
-			stack[sp++] = esp;
+			int ncp = sp - nap;
+			stack[sp++].SetInt(ip + 1);
+			stack[sp++].SetInt(ncp);
 			stack[sp++].SetInt(cp);
 			sp++; //variable parameters table
+			stack[sp++].SetInt(offset);
+			stack[sp++].SetInt(ap);
+			stack[sp++].SetInt(fp);
 
+			fp = nfp;
+			ap = nap;
+			offset = ap - fp;
 			cp = ncp;
 			if (variable){
 				Table* t = new Table();
-				stack[sp - 1].SetTable(int(t));
+				stack[sp - 4].SetTable(int(t));
 				//construct ...
-				constructTDot(t, fp, operand);
+				constructTDot(t, fp, ap);
 			}
 
-			nps.push_back({ operand, fp, offset });
-			offset = operand - fp;
 			ip = p & 0x00ffffff;
 			return;
 		}
@@ -269,26 +275,28 @@ void SVM::execute(){
 	case Opcode::RET:{
 		Value ret = stack[sp - 1];
 		int numRetVariable = (operand & 0xffff0000) >> 16;
-		CallInfo ci = nps[nps.size() - 1];
-		int ap = ci.ap;
-		int fp = ci.fp;
-		offset = ci.offset;
-		nps.pop_back();
 		int base = cp + ap;
-		int tb = stack[base + 3].GetInteger();
-		int ocp = stack[base + 2].GetInteger();
-		int esp = stack[base + 1].GetInteger();
-		int eip = stack[base + 0].GetInteger();
-		cp = ocp;
-		sp = esp;
-		ip = eip;
-		if (numRetVariable) stack[sp++] = ret;
+		int ofp     = stack[base + 6].GetInteger();
+		int oap     = stack[base + 5].GetInteger();
+		int ooffset = stack[base + 4].GetInteger();
+		int tb      = stack[base + 3].GetInteger();
+		int ocp     = stack[base + 2].GetInteger();
+		int esp     = stack[base + 1].GetInteger();
+		int eip     = stack[base + 0].GetInteger();
 
 		//可变参函数
 		if (ap != fp){
 			Table* t = reinterpret_cast<Table*>(tb);
 			delete t;
 		}
+
+		fp     = ofp;
+		ap     = oap;
+		offset = ooffset;
+		cp     = ocp;
+		sp     = esp;
+		ip     = eip;
+		if (numRetVariable) stack[sp++] = ret;
 
 		return;
 	}
@@ -318,18 +326,6 @@ void SVM::execute(){
 				int level = (operand & 0xff000000) >> 24;
 				int idx = operand & 0x00ffffff;
 				if (isStack(idx)){
-					bool mp = false;
-					int ap, fp;
-					if (nps.size() == 0){
-						mp = true;
-						ap = 0;
-						fp = 0;
-					}
-					else{
-						CallInfo ci = nps[nps.size() - 1];
-						ap = ci.ap;
-						fp = ci.fp;
-					}
 					if (false){
 						Table* table = reinterpret_cast<Table*>(stack[cp + ap + 3].GetTable());
 						//find prev table

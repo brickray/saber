@@ -48,7 +48,7 @@ public:
 		}
 
 		BlockCnt subBc;
-		int numSpace = 4;
+		int numSpace = 7;
 		subBc.variableIndex = numParams + numSpace;
 		for (int i = numParams + 1; i < children.size(); ++i){
 			children[i]->Compile(local, svm, subBc);
