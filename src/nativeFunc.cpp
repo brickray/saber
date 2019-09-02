@@ -947,6 +947,16 @@ static int close(SVM* svm, int numParams){
 	return 0;
 }
 
+static int input(SVM* svm, int numParams){
+	checkParamsNum("io.gets", numParams, 0);
+
+	char buf[1024] = { 0 };
+	gets(buf);
+	svm->PushString(buf);
+
+	return 1;
+}
+
 //-------------------------------table lib----------------------
 static int remove(SVM* svm, int numParams){
 	checkParamsNum("table.remove", numParams, 2);
@@ -994,6 +1004,17 @@ static int tforeach(SVM* svm, int numParams){
 		svm->PushStack(func);
 		svm->CallScript(2);
 	}
+
+	return 0;
+}
+
+static int tdestroy(SVM* svm, int numParams){
+	checkParamsNum("table.destroy", numParams);
+	Value table = svm->PopStack();
+	checkTable("table.destroy", table);
+
+	Table* t = reinterpret_cast<Table*>(table.GetTable());
+	delete t;
 
 	return 0;
 }
@@ -1057,11 +1078,16 @@ static int coresume(SVM* svm, int numParams){
 	else if (status == ECoroutineStatus::ESTART){
 		Value func;
 		func.SetFunction(co->ip);
-		co->ip = r.ip;
+		co->ip = r.ip; 
 		int ap = numParams - 1;
 		int cp = r.sp;
 		int fp = (func.GetInteger() & 0x7f000000) >> 24;
 		int offset = ap - fp;
+		ccmap[co].push_back({ cp, ap, fp, offset });
+		ap = r.ap;
+		cp = r.cp;
+		fp = r.fp;
+		offset = ap - fp;
 		ccmap[co].push_back({ cp, ap, fp, offset });
 
 		for (int i = 0; i < numParams - 1; ++i)
@@ -1074,6 +1100,7 @@ static int coresume(SVM* svm, int numParams){
 
 		CallInfo ci = ccmap[co][ccmap[co].size() - 1];
 		ccmap[co].pop_back();
+		ccmap[co].push_back({ r.cp, r.ap, r.fp, r.offset });
 		SVM::Register restore;
 		restore.ip = co->ip;
 		restore.sp = r.sp;
@@ -1086,7 +1113,7 @@ static int coresume(SVM* svm, int numParams){
 
 		Value vip;
 		vip.SetInt((r.ip + 1) | (1 << 31));//协程标志
-		if (ccmap[co].size() >= 1 && ccmap[co][0].cp == ci.cp)
+		if (ccmap[co][0].cp == ci.cp)
 			svm->SetStack(ci.cp + ci.ap, vip);
 		co->ip = r.ip;
 	}
@@ -1102,12 +1129,8 @@ static int coyield(SVM* svm, int numParams){
 	co->status = ECoroutineStatus::ESUSPENDED;
 	SVM::Register r = svm->GetRegister();
 	CallInfo ci;
-	if (svm->GetCoSize() == 0) ci = ccmap[(Coroutine*)1][0];
-	else{
-		Coroutine* p = svm->PopCo();
-		ci = ccmap[p][ccmap[p].size() - 1];
-		svm->PushCo(p);
-	}
+	ci = ccmap[co][ccmap[co].size() - 1];
+	ccmap[co].pop_back();
 	int ip = r.ip;
 	int cp = r.cp;
 	int offset = r.offset;
@@ -1152,6 +1175,16 @@ static int costatus(SVM* svm, int numParams){
 	svm->PushString(ret);
 
 	return 1;
+}
+
+static int cdestroy(SVM* svm, int numParams){
+	checkParamsNum("coroutine.destroy", numParams);
+	Value co = svm->PopStack();
+	checkCoroutine("coroutine.destroy", co);
+
+	delete co.GetCoroutine();
+
+	return 0;
 }
 
 //------------------------------func register-------------------
@@ -1279,6 +1312,7 @@ static RegisterFunction io[] = {
 	{ "read", read },
 	{ "write", write },
 	{ "close", close },
+	{ "input", input },
 	{ "", nullptr },
 };
 
@@ -1303,6 +1337,7 @@ static RegisterFunction tb[] = {
 	{ "remove", remove },
 	{ "len", tlength },
 	{ "foreach", tforeach },
+	{ "destroy", tdestroy },
 	{ "", nullptr },
 };
 
@@ -1330,6 +1365,7 @@ static RegisterFunction co[] = {
 	{ "resume", coresume },
 	{ "yield", coyield },
 	{ "status", costatus },
+	{ "destroy", cdestroy },
 	{ "", nullptr },
 };
 

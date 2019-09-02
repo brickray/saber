@@ -331,16 +331,24 @@ void SVM::execute(){
 				int level = (operand & 0xff000000) >> 24;
 				int idx = operand & 0x00ffffff;
 				if (isStack(idx)){
-					if (false){
-						Table* table = reinterpret_cast<Table*>(stack[cp + ap + 3].GetTable());
-						//find prev table
+					if (true){
+						int tcp = cp;
+						int tap = ap;
+						int tfp = fp;
+						int tof = offset;
 						for (int i = 0; i < level; ++i){
-							table = reinterpret_cast<Table*>(table->kv["prev"].GetTable());
+							Value vcp = stack[tcp + tap + 2];
+							Value vof = stack[tcp + tap + 4];
+							Value vap = stack[tcp + tap + 5];
+							Value vfp = stack[tcp + tap + 6];
+							tcp = vcp.GetInteger();
+							tof = vof.GetInteger();
+							tap = vap.GetInteger();
+							tfp = vfp.GetInteger();
 						}
-						int o = idx + ((idx >= fp + 3) ? offset : 0);
 
-						int i = table->kv["cv" + to_string(o)].GetInteger();
-						src = stack[i];
+						int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
+						src = stack[o];
 					}
 					else{
 						int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
