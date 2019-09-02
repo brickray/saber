@@ -31,17 +31,36 @@ end
 Test("a1", "a2", "a3", 1, 2, 3, 4)
 Test("c1", "c2", 2, 3)
 
-def func()
-    print("co-body1")
-    coroutine.yield()
-    print("co-body2")
+
+def send(p)
+    print("product send : ", p)
+    coroutine.yield(p)
 end
 
-co = coroutine.create(func)
-coroutine.resume(co)
-print("resume1")
-coroutine.resume(co)
-print("resume2")
+def func()
+    local p
+    while true do
+        p = io.input()
+	send(p)
+    end
+end
+local product = coroutine.create(func)
+
+def receive(co)
+    local res = coroutine.resume(co)
+    if res then
+	print("consumer received : ", res)
+    else
+	print("consumer receive failed : ", res)
+    end
+end
+
+def consumer(co)
+    while true do
+	receive(co)
+    end
+end
+consumer(product)
 
 
 //result
@@ -60,8 +79,4 @@ print("resume2")
 --c2
 --2
 --3
---co-body1
---resume1
---co-body2
---resume2
 ```
