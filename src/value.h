@@ -32,25 +32,27 @@ enum class ECoroutineStatus{
 	EDEAD      = 3,
 };
 
+class Value;
+class Closure;
 struct Coroutine{
 	ECoroutineStatus status;
+	Closure* cl;
 	int ip;
-//	int sp;
-	int cp;
 };
 
+class Closure;
 struct SValue{
 	union{
 		bool       bValue;
 		int        iValue;
 		float      fValue;
+		Closure*   cl;
 		SFunc      sfunc;
 		Coroutine* co;
 	};
 	string sValue;
 };
 
-class Value;
 struct Table{
 	hash_map<string, Value> kv;
 };
@@ -86,7 +88,7 @@ public:
 	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i; }
 	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; }
 	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; }
-	void SetFunction(int i) { type = EValueType::EFUNC; value.iValue = i; }
+	void SetFunction(Closure* cl) { type = EValueType::EFUNC; value.cl = cl;; }
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; }
 	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; }
 	void SetTable(int i) { type = EValueType::ETABLE; value.iValue = i; }
@@ -106,7 +108,7 @@ public:
 	int GetInteger() const { return value.iValue; }
 	float GetFloat() const { return value.fValue; }
 	string GetString() const { return value.sValue; }
-	int GetFunction() const { return value.iValue; }
+	Closure* GetFunction() const { return value.cl; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 	int GetLightUData() const { return value.iValue; }
 	int GetTable() const { return value.iValue; }
@@ -571,6 +573,17 @@ public:
 
 		return ret;
 	}
+};
+
+struct Closure{
+	int entry;
+
+	//在该函数体内定义的变量
+	typedef hash_map<string, Value>::iterator VariableIterator;
+	hash_map<string, Value> variables;
+	//closure values or non local variables
+	vector<int> cvs; //函数生命周期之内的非局部变量
+	hash_map<string, Value> ocvs; //函数生命周期之外的非局部变量
 };
 
 SABER_NAMESPACE_END

@@ -21,7 +21,8 @@ public:
 		}
 
 		BlockCnt subBc;
-		subBc.closure = true;
+		subBc.cl = bc.cl;
+		subBc.maxLevel = bc.maxLevel;
 		for (int i = 0; i < children.size(); ++i)
 			children[i]->Compile(e, svm, subBc);
 

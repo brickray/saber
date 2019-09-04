@@ -40,12 +40,31 @@ public:
 			if (e->HasSymbol(tok)){
 				int level = 0;
 				int idx = e->GetSymbol(tok, level).address;
+				int p = idx;
+				if (level != 0 && level < bc.maxLevel){
+					idx |= (level << 24);
+					int i = 0;
+					for (; i < bc.cl->cvs.size(); ++i){
+						if (bc.cl->cvs[i] == idx)
+							break;
+					}
+					if (i == bc.cl->cvs.size()){
+						int size = bc.cl->cvs.size();
+						bc.cl->cvs.push_back(idx);
+						//closure value
+						p = size;
+						p |= (1 << 30);
+					}
+					else{
+						p = i |= (1 << 30);
+					}
+				}
 
-				int p = idx | (level << 24);
-				SVM::Instruction ins(Opcode::PUSH, p);
+				SVM::Instruction ins(Opcode::PUSH, p, tok);
 				svm->AddCode(ins);
 
 				bc.nearst = idx;
+				bc.nearstS = tok;
 				return;
 			}
 
@@ -54,18 +73,8 @@ public:
 		}
 		case ETokenType::ESTRING:{
 			string str = token->GetToken();
-			int idx;
-			if (e->HasStringSymbol(str)){
-				idx = e->GetStringSymbol(str).address;
-			}
-			else{
-				value.SetString(str);
-				idx = svm->AddConstant(value);
-				SymbolInfo si = { value, idx, false };
-				e->SetStringSymbol(str, si);
-			}
 
-			SVM::Instruction ins(Opcode::PUSH, idx);
+			SVM::Instruction ins(Opcode::PUSHS, str);
 			svm->AddCode(ins);
 			break;
 		}

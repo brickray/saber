@@ -16,7 +16,6 @@ class Environment{
 protected:
 	shared_ptr<Environment> outter;
 	hash_map<string, SymbolInfo> symbolTable;
-	hash_map<string, SymbolInfo> stringTable;
 
 public:
 	Environment() : outter(nullptr){
@@ -76,27 +75,6 @@ public:
 		return false;
 	}
 
-	void SetStringSymbol(string symbol, SymbolInfo si){
-		if (outter) outter->SetStringSymbol(symbol, si);
-
-		stringTable[symbol] = si;
-	}
-
-	SymbolInfo GetStringSymbol(string symbol){
-		if (outter) outter->GetStringSymbol(symbol);
-
-		if (hasStringSymbol(symbol))
-			return getStringSymbol(symbol);
-
-		return SymbolInfo();
-	}
-
-	bool HasStringSymbol(string symbol){
-		if (outter) outter->HasStringSymbol(symbol);
-
-		return hasStringSymbol(symbol);
-	}
-
 private:
 	SymbolInfo getSymbol(string symbol){
 		return symbolTable[symbol];
@@ -104,14 +82,6 @@ private:
 
 	bool hasSymbol(string symbol) const{
 		return symbolTable.find(symbol) != symbolTable.end();
-	}
-
-	SymbolInfo getStringSymbol(string symbol){
-		return stringTable[symbol];
-	}
-
-	bool hasStringSymbol(string symbol) const{
-		return stringTable.find(symbol) != stringTable.end();
 	}
 };
 

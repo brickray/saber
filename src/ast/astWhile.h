@@ -19,6 +19,8 @@ public:
 		BlockCnt subBc;
 		subBc.isloop = true;
 		subBc.rets = bc.rets;
+		subBc.cl = bc.cl;
+		subBc.variableIndex = bc.variableIndex;
 		for (int i = 1; i < children.size(); ++i){
 			children[i]->Compile(e, svm, subBc);
 		}
@@ -36,6 +38,7 @@ public:
 		}
 
 		bc.rets = subBc.rets;
+		bc.variableIndex = subBc.variableIndex;
 	}
 };
 

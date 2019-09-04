@@ -34,6 +34,8 @@ public:
 		subBc.bps = bc.bps;
 		subBc.cps = bc.cps;
 		subBc.rets = bc.rets;
+		subBc.cl = bc.cl;
+		subBc.variableIndex = bc.variableIndex;
 		int size = hasElseBlock ? children.size() - 1 : children.size();
 		for (int i = 2; i < size; ++i){
 			children[i]->Compile(e, svm, subBc);
@@ -54,6 +56,7 @@ public:
 		bc.bps = subBc.bps;
 		bc.cps = subBc.cps;
 		bc.rets = subBc.rets;
+		bc.variableIndex = subBc.variableIndex;
 	}
 };
 

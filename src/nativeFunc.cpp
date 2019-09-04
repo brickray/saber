@@ -59,7 +59,9 @@ static int load(SVM* svm, int numParams){
 	}
 
 	Value func;
-	func.SetFunction(idx);
+	Closure* cl = new Closure();
+	cl->entry = idx;
+	func.SetFunction(cl);
 	svm->PushStack(func);
 
 	return 1;
@@ -1028,11 +1030,6 @@ struct CallInfo{
 };
 static hash_map<Coroutine*, vector<CallInfo> > ccmap;
 
-static void coinit(){
-	vector<CallInfo> top = { { 0, 0, 0, 0 } };
-	ccmap[(Coroutine*)1] = top;
-}
-
 void cocallback(SVM* svm){
 	Coroutine* co = svm->PopCo();
 	co->status = ECoroutineStatus::EDEAD;
@@ -1044,8 +1041,9 @@ static int cocreate(SVM* svm, int numParams){
 	Value func = svm->PopStack();
 	checkFunction("coroutine.create", func);
 
-	int p = func.GetInteger();
+	int p = func.GetFunction()->entry;
 	Coroutine* co = new Coroutine();
+	co->cl = func.GetFunction();
 	co->ip = p;
 	co->status = ECoroutineStatus::ESTART;
 	svm->PushCoroutine(co);
@@ -1077,7 +1075,7 @@ static int coresume(SVM* svm, int numParams){
 	}
 	else if (status == ECoroutineStatus::ESTART){
 		Value func;
-		func.SetFunction(co->ip);
+		func.SetFunction(co->cl);
 		co->ip = r.ip; 
 		int ap = numParams - 1;
 		int cp = r.sp;
@@ -1342,8 +1340,6 @@ static RegisterFunction tb[] = {
 };
 
 void registerTable(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
-	coinit();
-
 	Value table;
 	Table* t = new Table();
 	table.SetTable((int)t);

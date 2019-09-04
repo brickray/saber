@@ -13,18 +13,21 @@ SABER_NAMESPACE_BEGIN
 
 struct BlockCnt{
 	bool isloop;
-	bool closure;
+	int nearst;
+	string nearstS;
+	int variableIndex;
+	int maxLevel;
+	Closure* cl;
 	vector<int> bps; //break points
 	vector<int> cps; //continue points
 	vector<int> elifs; //else if
 	vector<int> rets; //return points
-	int nearst;
-	int variableIndex; 
 
 	BlockCnt(){
 		isloop = false;
-		closure = false;
 		variableIndex = 0;
+		maxLevel = 0;
+		cl = nullptr;
 	}
 };
 

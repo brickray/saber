@@ -19,6 +19,8 @@ public:
 		BlockCnt subBc;
 		subBc.isloop = true;
 		subBc.rets = bc.rets;
+		subBc.cl = bc.cl;
+		subBc.variableIndex = bc.variableIndex;
 		children[children.size() - 1]->Compile(e, svm, subBc);
 
 		int continueAddress = svm->AddCode(nop);
@@ -41,6 +43,7 @@ public:
 		}
 
 		bc.rets = subBc.rets;
+		bc.variableIndex = subBc.variableIndex;
 	}
 };
 

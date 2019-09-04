@@ -18,13 +18,19 @@ public:
 			int operand;
 			float operandf;
 		};
+		string operands;
 
 		Instruction(char opc, int ope = 0, bool r = false)
 		:opcode(opc), operand(ope), relative(r){}
 
-
 		Instruction(char opc, float ope)
 			:opcode(opc), operandf(ope), relative(false){}
+
+		Instruction(char opc, string ope)
+			:opcode(opc), operands(ope), relative(false){}
+
+		Instruction(char opc, int ope1, string ope2)
+			:opcode(opc), operand(ope1), operands(ope2), relative(false){}
 	};
 
 	struct Register{
@@ -40,21 +46,21 @@ protected:
 #define STACK_SIZE 1024
 	vector<Instruction> code;
 	vector<Value> stack;
-	vector<Value> constant;
 	vector<Value> global;
 	vector<Coroutine*> co; //协程栈
 
 	/*call stack
-	 | param  |    parameters
-	 |   ip   |
-	 |   sp   |
-	 |   cp   |
-	 |   tb   |
-	 | offset |
-	 |   ap   |    number of actual param
-	 |   fp   |    number of formal param
-	 | localp |    local variable
-	 |        | -> stack top
+	 |  param  |    parameters
+	 |    ip   |
+	 |    sp   |
+	 |    cp   |
+	 |  offset |
+	 |    ap   |    number of actual param
+	 |    fp   |    number of formal param
+	 | closure |
+	 |    tb   |
+	 |  localp |    local variable
+	 |         | -> stack top
 	*/
 	int ip; //代码计数器
 	int sp;	//栈顶指针
@@ -62,6 +68,7 @@ protected:
 	int offset;
 	int ap;
 	int fp;
+	Closure* cl;
 
 	SState* S;
 
@@ -74,14 +81,13 @@ public:
 	Instruction GetCode(int idx);
 	void SetCode(int idx, Instruction c);
 	int AddGlobal(Value v);
-	int AddConstant(Value v);
 	void SetStack(int i, Value v);
 	void PushStack(Value v);
 	void PushBool(bool b);
 	void PushInt(int i);
 	void PushFloat(float f);
 	void PushString(string s);
-	void PushFunc(int i);
+	void PushFunc(Closure* cl);
 	void PushNativeFunc(SFunc f);
 	void PushLightUData(int i);
 	void PushTable(int i);
@@ -105,13 +111,12 @@ private:
 	void execute();
 	bool isStack(int idx);
 	bool isGlobal(int idx);
-	bool isConstant(int idx);
 	int encodeGlobalIndex(int idx);
 	int decodeGlobalIndex(int idx);
-	int encodeConstantIndex(int idx);
-	int decodeConstantIndex(int idx);
 
 	void constructTDot(Table* t, int fp, int ap);
+	Value getClosureValue(int op);
+	void setClosureValue(int op, Value v);
 };
 
 SABER_NAMESPACE_END

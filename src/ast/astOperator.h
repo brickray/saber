@@ -21,7 +21,7 @@ public:
 				svm->SetCode(bc.nearst, dot);
 			}
 			else{
-				SVM::Instruction ins(Opcode::MOVE, bc.nearst);
+				SVM::Instruction ins(Opcode::MOVE, bc.nearst, bc.nearstS);
 				svm->AddCode(ins);
 			}
 		}
@@ -76,6 +76,7 @@ public:
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
+			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
 		}
 		else if (op == "-="){
@@ -86,6 +87,7 @@ public:
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
+			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
 		}
 		else if (op == "*="){
@@ -96,6 +98,7 @@ public:
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
+			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
 		}
 		else if (op == "/="){
@@ -106,6 +109,7 @@ public:
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
+			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
 		}
 		else if (op == "%="){
@@ -116,6 +120,7 @@ public:
 			svm->AddCode(ins);
 			ins.opcode = Opcode::MOVE;
 			ins.operand = bc.nearst;
+			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
 		}
 		else if (op == "<"){

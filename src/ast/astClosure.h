@@ -25,9 +25,13 @@ public:
 		SVM::Instruction reserve(Opcode::RESERVE, 0);
 		int reserveAddress = svm->AddCode(reserve);
 		Value func;
-		func.SetFunction(start | (numParams << 24) | (variable << 31));
+		//set closure
+		Closure* cl = new Closure();
+		cl->entry = start | (numParams << 24) | (variable << 31);
+		func.SetFunction(cl);
 		int funcAddress = svm->AddGlobal(func);
 
+		//set environment
 		shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
 		local->SetOutter(e);
 		for (int i = 0; i < numParams; ++i){
@@ -35,7 +39,7 @@ public:
 			if (name == "..."){
 				name = "args";
 				SymbolInfo si;
-				si.address = numParams + 3;
+				si.address = numParams + 7;
 				local->SetSymbol(name, si);
 			}
 			else{
@@ -46,7 +50,9 @@ public:
 		}
 
 		BlockCnt subBc;
-		int numSpace = 7;
+		subBc.cl = cl;
+		subBc.maxLevel = bc.maxLevel + 1;
+		int numSpace = 8;
 		subBc.variableIndex = numParams + numSpace;
 		for (int i = numParams; i < children.size(); ++i){
 			children[i]->Compile(local, svm, subBc);

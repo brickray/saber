@@ -15,10 +15,38 @@ public:
 		}
 
 		int idx = bc.variableIndex;
-		Value v;
-		SymbolInfo si = { v, bc.variableIndex++, true };
-		e->SetSymbol(tok->GetToken(), si);
-		bc.nearst = idx;
+		if (e->HasSymbol(tok->GetToken())){
+			int level = 0;
+			SymbolInfo si = e->GetSymbol(tok->GetToken(), level);
+			if (level != 0 || !si.local){
+				Value v;
+				SymbolInfo si = { v, bc.variableIndex++, true };
+				e->SetSymbol(tok->GetToken(), si);
+				bc.nearst = idx;
+				bc.nearstS = tok->GetToken();
+
+				if (bc.cl){
+					v.SetInt(idx);
+					bc.cl->variables[tok->GetToken()] = v;
+				}
+			}
+			else{
+				bc.nearst = si.address;
+				bc.nearstS = tok->GetToken();
+			}
+		}
+		else{
+			Value v;
+			SymbolInfo si = { v, bc.variableIndex++, true };
+			e->SetSymbol(tok->GetToken(), si);
+			bc.nearst = idx;
+			bc.nearstS = tok->GetToken();
+
+			if (bc.cl){
+				v.SetInt(idx);
+				bc.cl->variables[tok->GetToken()] = v;
+			}
+		}
 	}
 };
 

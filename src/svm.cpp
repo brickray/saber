@@ -11,13 +11,13 @@ SVM::SVM(SState* s){
 	code.reserve(64);
 	stack.resize(STACK_SIZE);
 	global.reserve(64);
-	constant.reserve(64);
 	ip = 0;
 	sp = 0;
 	cp = 0;
 	offset = 0;
 	ap = 0;
 	fp = 0;
+	cl = nullptr;
 }
 
 int SVM::AddCode(Instruction c){
@@ -46,12 +46,6 @@ int SVM::AddGlobal(Value v){
 	global.push_back(v);
 	
 	return encodeGlobalIndex(global.size() - 1);
-}
-
-int SVM::AddConstant(Value v){
-	constant.push_back(v);
-
-	return encodeConstantIndex(constant.size() - 1);
 }
 
 void SVM::SetStack(int i, Value v){
@@ -86,9 +80,9 @@ void SVM::PushString(string s){
 	PushStack(v);
 }
 
-void SVM::PushFunc(int i){
+void SVM::PushFunc(Closure* cl){
 	Value v;
-	v.SetFunction(i);
+	v.SetFunction(cl);
 	PushStack(v);
 }
 
@@ -149,7 +143,8 @@ void SVM::CallScript(int numParams){
 		func.GetNativeFunction()(this, numParams);
 	}
 	else if (func.IsFunction()){
-		int p = func.GetFunction();
+		Closure* curCl = func.GetFunction();
+		int p = curCl->entry;
 		int nfp = (p & 0x7f000000) >> 24;
 		bool variable = p & 0x80000000;
 		int nap = numParams;
@@ -162,10 +157,11 @@ void SVM::CallScript(int numParams){
 		stack[sp++].SetInt(nextip);
 		stack[sp++].SetInt(ncp);
 		stack[sp++].SetInt(cp);
-		sp++; //variable parameters table
 		stack[sp++].SetInt(offset);
 		stack[sp++].SetInt(ap);
 		stack[sp++].SetInt(fp);
+		stack[sp++].SetFunction(cl);
+		sp++; //variable parameters table
 
 		fp = nfp;
 		ap = nap;
@@ -173,11 +169,19 @@ void SVM::CallScript(int numParams){
 		cp = ncp;
 		if (variable){
 			Table* t = new Table();
-			stack[sp - 4].SetTable(int(t));
+			stack[sp - 1].SetTable(int(t));
 			//construct ...
 			constructTDot(t, fp, ap);
 		}
 
+		if (cl){
+			Closure::VariableIterator vit = cl->ocvs.begin();
+			for (; vit != cl->ocvs.end(); ++vit){
+				curCl->ocvs[vit->first] = vit->second;
+			}
+		}
+
+		cl = curCl;
 		ip = p & 0x00ffffff;
 
 		while (true){
@@ -201,17 +205,31 @@ void SVM::execute(){
 	int operand = ins.operand;
 	float operandf = ins.operandf;
 	switch (op){
-	case Opcode::MOVE:
-		if (isStack(operand)){
-			int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
-			stack[o] = stack[sp - 1];
+	case Opcode::MOVE:{
+		bool closure = operand & 0x40000000;
+		int idx = operand & 0x3fffffff;
+		if (closure){
+			if (cl->ocvs.find(ins.operands) != cl->ocvs.end()){
+				cl->ocvs[ins.operands] = stack[sp - 1];
+			}
+			else{
+				idx = cl->cvs[idx];
+				setClosureValue(idx, stack[sp - 1]);
+			}
 		}
 		else{
-			global[decodeGlobalIndex(operand)] = stack[sp - 1];
+			if (isStack(operand)){
+				int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
+				stack[o] = stack[sp - 1];
+			}
+			else{
+				global[decodeGlobalIndex(operand)] = stack[sp - 1];
+			}
 		}
 
 		sp--;
 		break;
+	}
 	case Opcode::JZ:{
 		bool t;
 		if (stack[sp - 1].IsFloat()) t = stack[sp - 1].GetFloat() != 0;
@@ -237,7 +255,8 @@ void SVM::execute(){
 			break;
 		}
 		else if (func.IsFunction()){
-			int p = func.GetFunction();
+			Closure* curCl = func.GetFunction();
+			int p = curCl->entry;
 			int nfp = (p & 0x7f000000) >> 24;
 			bool variable = p & 0x80000000;
 			int nap = operand;
@@ -249,10 +268,11 @@ void SVM::execute(){
 			stack[sp++].SetInt(ip + 1);
 			stack[sp++].SetInt(ncp);
 			stack[sp++].SetInt(cp);
-			sp++; //variable parameters table
 			stack[sp++].SetInt(offset);
 			stack[sp++].SetInt(ap);
 			stack[sp++].SetInt(fp);
+			stack[sp++].SetFunction(cl);
+			sp++; //variable parameters table
 
 			fp = nfp;
 			ap = nap;
@@ -260,11 +280,19 @@ void SVM::execute(){
 			cp = ncp;
 			if (variable){
 				Table* t = new Table();
-				stack[sp - 4].SetTable(int(t));
+				stack[sp - 1].SetTable(int(t));
 				//construct ...
 				constructTDot(t, fp, ap);
 			}
 
+			if (cl){
+				Closure::VariableIterator vit = cl->ocvs.begin();
+				for (; vit != cl->ocvs.end(); ++vit){
+					curCl->ocvs[vit->first] = vit->second;
+				}
+			}
+
+			cl = curCl;
 			ip = p & 0x00ffffff;
 			return;
 		}
@@ -277,13 +305,14 @@ void SVM::execute(){
 		Value ret = stack[sp - 1];
 		int numRetVariable = (operand & 0xffff0000) >> 16;
 		int base = cp + ap;
-		int ofp     = stack[base + 6].GetInteger();
-		int oap     = stack[base + 5].GetInteger();
-		int ooffset = stack[base + 4].GetInteger();
-		int tb      = stack[base + 3].GetInteger();
-		int ocp     = stack[base + 2].GetInteger();
-		int esp     = stack[base + 1].GetInteger();
-		int eip     = stack[base + 0].GetInteger();
+		int tb       = stack[base + 7].GetTable();
+		Closure* ocl = stack[base + 6].GetFunction();
+		int ofp      = stack[base + 5].GetInteger();
+		int oap      = stack[base + 4].GetInteger();
+		int ooffset  = stack[base + 3].GetInteger();
+		int ocp      = stack[base + 2].GetInteger();
+		int esp      = stack[base + 1].GetInteger();
+		int eip      = stack[base + 0].GetInteger();
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 
@@ -293,6 +322,41 @@ void SVM::execute(){
 			delete t;
 		}
 
+		if (ocl){
+			Closure::VariableIterator vit = ocl->ocvs.begin();
+			for (; vit != ocl->ocvs.end(); ++vit){
+				ocl->ocvs[vit->first] = cl->ocvs[vit->first];
+			}
+		}
+		//set closure value
+		if (ret.IsFunction() && (ret.GetFunction() != cl)){
+			Closure* o = ret.GetFunction();
+			Closure* f = new Closure();
+			f->entry = o->entry;
+			f->variables = o->variables;
+			Closure::VariableIterator vit = cl->ocvs.begin();
+			for (; vit != cl->ocvs.end(); ++vit){
+				f->ocvs[vit->first] = vit->second;
+			}
+			vit = cl->variables.begin();
+			for (; vit != cl->variables.end(); ++vit){
+				Value v;
+				int idx = vit->second.GetInteger();
+				if (isStack(idx)){
+					int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
+					v = stack[o];
+				}
+				else{
+					v = global[decodeGlobalIndex(idx)];
+				}
+
+				f->ocvs[vit->first] = v;
+			}
+
+			ret.SetFunction(f);
+		}
+
+		cl     = ocl;
 		fp     = ofp;
 		ap     = oap;
 		offset = ooffset;
@@ -317,6 +381,10 @@ void SVM::execute(){
 		stack[sp++].SetFloat(operandf);
 		break;
 	}
+	case Opcode::PUSHS:{
+		stack[sp++].SetString(ins.operands);
+		break;
+	}
 	case Opcode::PUSH:{
 		Value src;
 
@@ -324,36 +392,21 @@ void SVM::execute(){
 			src = stack[sp - 1 + operand];
 		}
 		else{
-			if (isConstant(operand)){
-				src = constant[decodeConstantIndex(operand)];
+			bool closure = operand & 0x40000000;
+			int idx = operand & 0x3fffffff;
+			if (closure){
+				if (cl->ocvs.find(ins.operands) != cl->ocvs.end()){
+					src = cl->ocvs[ins.operands];;
+				}
+				else{
+					idx = cl->cvs[idx];
+					src = getClosureValue(idx);
+				}
 			}
 			else{
-				int level = (operand & 0xff000000) >> 24;
-				int idx = operand & 0x00ffffff;
 				if (isStack(idx)){
-					if (true){
-						int tcp = cp;
-						int tap = ap;
-						int tfp = fp;
-						int tof = offset;
-						for (int i = 0; i < level; ++i){
-							Value vcp = stack[tcp + tap + 2];
-							Value vof = stack[tcp + tap + 4];
-							Value vap = stack[tcp + tap + 5];
-							Value vfp = stack[tcp + tap + 6];
-							tcp = vcp.GetInteger();
-							tof = vof.GetInteger();
-							tap = vap.GetInteger();
-							tfp = vfp.GetInteger();
-						}
-
-						int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
-						src = stack[o];
-					}
-					else{
-						int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
-						src = stack[o];
-					}
+					int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
+					src = stack[o];
 				}
 				else{//global
 					src = global[decodeGlobalIndex(idx)];
@@ -512,6 +565,60 @@ void SVM::constructTDot(Table* t, int fp, int ap){
 	}
 }
 
+Value SVM::getClosureValue(int op){
+	int level = (op & 0xff000000) >> 24;
+	int idx = op & 0x00ffffff;
+	if (isStack(idx)){
+		int tcp = cp;
+		int tap = ap;
+		int tfp = fp;
+		int tof = offset;
+		for (int i = 0; i < level; ++i){
+			Value vcp = stack[tcp + tap + 2];
+			Value vof = stack[tcp + tap + 4];
+			Value vap = stack[tcp + tap + 5];
+			Value vfp = stack[tcp + tap + 6];
+			tcp = vcp.GetInteger();
+			tof = vof.GetInteger();
+			tap = vap.GetInteger();
+			tfp = vfp.GetInteger();
+		}
+
+		int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
+		return stack[o];
+	}
+	else{
+		return global[decodeGlobalIndex(idx)];
+	}
+}
+
+void SVM::setClosureValue(int op, Value v){
+	int level = (op & 0xff000000) >> 24;
+	int idx = op & 0x00ffffff;
+	if (isStack(idx)){
+		int tcp = cp;
+		int tap = ap;
+		int tfp = fp;
+		int tof = offset;
+		for (int i = 0; i < level; ++i){
+			Value vcp = stack[tcp + tap + 2];
+			Value vof = stack[tcp + tap + 4];
+			Value vap = stack[tcp + tap + 5];
+			Value vfp = stack[tcp + tap + 6];
+			tcp = vcp.GetInteger();
+			tof = vof.GetInteger();
+			tap = vap.GetInteger();
+			tfp = vfp.GetInteger();
+		}
+
+		int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
+		stack[o] = v;
+	}
+	else{
+		global[decodeGlobalIndex(idx)] = v;
+	}
+}
+
 bool SVM::isStack(int idx){
 	return idx >= 0 && idx < STACK_SIZE;
 }
@@ -520,24 +627,12 @@ bool SVM::isGlobal(int idx){
 	return idx >= STACK_SIZE;
 }
 
-bool SVM::isConstant(int idx){
-	return idx < 0;
-}
-
 int SVM::encodeGlobalIndex(int idx){
 	return STACK_SIZE + idx;
 }
 
 int SVM::decodeGlobalIndex(int idx){
 	return idx - STACK_SIZE;
-}
-
-int SVM::encodeConstantIndex(int idx){
-	return -idx - 1;
-}
-
-int SVM::decodeConstantIndex(int idx){
-	return -(idx + 1);
 }
 
 string SVM::ShowCode(){
@@ -571,6 +666,7 @@ string SVM::ShowCode(){
 		"PUSHB",
 		"PUSHI",
 		"PUSHF",
+		"PUSHS",
 		"PUSH",
 	};
 
@@ -585,23 +681,16 @@ string SVM::ShowCode(){
 			if (c == "PUSHF"){
 				ret += to_string(code[i].operandf);
 			}
+			else if (c == "PUSHS"){
+				ret += code[i].operands;
+			}
 			else{
 				ret += to_string(code[i].operand);
 			}
 		}
 		else if (code[i].opcode >= Opcode::ENUM1 && code[i].opcode < Opcode::ENUM2){
 			ret += "  ";
-			if (c == "PUSH"){
-				if (isConstant(code[i].operand)){
-					ret += "\"" + constant[decodeConstantIndex(code[i].operand)].GetString() + "\"";
-				}
-				else{
-					ret += to_string(code[i].operand);
-				}
-			}
-			else{
-				ret += to_string(code[i].operand);
-			}
+			ret += to_string(code[i].operand);
 			ret += "  ";
 			ret += to_string(code[i].relative);
 		}

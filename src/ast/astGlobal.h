@@ -34,19 +34,48 @@ public:
 			SymbolInfo si = { v, idx, false };
 			e->SetSymbol(tok->GetToken(), si);
 			bc.nearst = idx;
+			bc.nearstS = tok->GetToken();
+
+			if (bc.cl){
+				v.SetInt(idx);
+				bc.cl->variables[tok->GetToken()] = v;
+			}
 		}
 		else{
-			bool local;
-			SymbolInfo si = e->GetSymbol(tok->GetToken(), local);
-			if (local){
-				Value v;
-				idx = svm->AddGlobal(v);
-				SymbolInfo si = { v, idx, false };
-				e->SetSymbol(tok->GetToken(), si);
-				bc.nearst = idx;
+			int level = 0;
+			SymbolInfo si = e->GetSymbol(tok->GetToken(), level);
+			bool local = si.local;
+			if (level != 0){
+				if (level < bc.maxLevel){
+					idx = si.address;
+					idx |= (level << 24);
+					int i = 0;
+					for (; i < bc.cl->cvs.size(); ++i){
+						if (bc.cl->cvs[i] == idx)
+							break;
+					}
+					i |= (1 << 30);
+					bc.nearst = i;
+					bc.nearstS = tok->GetToken();
+				}
+				else{
+					if (local){
+						Value v;
+						idx = svm->AddGlobal(v);
+						SymbolInfo si = { v, idx, false };
+						e->SetSymbol(tok->GetToken(), si);
+						bc.nearst = idx;
+						bc.nearstS = tok->GetToken();
+					}
+					else{
+						bc.nearst = si.address;
+						bc.nearstS = tok->GetToken();
+					}
+				}
 			}
 			else{
 				bc.nearst = si.address;
+				bc.nearstS = tok->GetToken();
 			}
 		}
 	}
