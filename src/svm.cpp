@@ -80,7 +80,7 @@ void SVM::PushString(string s){
 	PushStack(v);
 }
 
-void SVM::PushFunc(Closure* cl){
+void SVM::PushFunc(Clptr cl){
 	Value v;
 	v.SetFunction(cl);
 	PushStack(v);
@@ -143,7 +143,7 @@ void SVM::CallScript(int numParams){
 		func.GetNativeFunction()(this, numParams);
 	}
 	else if (func.IsFunction()){
-		Closure* curCl = func.GetFunction();
+		Clptr curCl = func.GetFunction();
 		int p = curCl->entry;
 		int nfp = (p & 0x7f000000) >> 24;
 		bool variable = p & 0x80000000;
@@ -255,7 +255,7 @@ void SVM::execute(){
 			break;
 		}
 		else if (func.IsFunction()){
-			Closure* curCl = func.GetFunction();
+			Clptr curCl = func.GetFunction();
 			int p = curCl->entry;
 			int nfp = (p & 0x7f000000) >> 24;
 			bool variable = p & 0x80000000;
@@ -306,7 +306,7 @@ void SVM::execute(){
 		int numRetVariable = (operand & 0xffff0000) >> 16;
 		int base = cp + ap;
 		int tb       = stack[base + 7].GetTable();
-		Closure* ocl = stack[base + 6].GetFunction();
+		Clptr ocl    = stack[base + 6].GetFunction();
 		int ofp      = stack[base + 5].GetInteger();
 		int oap      = stack[base + 4].GetInteger();
 		int ooffset  = stack[base + 3].GetInteger();
@@ -330,8 +330,8 @@ void SVM::execute(){
 		}
 		//set closure value
 		if (ret.IsFunction() && (ret.GetFunction() != cl)){
-			Closure* o = ret.GetFunction();
-			Closure* f = new Closure();
+			Clptr o = ret.GetFunction();
+			Clptr f = shared_ptr<Closure>(new Closure());
 			f->entry = o->entry;
 			f->variables = o->variables;
 			Closure::VariableIterator vit = cl->ocvs.begin();
@@ -364,7 +364,7 @@ void SVM::execute(){
 		sp     = esp;
 		ip     = eip;
 		if (numRetVariable) stack[sp++] = ret;
-
+			
 		if (isCoroutine) cocallback(this);
 
 		return;
@@ -389,7 +389,10 @@ void SVM::execute(){
 		Value src;
 
 		if (relative){
+			//这个位置必定是函数地址
 			src = stack[sp - 1 + operand];
+			//将函数引用计数减一
+			stack[sp - 1 + operand].SetNull();
 		}
 		else{
 			bool closure = operand & 0x40000000;

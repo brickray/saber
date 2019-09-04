@@ -68,7 +68,7 @@ protected:
 	int offset;
 	int ap;
 	int fp;
-	Closure* cl;
+	Clptr cl;
 
 	SState* S;
 
@@ -87,7 +87,7 @@ public:
 	void PushInt(int i);
 	void PushFloat(float f);
 	void PushString(string s);
-	void PushFunc(Closure* cl);
+	void PushFunc(Clptr cl);
 	void PushNativeFunc(SFunc f);
 	void PushLightUData(int i);
 	void PushTable(int i);

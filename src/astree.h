@@ -17,7 +17,7 @@ struct BlockCnt{
 	string nearstS;
 	int variableIndex;
 	int maxLevel;
-	Closure* cl;
+	Clptr cl;
 	vector<int> bps; //break points
 	vector<int> cps; //continue points
 	vector<int> elifs; //else if

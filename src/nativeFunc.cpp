@@ -59,7 +59,7 @@ static int load(SVM* svm, int numParams){
 	}
 
 	Value func;
-	Closure* cl = new Closure();
+	Clptr cl = shared_ptr<Closure>(new Closure());
 	cl->entry = idx;
 	func.SetFunction(cl);
 	svm->PushStack(func);

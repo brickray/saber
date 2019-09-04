@@ -26,7 +26,7 @@ public:
 		int reserveAddress = svm->AddCode(reserve);
 		Value func;
 		//set closure
-		Closure* cl = new Closure();
+		Clptr cl = shared_ptr<Closure>(new Closure());
 		cl->entry = start | (numParams << 24) | (variable << 31);
 		func.SetFunction(cl);
 		int funcAddress = svm->AddGlobal(func);

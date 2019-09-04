@@ -34,9 +34,10 @@ enum class ECoroutineStatus{
 
 class Value;
 class Closure;
+typedef shared_ptr<Closure> Clptr;
 struct Coroutine{
 	ECoroutineStatus status;
-	Closure* cl;
+	Clptr cl;
 	int ip;
 };
 
@@ -46,10 +47,10 @@ struct SValue{
 		bool       bValue;
 		int        iValue;
 		float      fValue;
-		Closure*   cl;
 		SFunc      sfunc;
 		Coroutine* co;
 	};
+	Clptr  cl;
 	string sValue;
 };
 
@@ -84,15 +85,16 @@ public:
 
 		return ret;
 	}
-	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; }
-	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i; }
-	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; }
-	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; }
-	void SetFunction(Closure* cl) { type = EValueType::EFUNC; value.cl = cl;; }
-	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; }
-	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; }
-	void SetTable(int i) { type = EValueType::ETABLE; value.iValue = i; }
-	void SetCoroutine(Coroutine* co) { type = EValueType::ECOROUTINE; value.co = co; }
+	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; value.cl = nullptr; }
+	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i;  value.cl = nullptr; }
+	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; value.cl = nullptr; }
+	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; value.cl = nullptr; }
+	void SetFunction(Clptr cl) { type = EValueType::EFUNC; value.cl = cl; }
+	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; value.cl = nullptr; }
+	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; }
+	void SetTable(int i) { type = EValueType::ETABLE; value.iValue = i; value.cl = nullptr; }
+	void SetCoroutine(Coroutine* co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; }
+	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -108,7 +110,7 @@ public:
 	int GetInteger() const { return value.iValue; }
 	float GetFloat() const { return value.fValue; }
 	string GetString() const { return value.sValue; }
-	Closure* GetFunction() const { return value.cl; }
+	Clptr& GetFunction() { return value.cl; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 	int GetLightUData() const { return value.iValue; }
 	int GetTable() const { return value.iValue; }
