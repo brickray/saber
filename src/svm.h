@@ -90,7 +90,7 @@ public:
 	void PushFunc(Clptr cl);
 	void PushNativeFunc(SFunc f);
 	void PushLightUData(int i);
-	void PushTable(int i);
+	void PushTable(Tptr t);
 	void PushCoroutine(Coroutine* co); //压入到全局栈
 	Value PopStack();
 
@@ -114,7 +114,7 @@ private:
 	int encodeGlobalIndex(int idx);
 	int decodeGlobalIndex(int idx);
 
-	void constructTDot(Table* t, int fp, int ap);
+	void constructTDot(Tptr t, int fp, int ap);
 	Value getClosureValue(int op);
 	void setClosureValue(int op, Value v);
 };

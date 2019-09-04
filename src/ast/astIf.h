@@ -36,6 +36,7 @@ public:
 		subBc.rets = bc.rets;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
+		subBc.maxLevel = bc.maxLevel;
 		int size = hasElseBlock ? children.size() - 1 : children.size();
 		for (int i = 2; i < size; ++i){
 			children[i]->Compile(e, svm, subBc);

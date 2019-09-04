@@ -82,8 +82,8 @@ void SState::Register(RegisterFunction func[]){
 
 void SState::RegisterLib(string name, RegisterFunction func[]){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	env->SetSymbol(name, si);

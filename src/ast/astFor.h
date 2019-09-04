@@ -21,6 +21,7 @@ public:
 		subBc.rets = bc.rets;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
+		subBc.maxLevel = bc.maxLevel;
 		children[children.size() - 1]->Compile(e, svm, subBc);
 
 		int continueAddress = svm->AddCode(nop);

@@ -967,7 +967,7 @@ static int remove(SVM* svm, int numParams){
 	checkTable("table.remove", t);
 	checkString("table.remove", s, 2);
 
-	Table* table = reinterpret_cast<Table*>(t.GetTable());
+	Tptr table = t.GetTable();
 	TableIteration ti = table->kv.find(s.GetString());
 	if (ti != table->kv.end()) 
 		table->kv.erase(ti);
@@ -980,7 +980,7 @@ static int tlength(SVM* svm, int numParams){
 	Value t = svm->PopStack();
 	checkTable("table.len", t);
 
-	Table* table = reinterpret_cast<Table*>(t.GetTable());
+	Tptr table = t.GetTable();
 	svm->PushInt(table->kv.size());
 
 	return 1;
@@ -994,7 +994,7 @@ static int tforeach(SVM* svm, int numParams){
 	checkTable("table.foreach", table);
 	checkFunction("table.foreach", func, 2);
 
-	Table* t = reinterpret_cast<Table*>(table.GetTable());
+	Tptr t = table.GetTable();
 	TableIteration ti = t->kv.begin();
 	for (; ti != t->kv.end(); ++ti){
 		Value key, value;
@@ -1006,17 +1006,6 @@ static int tforeach(SVM* svm, int numParams){
 		svm->PushStack(func);
 		svm->CallScript(2);
 	}
-
-	return 0;
-}
-
-static int tdestroy(SVM* svm, int numParams){
-	checkParamsNum("table.destroy", numParams);
-	Value table = svm->PopStack();
-	checkTable("table.destroy", table);
-
-	Table* t = reinterpret_cast<Table*>(table.GetTable());
-	delete t;
 
 	return 0;
 }
@@ -1233,8 +1222,8 @@ static RegisterFunction math[] = {
 
 void registerMath(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("math", si);
@@ -1258,8 +1247,8 @@ static RegisterFunction os[] = {
 
 void registerOs(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("os", si);
@@ -1289,8 +1278,8 @@ static RegisterFunction str[] = {
 
 void registerStr(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("string", si);
@@ -1316,8 +1305,8 @@ static RegisterFunction io[] = {
 
 void registerIo(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("io", si);
@@ -1335,14 +1324,13 @@ static RegisterFunction tb[] = {
 	{ "remove", remove },
 	{ "len", tlength },
 	{ "foreach", tforeach },
-	{ "destroy", tdestroy },
 	{ "", nullptr },
 };
 
 void registerTable(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("table", si);
@@ -1367,8 +1355,8 @@ static RegisterFunction co[] = {
 
 void registerCoroutine(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Table* t = new Table();
-	table.SetTable((int)t);
+	Tptr t = shared_ptr<Table>(new Table());
+	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("coroutine", si);

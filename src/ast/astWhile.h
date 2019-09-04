@@ -21,6 +21,7 @@ public:
 		subBc.rets = bc.rets;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
+		subBc.maxLevel = bc.maxLevel;
 		for (int i = 1; i < children.size(); ++i){
 			children[i]->Compile(e, svm, subBc);
 		}

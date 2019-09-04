@@ -34,7 +34,9 @@ enum class ECoroutineStatus{
 
 class Value;
 class Closure;
+struct Table;
 typedef shared_ptr<Closure> Clptr;
+typedef shared_ptr<Table> Tptr;
 struct Coroutine{
 	ECoroutineStatus status;
 	Clptr cl;
@@ -50,6 +52,7 @@ struct SValue{
 		SFunc      sfunc;
 		Coroutine* co;
 	};
+	Tptr   t;
 	Clptr  cl;
 	string sValue;
 };
@@ -85,16 +88,16 @@ public:
 
 		return ret;
 	}
-	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; value.cl = nullptr; }
-	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i;  value.cl = nullptr; }
-	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; value.cl = nullptr; }
-	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; value.cl = nullptr; }
-	void SetFunction(Clptr cl) { type = EValueType::EFUNC; value.cl = cl; }
-	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; value.cl = nullptr; }
-	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; }
-	void SetTable(int i) { type = EValueType::ETABLE; value.iValue = i; value.cl = nullptr; }
-	void SetCoroutine(Coroutine* co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; }
-	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; }
+	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; value.cl = nullptr; value.t = nullptr; }
+	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i;  value.cl = nullptr; value.t = nullptr; }
+	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; value.cl = nullptr; value.t = nullptr; }
+	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; value.cl = nullptr; value.t = nullptr; }
+	void SetFunction(Clptr cl) { type = EValueType::EFUNC; value.cl = cl; value.t = nullptr; }
+	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; value.cl = nullptr; value.t = nullptr; }
+	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; value.t = nullptr; }
+	void SetTable(Tptr t) { type = EValueType::ETABLE; value.t = t; value.cl = nullptr; }
+	void SetCoroutine(Coroutine* co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; value.t = nullptr; }
+	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; value.t = nullptr; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
 	bool IsFloat() const { return type == EValueType::EFLOAT; }
@@ -113,7 +116,7 @@ public:
 	Clptr& GetFunction() { return value.cl; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
 	int GetLightUData() const { return value.iValue; }
-	int GetTable() const { return value.iValue; }
+	Tptr& GetTable() { return value.t; }
 	Coroutine* GetCoroutine() const { return value.co; }
 
 	Value operator-(){

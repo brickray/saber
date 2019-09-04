@@ -98,9 +98,9 @@ void SVM::PushLightUData(int i){
 	PushStack(v);
 }
 
-void SVM::PushTable(int i){
+void SVM::PushTable(Tptr t){
 	Value v;
-	v.SetTable(i);
+	v.SetTable(t);
 	PushStack(v);
 }
 
@@ -168,8 +168,8 @@ void SVM::CallScript(int numParams){
 		offset = ap - fp;
 		cp = ncp;
 		if (variable){
-			Table* t = new Table();
-			stack[sp - 1].SetTable(int(t));
+			Tptr t = shared_ptr<Table>(new Table());
+			stack[sp - 1].SetTable(t);
 			//construct ...
 			constructTDot(t, fp, ap);
 		}
@@ -279,8 +279,8 @@ void SVM::execute(){
 			offset = ap - fp;
 			cp = ncp;
 			if (variable){
-				Table* t = new Table();
-				stack[sp - 1].SetTable(int(t));
+				Tptr t = shared_ptr<Table>(new Table());
+				stack[sp - 1].SetTable(t);
 				//construct ...
 				constructTDot(t, fp, ap);
 			}
@@ -305,7 +305,7 @@ void SVM::execute(){
 		Value ret = stack[sp - 1];
 		int numRetVariable = (operand & 0xffff0000) >> 16;
 		int base = cp + ap;
-		int tb       = stack[base + 7].GetTable();
+		Tptr t       = stack[base + 7].GetTable();
 		Clptr ocl    = stack[base + 6].GetFunction();
 		int ofp      = stack[base + 5].GetInteger();
 		int oap      = stack[base + 4].GetInteger();
@@ -316,12 +316,6 @@ void SVM::execute(){
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 
-		//可变参函数
-		if (ap != fp){
-			Table* t = reinterpret_cast<Table*>(tb);
-			delete t;
-		}
-
 		if (ocl){
 			Closure::VariableIterator vit = ocl->ocvs.begin();
 			for (; vit != ocl->ocvs.end(); ++vit){
@@ -329,7 +323,7 @@ void SVM::execute(){
 			}
 		}
 		//set closure value
-		if (ret.IsFunction() && (ret.GetFunction() != cl)){
+		if (numRetVariable && ret.IsFunction() && (ret.GetFunction() != cl)){
 			Clptr o = ret.GetFunction();
 			Clptr f = shared_ptr<Closure>(new Closure());
 			f->entry = o->entry;
@@ -438,7 +432,7 @@ void SVM::execute(){
 			Error::GetInstance()->ProcessError("key必须为integer或string");
 		}
 
-		Table* t = reinterpret_cast<Table*>(table.GetTable());
+		Tptr t = table.GetTable();
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
 		Value value;
@@ -454,8 +448,8 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::SETTABLE:{
-		Table* t = new Table();
-		stack[sp++].SetTable((int)t);
+		Tptr t = shared_ptr<Table>(new Table());
+		stack[sp++].SetTable(t);
 
 		break;
 	}
@@ -469,7 +463,7 @@ void SVM::execute(){
 		if (!key.IsString() && !key.IsInteger()){
 			Error::GetInstance()->ProcessError("key必须为integer或string");
 		}
-		Table* t = reinterpret_cast<Table*>(table.GetTable());
+		Tptr t = table.GetTable();
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
 		t->kv[s] = value;
@@ -558,7 +552,7 @@ void SVM::execute(){
 	ip++;
 }
 
-void SVM::constructTDot(Table* t, int fp, int ap){
+void SVM::constructTDot(Tptr t, int fp, int ap){
 	Value num;
 	num.SetInt(ap - fp + 1);
 	t->kv["num"] = num;

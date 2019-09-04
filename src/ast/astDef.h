@@ -43,11 +43,19 @@ public:
 				SymbolInfo si;
 				si.address = numParams + 7;
 				local->SetSymbol(name, si);
+
+				Value v;
+				v.SetInt(numParams + 7);
+				cl->variables[name] = v;
 			}
 			else{
 				SymbolInfo si;
 				si.address = i - 1;
 				local->SetSymbol(name, si);
+
+				Value v;
+				v.SetInt(i - 1);
+				cl->variables[name] = v;
 			}
 		}
 
