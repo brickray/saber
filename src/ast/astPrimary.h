@@ -63,7 +63,7 @@ public:
 				SVM::Instruction ins(Opcode::PUSH, p, tok);
 				svm->AddCode(ins);
 
-				bc.nearst = idx;
+				bc.nearst = p;
 				bc.nearstS = tok;
 				return;
 			}
