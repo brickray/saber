@@ -11,10 +11,11 @@ def fib(a)
     return fib(a - 1) + fib(a - 2)
 end
 
-tb = {} //create a table
-tb.fib = fib //fibonacci
-tb.fibp = 10
-tb.iter = def (key, value) print(key, value) end //table iteration function
+tb = {
+      "fib" = fib, 
+      "fibp" = 10, 
+      "iter" = def(key, value) print(key, value) end
+     } //create a table
 
 print(tb.fib(tb.fibp), table.len(tb))
 table.foreach(tb, tb.iter) //traverse table
