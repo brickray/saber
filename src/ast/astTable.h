@@ -9,6 +9,10 @@ class AstTable : public Astree{
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction s(Opcode::SETTABLE);
 		svm->AddCode(s);
+
+		for (int i = 0; i < GetNumChildren(); ++i){
+			children[i]->Compile(e, svm, bc);
+		}
 	}
 };
 

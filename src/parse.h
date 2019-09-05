@@ -91,6 +91,7 @@ private:
 	bool matchDef(shared_ptr<Astree>& astree);
 	bool matchFunc(shared_ptr<Astree>& astree);
 	bool matchClosure(shared_ptr<Astree>& astree);
+	bool matchTableInit(shared_ptr<Astree>& astree);
 	bool matchTable(shared_ptr<Astree>& astree);
 	bool matchStatement(shared_ptr<Astree>& astree);
 };

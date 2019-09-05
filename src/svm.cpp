@@ -457,6 +457,12 @@ void SVM::execute(){
 		Value key = stack[sp - 1];
 		Value table = stack[sp - 2];
 		Value value = stack[sp - 3];
+		if (operand){
+			key = stack[sp - 1];
+			value = stack[sp - 2];
+			table = stack[sp - 3];
+		}
+
 		if (!table.IsTable()){
 			Error::GetInstance()->ProcessError("尝试对非Table对象使用[.]");
 		}
@@ -468,7 +474,9 @@ void SVM::execute(){
 		if (key.IsInteger()) s = to_string(key.GetInteger());
 		t->kv[s] = value;
 
-		sp -= 3;
+		if (operand) sp -= 2;
+		else sp -= 3;
+
 		break;
 	}
 	case Opcode::EXIT:

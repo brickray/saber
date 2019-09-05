@@ -6,7 +6,10 @@
 SABER_NAMESPACE_BEGIN
 
 class AstOperator : public Astree{
+private:
+	bool tbinit = false;
 public:
+	void SetTableInit() { tbinit = true; }
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		string op = token->GetToken();
 		if (op == "="){
@@ -15,10 +18,12 @@ public:
 
 			if (istable){
 				SVM::Instruction ins(Opcode::STFILED);
+				if (tbinit) ins.operand = 1;
 				svm->AddCode(ins);
 
 				SVM::Instruction dot(Opcode::GTFILED, 1);
-				svm->SetCode(bc.nearst, dot);
+				if (!tbinit)
+					svm->SetCode(bc.nearst, dot);
 			}
 			else{
 				SVM::Instruction ins(Opcode::MOVE, bc.nearst, bc.nearstS);

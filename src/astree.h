@@ -25,6 +25,7 @@ struct BlockCnt{
 
 	BlockCnt(){
 		isloop = false;
+		nearst = 0;
 		variableIndex = 0;
 		maxLevel = 0;
 		cl = nullptr;
