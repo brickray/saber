@@ -260,14 +260,18 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 bool SyntaxParse::matchNegExpr(shared_ptr<Astree>& astree){
 	Token* tok;
 	if (match("-", &tok)){
-		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-		shared_ptr<Astree> op = shared_ptr <Astree>(new AstOperator());
-		op->SetToken(tok);
-		if (!matchTerm(stat)) return false;
-		op->AddChild(stat);
-		astree->AddChild(op);
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+			shared_ptr<Astree> op = shared_ptr <Astree>(new AstOperator());
+			op->SetToken(tok);
+			if (!matchTerm(stat)) return false;
+			op->AddChild(stat);
+			astree->AddChild(op);
 
-		return true;
+			return true;
+		}
+
+		lexer.Back();
 	}
 
 	return matchTerm(astree);
@@ -281,17 +285,21 @@ bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	if (match("*", &tok) || match("/", &tok) || 
 		match("*=", &tok) || match("/=", &tok) ||
 		match("%", &tok) || match("%=", &tok)){
-		if (tok->GetToken() == "*=" || tok->GetToken() == "/=" || tok->GetToken() == "%="){
-			if (!stat->GetToken() || stat->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
-				Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
-				return false;
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			if (tok->GetToken() == "*=" || tok->GetToken() == "/=" || tok->GetToken() == "%="){
+				if (!stat->GetToken() || stat->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+					Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
+					return false;
+				}
 			}
+			op->SetToken(tok);
+			op->AddChild(stat);
+			if (!matchMuldivExpr(op)) return false;
+			astree->AddChild(op);
+			return true;
 		}
-		op->SetToken(tok);
-		op->AddChild(stat);
-		if (!matchMuldivExpr(op)) return false;
-		astree->AddChild(op);
-		return true;
+
+		lexer.Back();
 	}
 
 	astree->AddChild(stat);
@@ -304,17 +312,21 @@ bool SyntaxParse::matchAddsubExpr(shared_ptr<Astree>& astree){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("+", &tok) || match("-", &tok) || match("+=", &tok) || match("-=", &tok)){
-		if (tok->GetToken() == "+=" || tok->GetToken() == "-="){
-			if (!stat->GetChild(0)->GetToken() || stat->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
-				Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
-				return false;
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			if (tok->GetToken() == "+=" || tok->GetToken() == "-="){
+				if (!stat->GetChild(0)->GetToken() || stat->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+					Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
+					return false;
+				}
 			}
+			op->SetToken(tok);
+			op->AddChild(stat);
+			if (!matchAddsubExpr(op)) return false;
+			astree->AddChild(op);
+			return true;
 		}
-		op->SetToken(tok);
-		op->AddChild(stat);
-		if (!matchAddsubExpr(op)) return false;
-		astree->AddChild(op);
-		return true;
+
+		lexer.Back();
 	}
 
 	astree->AddChild(stat);
@@ -329,11 +341,15 @@ bool SyntaxParse::matchCompExpr(shared_ptr<Astree>& astree){
 	if (match("==", &tok) || match("!=", &tok) || 
 		match(">", &tok) || match("<", &tok) ||
 		match(">=", &tok) || match("<=", &tok)){
-		op->SetToken(tok);
-		op->AddChild(stat);
-		if (!matchCompExpr(op)) return false;
-		astree->AddChild(op);
-		return true;
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			op->SetToken(tok);
+			op->AddChild(stat);
+			if (!matchCompExpr(op)) return false;
+			astree->AddChild(op);
+			return true;
+		}
+
+		lexer.Back();
 	}
 
 	astree->AddChild(stat);
@@ -346,11 +362,15 @@ bool SyntaxParse::matchAndorExpr(shared_ptr<Astree>& astree){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("&&", &tok) || match("||", &tok)){
-		op->SetToken(tok);
-		op->AddChild(stat);
-		if (!matchAndorExpr(op)) return false;
-		astree->AddChild(op);
-		return true;
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			op->SetToken(tok);
+			op->AddChild(stat);
+			if (!matchAndorExpr(op)) return false;
+			astree->AddChild(op);
+			return true;
+		}
+
+		lexer.Back();
 	}
 
 	astree->AddChild(stat);
