@@ -477,6 +477,9 @@ public:
 			va.SetBool(false);
 		}
 		else {
+			if (IsNull()){
+				va.SetBool(true);
+			}
 			if (IsBoolean()){
 				va.SetBool(value.bValue == v.value.bValue);
 			}
@@ -485,6 +488,15 @@ public:
 			}
 			else if (IsNativeFunction()){
 				va.SetBool(value.sfunc == v.value.sfunc);
+			}
+			else if (IsLightUData()){
+				va.SetBool(value.iValue == v.value.iValue);
+			}
+			else if (IsTable()){
+				va.SetBool(value.t == v.value.t);
+			}
+			else if (IsCoroutine()){
+				va.SetBool(value.cl == v.value.cl);
 			}
 		}
 
@@ -507,6 +519,9 @@ public:
 			va.SetBool(true);
 		}
 		else {
+			if (IsNull()){
+				va.SetBool(false);
+			}
 			if (IsBoolean()){
 				va.SetBool(value.bValue != v.value.bValue);
 			}
@@ -515,6 +530,15 @@ public:
 			}
 			else if (IsNativeFunction()){
 				va.SetBool(value.sfunc != v.value.sfunc);
+			}
+			else if (IsLightUData()){
+				va.SetBool(value.iValue != v.value.iValue);
+			}
+			else if (IsTable()){
+				va.SetBool(value.t != v.value.t);
+			}
+			else if (IsCoroutine()){
+				va.SetBool(value.cl != v.value.cl);
 			}
 		}
 

@@ -232,8 +232,11 @@ void SVM::execute(){
 	}
 	case Opcode::JZ:{
 		bool t;
-		if (stack[sp - 1].IsFloat()) t = stack[sp - 1].GetFloat() != 0;
-		else t = stack[sp - 1].GetBoolean();
+		if (stack[sp - 1].IsNull()) t = false;
+		else if (stack[sp - 1].IsBoolean()) t = stack[sp - 1].GetBoolean();
+		else if (stack[sp - 1].IsFloat()) t = stack[sp - 1].GetFloat() != 0;
+		else if (stack[sp - 1].IsInteger()) t = stack[sp - 1].GetInteger() != 0;
+		else t = true;
 
 		sp--;
 		if (!t){
