@@ -36,6 +36,11 @@ public:
 				svm->AddCode(ins);
 				return;
 			}
+			if (tok == "null"){
+				SVM::Instruction ins(Opcode::PUSHN);
+				svm->AddCode(ins);
+				return;
+			}
 
 			if (istable){
 				string str = token->GetToken();

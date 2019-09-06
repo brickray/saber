@@ -363,6 +363,10 @@ void SVM::execute(){
 
 		return;
 	}
+	case Opcode::PUSHN:{
+		stack[sp++].SetNull();
+		break;
+	}
 	case Opcode::PUSHB:{
 		stack[sp++].SetBool(operand);
 		break;
@@ -660,6 +664,7 @@ string SVM::ShowCode(){
 		"SETTABLE",
 		"STFILED",
 		"EXIT",
+		"PUSHN",
 		"NOP",
 		"GTFILED",
 		"MOVE",

@@ -67,6 +67,127 @@ static int load(SVM* svm, int numParams){
 	return 1;
 }
 
+static int toint(SVM* svm, int numParams){
+	checkParamsNum("toint", numParams);
+	Value v = svm->PopStack();
+	if (!(v.IsNumber() || v.IsString())){
+		Error::GetInstance()->ProcessError("toint参数类型错误");
+	}
+
+	if (v.IsInteger()){
+		svm->PushStack(v);
+	}
+	else if (v.IsFloat()){
+		float f = v.GetFloat();
+		svm->PushInt(f);
+	}
+	else{
+		string str = v.GetString();
+		svm->PushInt(atoi(str.c_str()));
+	}
+
+	return 1;
+}
+
+static int isnull(SVM* svm, int numParams){
+	checkParamsNum("isnull", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsNull());
+
+	return 1;
+}
+
+static int isbool(SVM* svm, int numParams){
+	checkParamsNum("isbool", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsBoolean());
+
+	return 1;
+}
+
+static int isint(SVM* svm, int numParams){
+	checkParamsNum("isint", numParams);
+	Value v = svm->PopStack();
+	
+	svm->PushBool(v.IsInteger());
+
+	return 1;
+}
+
+static int isfloat(SVM* svm, int numParams){
+	checkParamsNum("isfloat", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsFloat());
+
+	return 1;
+}
+
+static int isnumber(SVM* svm, int numParams){
+	checkParamsNum("isnumber", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsNumber());
+
+	return 1;
+}
+
+static int isstring(SVM* svm, int numParams){
+	checkParamsNum("isstring", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsString());
+
+	return 1;
+}
+
+static int islightudata(SVM* svm, int numParams){
+	checkParamsNum("islightudata", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsLightUData());
+
+	return 1;
+}
+
+static int isfunction(SVM* svm, int numParams){
+	checkParamsNum("isfunction", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsFunction());
+
+	return 1;
+}
+
+static int isnativefunction(SVM* svm, int numParams){
+	checkParamsNum("isnativefunction", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsNativeFunction());
+
+	return 1;
+}
+
+static int istable(SVM* svm, int numParams){
+	checkParamsNum("istable", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsTable());
+
+	return 1;
+}
+
+static int iscoroutine(SVM* svm, int numParams){
+	checkParamsNum("iscoroutine", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsCoroutine());
+
+	return 1;
+}
+
 static int test(SVM* svm, int numParams){
 	if (numParams == 1){
 		svm->CallScript(0);
@@ -842,6 +963,81 @@ static int format(SVM* svm, int numParams){
 	return 1;
 }
 
+static int lower(SVM* svm, int numParams){
+	checkParamsNum("string.lower", numParams);
+	Value v = svm->PopStack();
+	checkString("string.lower", v);
+
+	string str = v.GetString();
+	vector<char> ret(str.size() + 1);
+	for (int i = 0; i < str.size(); ++i){
+		char c = str[i];
+		if (c >= 'A' && c <= 'Z'){
+			c += 32;
+		}
+		ret[i] = c;
+	}
+	ret[str.size()] = '\0';
+	svm->PushString(&ret[0]);
+
+	return 1;
+}
+
+static int upper(SVM* svm, int numParams){
+	checkParamsNum("string.upper", numParams);
+	Value v = svm->PopStack();
+	checkString("string.upper", v);
+
+	string str = v.GetString();
+	vector<char> ret(str.size() + 1);
+	for (int i = 0; i < str.size(); ++i){
+		char c = str[i];
+		if (c >= 'a' && c <= 'z'){
+			c -= 32;
+		}
+		ret[i] = c;
+	}
+	ret[str.size()] = '\0';
+	svm->PushString(&ret[0]);
+
+	return 1;
+}
+
+static int isdigit(SVM* svm, int numParams){
+	checkParamsNum("string.isdigit", numParams);
+	Value v = svm->PopStack();
+	checkString("string.isdigit", v);
+
+	string str = v.GetString();
+	char c = str[0];
+	if (c >= '0' && c <= '9'){
+		svm->PushBool(true);
+	}
+	else{
+		svm->PushBool(false);
+	}
+
+	return 1;
+}
+
+static int isletter(SVM* svm, int numParams){
+	checkParamsNum("string.isletter", numParams);
+	Value v = svm->PopStack();
+	checkString("string.isletter", v);
+
+	string str = v.GetString();
+	char c = str[0];
+	if ((c >= 'a' && c <= 'z') ||
+		(c >= 'A' && c <= 'Z')){
+		svm->PushBool(true);
+	}
+	else{
+		svm->PushBool(false);
+	}
+
+	return 1;
+}
+
 //------------------------------io lib-------------------------
 static int fexist(SVM* svm, int numParams){
 	Value fileV, modeV;
@@ -1180,6 +1376,17 @@ static RegisterFunction basic[] = {
 	{ "print", print },
 	{ "type", type },
 	{ "load", load },
+	{ "toint", toint },
+	{ "isnull", isnull },
+	{ "isbool", isbool },
+	{ "isint", isint },
+	{ "isfloat", isfloat },
+	{ "isnumber", isnumber },
+	{ "isstring", isstring },
+	{ "isfunction", isfunction },
+	{ "isnativefunction", isnativefunction },
+	{ "istable", istable },
+	{ "iscoroutine", iscoroutine },
 //	{ "test", test },
 	{ "", nullptr },
 };
@@ -1273,6 +1480,10 @@ static RegisterFunction str[] = {
 	{ "at", at },
 	{ "foreach", sforeach },
 	{ "format", format },
+	{ "lower", lower },
+	{ "upper", upper },
+	{ "isdigit", isdigit },
+	{ "isletter", isletter },
 	{ "", nullptr },
 };
 
