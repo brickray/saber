@@ -580,9 +580,9 @@ Value SVM::getClosureValue(int op){
 		int tof = offset;
 		for (int i = 0; i < level; ++i){
 			Value vcp = stack[tcp + tap + 2];
-			Value vof = stack[tcp + tap + 4];
-			Value vap = stack[tcp + tap + 5];
-			Value vfp = stack[tcp + tap + 6];
+			Value vof = stack[tcp + tap + 3];
+			Value vap = stack[tcp + tap + 4];
+			Value vfp = stack[tcp + tap + 5];
 			tcp = vcp.GetInteger();
 			tof = vof.GetInteger();
 			tap = vap.GetInteger();
@@ -607,9 +607,9 @@ void SVM::setClosureValue(int op, Value v){
 		int tof = offset;
 		for (int i = 0; i < level; ++i){
 			Value vcp = stack[tcp + tap + 2];
-			Value vof = stack[tcp + tap + 4];
-			Value vap = stack[tcp + tap + 5];
-			Value vfp = stack[tcp + tap + 6];
+			Value vof = stack[tcp + tap + 3];
+			Value vap = stack[tcp + tap + 4];
+			Value vfp = stack[tcp + tap + 5];
 			tcp = vcp.GetInteger();
 			tof = vof.GetInteger();
 			tap = vap.GetInteger();

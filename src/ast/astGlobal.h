@@ -54,6 +54,10 @@ public:
 						if (bc.cl->cvs[i] == idx)
 							break;
 					}
+					if (i == bc.cl->cvs.size()){
+						int size = bc.cl->cvs.size();
+						bc.cl->cvs.push_back(idx);
+					}
 					i |= (1 << 30);
 					bc.nearst = i;
 					bc.nearstS = tok->GetToken();
