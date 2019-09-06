@@ -151,6 +151,7 @@ void Lexer::parse(){
 			}
 			else{
 				comments = false;
+				continue;
 			}
 
 			c = code[++p];
