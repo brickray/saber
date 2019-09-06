@@ -38,66 +38,37 @@ void Lexer::init(){
 }
 
 void Lexer::parse(){
-	while (true){
-		string line = readLine();
-		if (line == ""){
-			if (ptr < code.size()) continue;
-			else break;
-		}
-
-		parseLine(line);
-	}
-}
-
-string Lexer::readLine(){
-	int p = code.find('\n', ptr);
-	if (p == -1){
-		if (ptr < code.size()){
-			string line = code.substr(ptr, code.size() - ptr);
-			ptr = code.size();
-			return line;
-		}
-
-		return "";
-	}
-
-	string line = code.substr(ptr, p - ptr);
-	ptr += p - ptr + 1;
-	lineNo++;
-	return line;
-}
-
-void Lexer::parseLine(string line){
 	int p = 0;
-	char c = line[p];
-	int size = line.length();
+	char c = code[p];
+	int size = code.length();
+	bool comments = true;
 
 	while (p < size){
 		string tok;
 		ETokenType type;
 		while (isSpace(c)){
-			c = line[++p];
+			c = code[++p];
 		}
 		if (isDigit(c)){
 			do{
 				tok += c;
-				c = line[++p];
+				c = code[++p];
 			} while (isDigit(c));
 			if (c == '.'){
 				do{
 					tok += c;
-					c = line[++p];
+					c = code[++p];
 				} while (isDigit(c));
 			}
-		
+
 			type = ETokenType::ENUMBER;
 		}
 		else if (isLetter(c)){
 			do{
 				tok += c;
-				c = line[++p];
+				c = code[++p];
 			} while (isLetter(c) || isDigit(c));
-		
+
 			if (reserved.find(tok) != reserved.end())
 				type = ETokenType::ERESERVED;
 			else
@@ -105,10 +76,10 @@ void Lexer::parseLine(string line){
 		}
 		else if (c == '\"' || c == '\''){
 			char quote = c;
-			c = line[++p];
+			c = code[++p];
 			while (c != quote){
 				if (c == '\\'){
-					char next = line[++p];
+					char next = code[++p];
 					switch (next){
 					case 'a':
 						tok += '\a';
@@ -151,68 +122,98 @@ void Lexer::parseLine(string line){
 				else{
 					tok += c;
 				}
-				c = line[++p];
+				c = code[++p];
 			}
-			c = line[++p];
+			c = code[++p];
 			type = ETokenType::ESTRING;
 		}
-		else if (c == '=' || c == '!' || c == '+' || c == '-' || 
+		else if (c == '/' && comments){
+			//comments
+			if (code[p + 1] == '/'){
+				for (int j = p + 2; j < size; ++j){
+					if (code[j] == '\n'){
+						p = j - 1;
+						break;
+					}
+					else if (j == size - 1){
+						p = j;
+						break;
+					}
+				}
+			}
+			else if (code[p + 1] == '*'){
+				for (int j = p + 2; j < size; ++j){
+					if (code[j] == '*' && code[j + 1] == '/'){
+						p = j + 2;
+						break;
+					}
+				}
+			}
+			else{
+				comments = false;
+			}
+
+			c = code[++p];
+			continue;
+		}
+		else if (c == '=' || c == '!' || c == '+' || c == '-' ||
 			c == '*' || c == '/' || c == '%' ||
 			c == '<' || c == '>'){
+			if (c == '/') comments = true;
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			if (c == '='){
 				tok += c;
-				c = line[++p];
+				c = code[++p];
 			}
 			type = ETokenType::EOPERATOR;
 		}
 		else if (c == '|'){
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			if (c == '|'){
 				tok += c;
-				c = line[++p];
+				c = code[++p];
 			}
 			type = ETokenType::EOPERATOR;
 		}
 		else if (c == '&'){
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			if (c == '&'){
 				tok += c;
-				c = line[++p];
+				c = code[++p];
 			}
 			type = ETokenType::EOPERATOR;
 		}
 		else if (c == ';'){
-			c = line[++p];
+			c = code[++p];
 			continue;
 		}
 		else if (c == '(' || c == '{' || c == '['){
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			type = ETokenType::ELEFT_BRACKET;
 		}
 		else if (c == ')' || c == '}' || c == ']'){
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			type = ETokenType::ERIGHT_BRACKET;
 		}
 		else if (c == ','){
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			type = ETokenType::ECOMMA;
 		}
 		else if (c == '.'){
 			tok += c;
-			c = line[++p];
+			c = code[++p];
 			if (c == '.'){
 				tok += c;
-				c = line[++p];
+				c = code[++p];
 				if (c == '.'){
 					tok += c;
-					c = line[++p];
+					c = code[++p];
 					type = ETokenType::ETDOT;
 				}
 				else{
@@ -223,8 +224,13 @@ void Lexer::parseLine(string line){
 				type = ETokenType::EDOT;
 			}
 		}
+		else if (c == '\n'){
+			lineNo++;
+			c = code[++p];
+			continue;
+		}
 		else if (c == '\0' || c == '\t'){
-			if (p < size) c = line[++p];
+			if (p < size) c = code[++p];
 
 			continue;
 		}

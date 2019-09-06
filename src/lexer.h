@@ -98,8 +98,6 @@ public:
 private:
 	void init();
 	void parse();
-	string readLine();
-	void parseLine(string line);
 
 	bool isLetter(char c) const { return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z'); }
 	bool isDigit(char c) const { return '0' <= c && c <= '9'; }

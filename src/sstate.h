@@ -1,7 +1,6 @@
 #ifndef H_SSTATE_H
 #define H_SSTATE_H
 
-#include "preprocessor.h"
 #include "lexer.h"
 #include "parse.h"
 #include "svm.h"
@@ -11,7 +10,6 @@ SABER_NAMESPACE_BEGIN
 
 class SState{
 private:
-	shared_ptr<Preprocessor> preprocessor;
 	shared_ptr<Lexer> lexer;
 	shared_ptr<SyntaxParse> parse;
 	shared_ptr<SVM> svm;

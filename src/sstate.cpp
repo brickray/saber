@@ -4,7 +4,6 @@
 SABER_NAMESPACE_BEGIN
 
 void SState::Init(){
-	preprocessor = shared_ptr<Preprocessor>(new Preprocessor());
 	lexer = shared_ptr<Lexer>(new Lexer());
 	parse = shared_ptr<SyntaxParse>(new SyntaxParse());
 	svm = shared_ptr<SVM>(new SVM(this));
@@ -14,8 +13,7 @@ void SState::Init(){
 }
 
 void SState::Compile(string code){
-	string afterProcess = preprocessor->Process(code);
-	lexer->Parse(afterProcess);
+	lexer->Parse(code);
 	parse->Parse(*lexer);
 	parse->Compile(env, svm);
 
