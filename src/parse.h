@@ -76,7 +76,7 @@ private:
 	bool matchIdentifier(shared_ptr<Astree>& astree);
 	bool matchString(shared_ptr<Astree>& astree);
 	bool matchPrimary(shared_ptr<Astree>& astree);
-	bool matchLValue(shared_ptr<Astree>& astree);
+	bool matchLValue(shared_ptr<Astree>& astree, bool array = false);
 	bool matchTerm(shared_ptr<Astree>& astree);
 	bool matchNegExpr(shared_ptr<Astree>& astree);
 	bool matchMuldivExpr(shared_ptr<Astree>& astree);

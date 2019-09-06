@@ -37,6 +37,14 @@ public:
 				return;
 			}
 
+			if (istable){
+				string str = token->GetToken();
+
+				SVM::Instruction ins(Opcode::PUSHS, str);
+				svm->AddCode(ins);
+				break;
+			}
+
 			if (e->HasSymbol(tok)){
 				int level = 0;
 				int idx = e->GetSymbol(tok, level).address;

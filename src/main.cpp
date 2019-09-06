@@ -94,9 +94,9 @@ void CppCallSaber(){
 	printf("%s\n", ret.ToString().c_str());
 }
 
-void main(){
+void main(int argc, char** argv){
 	ifstream stream;
-	stream.open("../test/script.sa");
+	stream.open(argv[1]);
 	if (!stream.is_open()){
 		printf("unable to open file\n");
 		return;
@@ -108,11 +108,9 @@ void main(){
 	state.Init();
 	state.RegisterLib("test", test);
 
-	state.ShowCode(true);
+//	state.ShowCode(true);
 	state.Compile(code);
 	state.Run();
 
-	CppCallSaber();
-
-	getchar();
+//	CppCallSaber();
 }

@@ -16,7 +16,8 @@ void Error::ProcessError(const char* format, ...){
 
 	va_end(args);
 
-	system("pause");
+	//system("pause");
+	exit(0);
 }
 
 SABER_NAMESPACE_END
