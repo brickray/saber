@@ -70,11 +70,15 @@ static int load(SVM* svm, int numParams){
 static int toint(SVM* svm, int numParams){
 	checkParamsNum("toint", numParams);
 	Value v = svm->PopStack();
-	if (!(v.IsNumber() || v.IsString())){
+	if (!(v.IsBoolean() || v.IsNumber() || v.IsString())){
 		Error::GetInstance()->ProcessError("toint参数类型错误");
 	}
 
-	if (v.IsInteger()){
+	if (v.IsBoolean()){
+		if (v.GetBoolean()) svm->PushInt(1);
+		else svm->PushInt(0);
+	}
+	else if (v.IsInteger()){
 		svm->PushStack(v);
 	}
 	else if (v.IsFloat()){
@@ -84,6 +88,32 @@ static int toint(SVM* svm, int numParams){
 	else{
 		string str = v.GetString();
 		svm->PushInt(atoi(str.c_str()));
+	}
+
+	return 1;
+}
+
+static int tostring(SVM* svm, int numParams){
+	checkParamsNum("tostring", numParams);
+	Value v = svm->PopStack();
+	if (!(v.IsBoolean() || v.IsNumber() || v.IsString())){
+		Error::GetInstance()->ProcessError("tostring参数类型错误");
+	}
+
+	if (v.IsBoolean()){
+		if (v.GetBoolean()) svm->PushString("true");
+		else svm->PushString("false");
+	}
+	if (v.IsInteger()){
+		int i = v.GetInteger();
+		svm->PushString(to_string(i));
+	}
+	else if (v.IsFloat()){
+		float f = v.GetFloat();
+		svm->PushString(to_string(f));
+	}
+	else{
+		svm->PushStack(v);
 	}
 
 	return 1;
@@ -1003,7 +1033,7 @@ static int upper(SVM* svm, int numParams){
 	return 1;
 }
 
-static int isdigit(SVM* svm, int numParams){
+static int sisdigit(SVM* svm, int numParams){
 	checkParamsNum("string.isdigit", numParams);
 	Value v = svm->PopStack();
 	checkString("string.isdigit", v);
@@ -1020,7 +1050,7 @@ static int isdigit(SVM* svm, int numParams){
 	return 1;
 }
 
-static int isletter(SVM* svm, int numParams){
+static int sisletter(SVM* svm, int numParams){
 	checkParamsNum("string.isletter", numParams);
 	Value v = svm->PopStack();
 	checkString("string.isletter", v);
@@ -1377,6 +1407,7 @@ static RegisterFunction basic[] = {
 	{ "type", type },
 	{ "load", load },
 	{ "toint", toint },
+	{ "tostring", tostring },
 	{ "isnull", isnull },
 	{ "isbool", isbool },
 	{ "isint", isint },
@@ -1482,8 +1513,8 @@ static RegisterFunction str[] = {
 	{ "format", format },
 	{ "lower", lower },
 	{ "upper", upper },
-	{ "isdigit", isdigit },
-	{ "isletter", isletter },
+	{ "isdigit", sisdigit },
+	{ "isletter", sisletter },
 	{ "", nullptr },
 };
 
