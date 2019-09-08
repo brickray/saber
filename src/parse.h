@@ -22,6 +22,7 @@
 #include "ast\astClosure.h"
 #include "ast\astDot.h"
 #include "ast\astTable.h"
+#include "ast\astHash.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +

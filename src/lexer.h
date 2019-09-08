@@ -17,6 +17,7 @@ enum class ETokenType{
 	ECOMMA,
 	EDOT,
 	ETDOT,
+	EHASH,
 	ENUM,
 };
 
@@ -32,6 +33,7 @@ static string tokenTypeString[int(ETokenType::ENUM)] = {
 	"comma",
 	"dot",
 	"tdot",
+	"hash",
 };
 
 static hash_set<string> reserved = {

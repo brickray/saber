@@ -32,7 +32,7 @@ void Lexer::Back(){
 
 void Lexer::init(){
 	ptr = 0;
-	lineNo = 0;
+	lineNo = 1;
 	tokenPtr = 0;
 	tokens.clear();
 }
@@ -63,11 +63,11 @@ void Lexer::parse(){
 
 			type = ETokenType::ENUMBER;
 		}
-		else if (isLetter(c)){
+		else if (isLetter(c) || c == '_'){
 			do{
 				tok += c;
 				c = code[++p];
-			} while (isLetter(c) || isDigit(c));
+			} while (isLetter(c) || isDigit(c) || c == '_');
 
 			if (reserved.find(tok) != reserved.end())
 				type = ETokenType::ERESERVED;
@@ -224,6 +224,11 @@ void Lexer::parse(){
 			else{
 				type = ETokenType::EDOT;
 			}
+		}
+		else if (c == '#'){
+			tok += c;
+			c = code[++p];
+			type = ETokenType::EHASH;
 		}
 		else if (c == '\n'){
 			lineNo++;

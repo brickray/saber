@@ -239,8 +239,21 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 		astree = left;
 		return true;
 	}
+	bool hash = false;
+	shared_ptr<Astree> astHash = shared_ptr<Astree>(new AstHash());
+	if (match("#")){
+		astree = astHash;
+		hash = true;
+		shared_ptr<Astree> p = shared_ptr<Astree>(new AstPrimary());
+		if (matchPrimary(p)){
+			Error::GetInstance()->ProcessError("行数:%d,[#]只能应用在左值上", p->GetToken()->GetLineNumber());
+			return false;
+		}
+	}
+
 	if (matchLValue(left)){
-		astree = RotateBTree(left);
+		if (hash) astree->AddChild(left);
+		else astree = RotateBTree(left);
 		return true;
 	}
 	Token* tok;

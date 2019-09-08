@@ -366,6 +366,20 @@ void SVM::execute(){
 
 		return;
 	}
+	case Opcode::GETLEN:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			stack[sp - 1].SetInt(v.GetTable()->kv.size());
+		}
+		else if (v.IsString()){
+			stack[sp - 1].SetInt(v.GetString().size());
+		}
+		else{
+			Error::GetInstance()->ProcessError("尝试对类型%s使用#", v.GetTypeString().c_str());
+		}
+
+		break;
+	}
 	case Opcode::PUSHN:{
 		stack[sp++].SetNull();
 		break;
@@ -668,6 +682,7 @@ string SVM::ShowCode(){
 		"STFILED",
 		"EXIT",
 		"PUSHN",
+		"GETLEN",
 		"NOP",
 		"GTFILED",
 		"MOVE",
