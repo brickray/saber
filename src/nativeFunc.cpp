@@ -38,6 +38,52 @@ static int type(SVM* svm, int numParams){
 	return 1;
 }
 
+static int seed(SVM* svm, int numParams){
+	checkParamsNum("srand", numParams);
+	Value v = svm->PopStack();
+	checkInteger("srand", v);
+
+	srand(v.GetInteger());
+
+	return 0;
+}
+
+static int uniformInt(SVM* svm, int numParams){
+	if (numParams != 0 && numParams != 2){
+		Error::GetInstance()->ProcessError("uniformInt只接受0个或2个参数");
+		svm->PushBool(false);
+	}
+	int s = 0;
+	int e = 1;
+	if (numParams == 2){
+		e = svm->PopStack().GetInteger();
+		s = svm->PopStack().GetInteger();
+	}
+
+	float r = float(rand()) / RAND_MAX;
+	svm->PushInt((e - s)*r + s);
+
+	return 1;
+}
+
+static int uniformFloat(SVM* svm, int numParams){
+	if (numParams != 0 && numParams != 2){
+		Error::GetInstance()->ProcessError("uniformFloat只接受0个或2个参数");
+		svm->PushBool(false);
+	}
+	int s = 0;
+	int e = 1;
+	if (numParams == 2){
+		e = svm->PopStack().GetInteger();
+		s = svm->PopStack().GetInteger();
+	}
+
+	float r = float(rand()) / RAND_MAX;
+	svm->PushFloat((e - s)*r + s);
+
+	return 1;
+}
+
 static int load(SVM* svm, int numParams){
 	checkParamsNum("load", numParams);
 	Value str = svm->PopStack();
@@ -520,6 +566,14 @@ static int gettime(SVM* svm, int numParams){
 	//去掉末尾的换行符
 	str = str.substr(0, str.size() - 1);
 	svm->PushString(str);
+
+	return 1;
+}
+
+static int gettimei(SVM* svm, int numParams){
+	checkParamsNum("os.time", numParams, 0);
+
+	svm->PushInt(time(nullptr));
 
 	return 1;
 }
@@ -1405,6 +1459,9 @@ static int cdestroy(SVM* svm, int numParams){
 static RegisterFunction basic[] = {
 	{ "print", print },
 	{ "type", type },
+	{ "seed", seed },
+	{ "uniformInt", uniformInt },
+	{ "uniformFloat", uniformFloat },
 	{ "load", load },
 	{ "toint", toint },
 	{ "tostring", tostring },
@@ -1477,6 +1534,7 @@ void registerMath(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 
 static RegisterFunction os[] = {
 	{ "gettime", gettime },
+	{ "time", gettimei },
 	{ "getclock", getclock },
 	{ "exit", osexit },
 	{ "sleep", osleep },
