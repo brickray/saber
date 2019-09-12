@@ -259,6 +259,10 @@ public:
 	}
 
 	Value operator+=(Value& v){
+		if (IsString() && v.IsString()){
+			value.sValue += v.GetString();
+			return *this;
+		}
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
 			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作\n");

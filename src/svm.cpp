@@ -208,28 +208,8 @@ void SVM::execute(){
 	float operandf = ins.operandf;
 	switch (op){
 	case Opcode::MOVE:{
-		bool closure = operand & 0x40000000;
-		int idx = operand & 0x3fffffff;
-		if (closure){
-			if (cl->ocvs.find(ins.operands) != cl->ocvs.end()){
-				cl->ocvs[ins.operands] = stack[sp - 1];
-			}
-			else{
-				idx = cl->cvs[idx];
-				setClosureValue(idx, stack[sp - 1]);
-			}
-		}
-		else{
-			if (isStack(operand)){
-				int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
-				stack[o] = stack[sp - 1];
-			}
-			else{
-				global[decodeGlobalIndex(operand)] = stack[sp - 1];
-			}
-		}
+		move(operand, ins.operands);
 
-		sp--;
 		break;
 	}
 	case Opcode::JZ:{
@@ -441,7 +421,19 @@ void SVM::execute(){
 		Tptr t = table.GetTable();
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
-		Value value = t->GetValue(s);
+		Value value;
+		if (!t->HasValue(s)){
+			if (!operand && t->HasValue("_default")){
+				Value func = t->GetValue("_default");
+
+				PushString(s);
+				PushStack(func);
+				CallScript(1);
+			}
+		}
+		else{
+			value = t->GetValue(s);
+		}
 
 		if (!operand){
 			if (value.IsNativeFunction() && t->HasValue(SELF)){
@@ -465,7 +457,7 @@ void SVM::execute(){
 		Value key = stack[sp - 1];
 		Value table = stack[sp - 2];
 		Value value = stack[sp - 3];
-		if (operand){
+		if (operand){//table init
 			key = stack[sp - 1];
 			value = stack[sp - 2];
 			table = stack[sp - 3];
@@ -493,7 +485,7 @@ void SVM::execute(){
 			}
 		}
 
-		if (operand) sp -= 2;
+		if (operand) sp -= 2; //table init
 		else sp -= 3;
 
 		break;
@@ -501,75 +493,241 @@ void SVM::execute(){
 	case Opcode::EXIT:
 		ip = code.size();
 		break;
-	case Opcode::NEG:
-		stack[sp - 1] = -stack[sp - 1];
+	case Opcode::NEG:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_neg", 0, "-");
+		}
+		else{
+			stack[sp - 1] = -v;
+		}
 
 		break;
-	case Opcode::ADD:
-		stack[sp - 2] = stack[sp - 1] + stack[sp - 2];
+	}
+	case Opcode::ADD:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_add", 1, "+");
+		}
+		else{
+			stack[sp - 2] = v + stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
-	case Opcode::SUB:
-		stack[sp - 2] = stack[sp - 1] - stack[sp - 2];
+	}
+	case Opcode::SUB:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_sub", 1, "-");
+		}
+		else{
+			stack[sp - 2] = v - stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
-	case Opcode::MUL:
-		stack[sp - 2] = stack[sp - 1] * stack[sp - 2];
+	}
+	case Opcode::MUL:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_mul", 1, "*");
+		}
+		else{
+			stack[sp - 2] = v * stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
-	case Opcode::DIV:
-		stack[sp - 2] = stack[sp - 1] / stack[sp - 2];
+	}
+	case Opcode::DIV:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_div", 1, "/");
+		}
+		else{
+			stack[sp - 2] = v / stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
-	case Opcode::MOD:
-		stack[sp - 2] = stack[sp - 1] % stack[sp - 2];
+	}
+	case Opcode::MOD:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_mod", 1, "%");
+		}
+		else{
+			stack[sp - 2] = v % stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
-	case Opcode::GT:
-		stack[sp - 2] = stack[sp - 2] < stack[sp - 1];
+	}
+	case Opcode::PLUSEQ:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_pluseq", 1, "+=");
+		}
+		else{
+			v += stack[sp - 2]; 
+			stack[sp - 2] = v;
+			sp--;
+			move(operand, ins.operands);
+		}
 
-		sp--;
 		break;
-	case Opcode::LT:
-		stack[sp - 2] = stack[sp - 2] > stack[sp - 1];
+	}
+	case Opcode::MIMUSEQ:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_minuseq", 1, "-=");
+		}
+		else{
+			v -= stack[sp - 2];
+			stack[sp - 2] = v;
+			sp--;
+			move(operand, ins.operands);
+		}
 
-		sp--;
 		break;
-	case Opcode::GE:
-		stack[sp - 2] = stack[sp - 2] <= stack[sp - 1];
+	}
+	case Opcode::MULEQ:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_muleq", 1, "*=");
+		}
+		else{
+			v *= stack[sp - 2];
+			stack[sp - 2] = v;
+			sp--;
+			move(operand, ins.operands);
+		}
 
-		sp--;
 		break;
-	case Opcode::LE:
-		stack[sp - 2] = stack[sp - 2] >= stack[sp - 1];
+	}
+	case Opcode::DIVEQ:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_diveq", 1, "/=");
+		}
+		else{
+			v /= stack[sp - 2];
+			stack[sp - 2] = v;
+			sp--;
+			move(operand, ins.operands);
+		}
 
-		sp--;
 		break;
-	case Opcode::EQ:
-		stack[sp - 2] = stack[sp - 2] == stack[sp - 1];
+	}
+	case Opcode::MODEQ:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_modeq", 1, "%=");
+		}
+		else{
+			v %= stack[sp - 2];
+			stack[sp - 2] = v;
+			sp--;
+			move(operand, ins.operands);
+		}
 
-		sp--;
 		break;
-	case Opcode::NE:
-		stack[sp - 2] = stack[sp - 2] != stack[sp - 1];
+	}
+	case Opcode::GT:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_gt", 1, ">");
+		}
+		else{
+			stack[sp - 2] = v > stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
+	}
+	case Opcode::LT:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_lt", 1, "<");
+		}
+		else{
+			stack[sp - 2] = v < stack[sp - 2];
+			sp--;
+		}
+
+		break;
+	}
+	case Opcode::GE:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_ge", 1, ">=");
+		}
+		else{
+			stack[sp - 2] = v >= stack[sp - 2];
+			sp--;
+		}
+
+		break;
+	}
+	case Opcode::LE:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_le", 1, "<=");
+		}
+		else{
+			stack[sp - 2] = v <= stack[sp - 2];
+			sp--;
+		}
+
+		break;
+	}
+	case Opcode::EQ:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_equal", 1, "==");
+		}
+		else{
+			stack[sp - 2] = v == stack[sp - 2];
+			sp--;
+		}
+
+		break;
+	}
+	case Opcode::NE:{
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_nequal", 1, "!=");
+		}
+		else{
+			stack[sp - 2] = v != stack[sp - 2];
+			sp--;
+		}
+
+		break;
+	}
 	case Opcode::OR:{
-		stack[sp - 2] = stack[sp - 2] || stack[sp - 1];
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_or", 1, "||");
+		}
+		else{
+			stack[sp - 2] = v || stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
 	}
 	case Opcode::AND:{
-		stack[sp - 2] = stack[sp - 2] && stack[sp - 1];
+		Value v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_and", 1, "&&");
+		}
+		else{
+			stack[sp - 2] = v && stack[sp - 2];
+			sp--;
+		}
 
-		sp--;
 		break;
 	}
 	case Opcode::NOP: //do nothing
@@ -667,6 +825,54 @@ Clptr SVM::createClosure(Clptr o){
 	return f;
 }
 
+void SVM::overrideOp(Value t, string opname, int np, string op){
+	if (t.GetTable()->HasValue(opname)){
+		Value func = t.GetTable()->GetValue(opname);
+		sp--;
+		
+		PushStack(func);
+		CallScript(np);
+	}
+	else{
+		if (t.GetTable()->HasValue("_default")){
+			Value func = t.GetTable()->GetValue("_default");
+			sp--;
+
+			PushString(op);
+			PushStack(func);
+			CallScript(1);
+		}
+		else{
+			Error::GetInstance()->ProcessError("没有对应的操作符[%s]", op.c_str());
+		}
+	}
+}
+
+void SVM::move(int operand, string operands){
+	bool closure = operand & 0x40000000;
+	int idx = operand & 0x3fffffff;
+	if (closure){
+		if (cl->ocvs.find(operands) != cl->ocvs.end()){
+			cl->ocvs[operands] = stack[sp - 1];
+		}
+		else{
+			idx = cl->cvs[idx];
+			setClosureValue(idx, stack[sp - 1]);
+		}
+	}
+	else{
+		if (isStack(operand)){
+			int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
+			stack[o] = stack[sp - 1];
+		}
+		else{
+			global[decodeGlobalIndex(operand)] = stack[sp - 1];
+		}
+	}
+
+	sp--;
+}
+
 bool SVM::isStack(int idx){
 	return idx >= 0 && idx < STACK_SIZE;
 }
@@ -692,6 +898,11 @@ string SVM::ShowCode(){
 		"MUL",
 		"DIV",
 		"MOD",
+		"PLUSEQ",
+		"MINUSEQ",
+		"MULEQ",
+		"DIVEQ",
+		"MODEQ",
 		"GT",
 		"LT",
 		"GE",

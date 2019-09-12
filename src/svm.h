@@ -118,6 +118,8 @@ private:
 	Value getClosureValue(int op);
 	void setClosureValue(int op, Value v);
 	Clptr createClosure(Clptr o);
+	void overrideOp(Value t, string opname, int np, string op);
+	void move(int operand, string operands);
 };
 
 SABER_NAMESPACE_END

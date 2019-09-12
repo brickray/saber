@@ -77,9 +77,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins(Opcode::ADD);
-			svm->AddCode(ins);
-			ins.opcode = Opcode::MOVE;
+			SVM::Instruction ins(Opcode::PLUSEQ);
 			ins.operand = bc.nearst;
 			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
@@ -88,9 +86,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins(Opcode::SUB);
-			svm->AddCode(ins);
-			ins.opcode = Opcode::MOVE;
+			SVM::Instruction ins(Opcode::MIMUSEQ);
 			ins.operand = bc.nearst;
 			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
@@ -99,9 +95,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins(Opcode::MUL);
-			svm->AddCode(ins);
-			ins.opcode = Opcode::MOVE;
+			SVM::Instruction ins(Opcode::MULEQ);
 			ins.operand = bc.nearst;
 			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
@@ -110,9 +104,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins(Opcode::DIV);
-			svm->AddCode(ins);
-			ins.opcode = Opcode::MOVE;
+			SVM::Instruction ins(Opcode::DIVEQ);
 			ins.operand = bc.nearst;
 			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
@@ -121,9 +113,7 @@ public:
 			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
-			SVM::Instruction ins(Opcode::MOD);
-			svm->AddCode(ins);
-			ins.opcode = Opcode::MOVE;
+			SVM::Instruction ins(Opcode::MODEQ);
 			ins.operand = bc.nearst;
 			ins.operands = bc.nearstS;
 			svm->AddCode(ins);
