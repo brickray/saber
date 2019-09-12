@@ -144,11 +144,13 @@ void SVM::CallScript(int numParams){
 	}
 	else if (func.IsFunction()){
 		Clptr curCl = func.GetFunction();
+		curCl->childs.clear();
 		int p = curCl->entry;
 		int nfp = (p & 0x7f000000) >> 24;
 		bool variable = p & 0x80000000;
+		bool outer = curCl->level <= (cl ? cl->level : 0);
 		int nap = numParams;
-		if ((!variable) && (nfp != numParams)){
+		if ((!variable) && (nfp != nap)){
 			Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 		}
 
@@ -174,7 +176,7 @@ void SVM::CallScript(int numParams){
 			constructTDot(t, fp, ap);
 		}
 
-		if (cl){
+		if (cl && !outer){
 			Closure::VariableIterator vit = cl->ocvs.begin();
 			for (; vit != cl->ocvs.end(); ++vit){
 				curCl->ocvs[vit->first] = vit->second;
@@ -259,11 +261,13 @@ void SVM::execute(){
 		}
 		else if (func.IsFunction()){
 			Clptr curCl = func.GetFunction();
+			curCl->childs.clear();
 			int p = curCl->entry;
 			int nfp = (p & 0x7f000000) >> 24;
 			bool variable = p & 0x80000000;
+			bool outer = curCl->level <= (cl ? cl->level : 0);
 			int nap = operand;
-			if ((!variable) && (nfp != operand)){
+			if ((!variable) && (nfp != nap)){
 				Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 			}
 
@@ -288,7 +292,7 @@ void SVM::execute(){
 				constructTDot(t, fp, ap);
 			}
 
-			if (cl){
+			if (cl && !outer){
 				Closure::VariableIterator vit = cl->ocvs.begin();
 				for (; vit != cl->ocvs.end(); ++vit){
 					curCl->ocvs[vit->first] = vit->second;
@@ -326,31 +330,12 @@ void SVM::execute(){
 			}
 		}
 		//set closure value
+		Closure::ClosureIterator it = cl->childs.begin();
+		Closure::ClosureIterator ited = cl->childs.end();
+		for (; it != ited; ++it) (*it)->SetFunction(createClosure((*it)->GetFunction()));
+		
 		if (numRetVariable && ret.IsFunction() && (ret.GetFunction() != cl)){
-			Clptr o = ret.GetFunction();
-			Clptr f = shared_ptr<Closure>(new Closure());
-			f->entry = o->entry;
-			f->variables = o->variables;
-			Closure::VariableIterator vit = cl->ocvs.begin();
-			for (; vit != cl->ocvs.end(); ++vit){
-				f->ocvs[vit->first] = vit->second;
-			}
-			vit = cl->variables.begin();
-			for (; vit != cl->variables.end(); ++vit){
-				Value v;
-				int idx = vit->second.GetInteger();
-				if (isStack(idx)){
-					int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
-					v = stack[o];
-				}
-				else{
-					v = global[decodeGlobalIndex(idx)];
-				}
-
-				f->ocvs[vit->first] = v;
-			}
-
-			ret.SetFunction(f);
+			ret.SetFunction(createClosure(ret.GetFunction()));
 		}
 
 		cl     = ocl;
@@ -496,6 +481,17 @@ void SVM::execute(){
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
 		t->AddValue(s, value);
+		if (cl){
+			Value* ptr = t->GetValuePtr(s);
+			if (value.IsFunction()){
+				cl->childs.insert(ptr);
+			}
+			else{
+				Closure::ClosureIterator it = cl->childs.find(ptr);
+				if (it != cl->childs.end())
+					cl->childs.erase(it);
+			}
+		}
 
 		if (operand) sp -= 2;
 		else sp -= 3;
@@ -643,6 +639,32 @@ void SVM::setClosureValue(int op, Value v){
 	else{
 		global[decodeGlobalIndex(idx)] = v;
 	}
+}
+
+Clptr SVM::createClosure(Clptr o){
+	Clptr f = shared_ptr<Closure>(new Closure());
+	f->entry = o->entry;
+	f->variables = o->variables;
+	Closure::VariableIterator vit = cl->ocvs.begin();
+	for (; vit != cl->ocvs.end(); ++vit){
+		f->ocvs[vit->first] = vit->second;
+	}
+	vit = cl->variables.begin();
+	for (; vit != cl->variables.end(); ++vit){
+		Value v;
+		int idx = vit->second.GetInteger();
+		if (isStack(idx)){
+			int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
+			v = stack[o];
+		}
+		else{
+			v = global[decodeGlobalIndex(idx)];
+		}
+
+		f->ocvs[vit->first] = v;
+	}
+
+	return f;
 }
 
 bool SVM::isStack(int idx){

@@ -622,6 +622,11 @@ public:
 		return Value();
 	}
 
+	//key must exist
+	Value* GetValuePtr(string key){
+		return &kv[key];
+	}
+
 	bool HasValue(string key){
 		return kv.find(key) != kv.end();
 	}
@@ -647,13 +652,16 @@ public:
 
 struct Closure{
 	int entry;
+	int level;
 
 	//在该函数体内定义的变量
 	typedef hash_map<string, Value>::iterator VariableIterator;
+	typedef hash_set<Value*>::iterator ClosureIterator;
 	hash_map<string, Value> variables;
 	//closure values or non local variables
 	vector<int> cvs; //函数生命周期之内的非局部变量
 	hash_map<string, Value> ocvs; //函数生命周期之外的非局部变量
+	hash_set<Value*> childs;
 };
 
 SABER_NAMESPACE_END

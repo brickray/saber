@@ -117,6 +117,7 @@ private:
 	void constructTDot(Tptr t, int fp, int ap);
 	Value getClosureValue(int op);
 	void setClosureValue(int op, Value v);
+	Clptr createClosure(Clptr o);
 };
 
 SABER_NAMESPACE_END
