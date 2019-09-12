@@ -89,9 +89,7 @@ void SState::RegisterLib(string name, RegisterFunction func[]){
 		string name = func[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(func[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, func[i].f);
 	}
 }
 

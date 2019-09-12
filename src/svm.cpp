@@ -369,7 +369,7 @@ void SVM::execute(){
 	case Opcode::GETLEN:{
 		Value v = stack[sp - 1];
 		if (v.IsTable()){
-			stack[sp - 1].SetInt(v.GetTable()->kv.size());
+			stack[sp - 1].SetInt(v.GetTable()->GetLength());
 		}
 		else if (v.IsString()){
 			stack[sp - 1].SetInt(v.GetString().size());
@@ -456,13 +456,10 @@ void SVM::execute(){
 		Tptr t = table.GetTable();
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
-		Value value;
-		if (t->kv.find(s) != t->kv.end()){
-			value = t->kv[s];
-		}
+		Value value = t->GetValue(s);
 
 		if (!operand){
-			if (value.IsNativeFunction() && t->kv.find(SELF) != t->kv.end()){
+			if (value.IsNativeFunction() && t->HasValue(SELF)){
 				stack[sp - 1] = value;
 			}
 			else{
@@ -498,7 +495,7 @@ void SVM::execute(){
 		Tptr t = table.GetTable();
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
-		t->kv[s] = value;
+		t->AddValue(s, value);
 
 		if (operand) sp -= 2;
 		else sp -= 3;
@@ -587,12 +584,10 @@ void SVM::execute(){
 }
 
 void SVM::constructTDot(Tptr t, int fp, int ap){
-	Value num;
-	num.SetInt(ap - fp + 1);
-	t->kv["num"] = num;
+	t->AddInt("num", ap - fp + 1);
 	for (int i = fp - 1; i < ap; ++i){
 		Value p = stack[cp + i];
-		t->kv[to_string(i - fp + 1)] = p;
+		t->AddValue(to_string(i - fp + 1), p);
 	}
 }
 

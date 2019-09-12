@@ -34,7 +34,7 @@ static int setx(SVM* svm, int numParams){
 	checkTable("CTest.setx", v);
 	checkInteger("CTest.setx", x, 2);
 
-	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->kv[SELF].GetLightUData());
+	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->GetValue(SELF).GetLightUData());
 	t->SetX(x.GetInteger());
 
 	return 0;
@@ -47,7 +47,7 @@ static int sety(SVM* svm, int numParams){
 	checkTable("CTest.sety", v);
 	checkInteger("CTest.sety", x, 2);
 
-	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->kv[SELF].GetLightUData());
+	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->GetValue(SELF).GetLightUData());
 	t->SetY(x.GetInteger());
 
 	return 0;
@@ -58,7 +58,7 @@ static int add(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkTable("CTest.add", v);
 
-	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->kv[SELF].GetLightUData());
+	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->GetValue(SELF).GetLightUData());
 	svm->PushInt(t->Add());
 
 	return 1;
@@ -68,15 +68,10 @@ static int create(SVM* svm, int numParams){
 	checkParamsNum("CTest.create", numParams, 0);
 	CTest* t = new CTest();
 	Tptr table = Tptr(new Table());
-	Value self, f;
-	f.SetNativeFunction(setx);
-	table->kv["setx"] = f;
-	f.SetNativeFunction(sety);
-	table->kv["sety"] = f;
-	f.SetNativeFunction(add);
-	table->kv["add"] = f;
-	self.SetLightUData(int(t));
-	table->kv[SELF] = self;
+	table->AddNativeFunction("setx", setx);
+	table->AddNativeFunction("sety", sety);
+	table->AddNativeFunction("add", add);
+	table->AddLightUData(SELF, t);
 	
 	svm->PushTable(table);
 

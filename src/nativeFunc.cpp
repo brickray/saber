@@ -1248,9 +1248,7 @@ static int remove(SVM* svm, int numParams){
 	checkString("table.remove", s, 2);
 
 	Tptr table = t.GetTable();
-	TableIteration ti = table->kv.find(s.GetString());
-	if (ti != table->kv.end()) 
-		table->kv.erase(ti);
+	table->Remove(s.GetString());
 
 	return 0;
 }
@@ -1261,7 +1259,7 @@ static int tlength(SVM* svm, int numParams){
 	checkTable("table.len", t);
 
 	Tptr table = t.GetTable();
-	svm->PushInt(table->kv.size());
+	svm->PushInt(table->GetLength());
 
 	return 1;
 }
@@ -1275,8 +1273,9 @@ static int tforeach(SVM* svm, int numParams){
 	checkFunction("table.foreach", func, 2);
 
 	Tptr t = table.GetTable();
-	TableIteration ti = t->kv.begin();
-	for (; ti != t->kv.end(); ++ti){
+	TableIteration ti = t->Begin();
+	TableIteration tied = t->End();
+	for (; ti != tied; ++ti){
 		Value key, value;
 		key.SetString(ti->first);
 		value = ti->second;
@@ -1540,9 +1539,7 @@ void registerMath(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = math[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(math[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, math[i].f);
 	}
 }
 
@@ -1566,9 +1563,7 @@ void registerOs(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = os[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(os[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, os[i].f);
 	}
 }
 
@@ -1601,9 +1596,7 @@ void registerStr(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = str[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(str[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, str[i].f);
 	}
 }
 
@@ -1628,9 +1621,7 @@ void registerIo(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = io[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(io[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, io[i].f);
 	}
 }
 
@@ -1653,9 +1644,7 @@ void registerTable(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = tb[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(tb[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, tb[i].f);
 	}
 }
 
@@ -1679,9 +1668,7 @@ void registerCoroutine(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 		string name = co[i].name;
 		if (name == "") break;
 
-		Value function;
-		function.SetNativeFunction(co[i].f);
-		t->kv[name] = function;
+		t->AddNativeFunction(name, co[i].f);
 	}
 }
 

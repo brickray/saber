@@ -43,7 +43,6 @@ struct Coroutine{
 	int ip;
 };
 
-class Closure;
 struct SValue{
 	union{
 		bool       bValue;
@@ -56,12 +55,6 @@ struct SValue{
 	Clptr  cl;
 	string sValue;
 };
-
-struct Table{
-	hash_map<string, Value> kv;
-};
-
-typedef hash_map<string, Value>::iterator TableIteration;
 
 class Value{
 private:
@@ -601,6 +594,54 @@ public:
 		}
 
 		return ret;
+	}
+};
+
+typedef hash_map<string, Value>::iterator TableIteration;
+struct Table{
+private:
+	hash_map<string, Value> kv;
+
+public:
+	void AddBool(string key, bool b) { Value v; v.SetBool(b); kv[key] = v; }
+	void AddInt(string key, int i) { Value v; v.SetInt(i); kv[key] = v; }
+	void AddFloat(string key, float f) { Value v; v.SetFloat(f); kv[key] = v; }
+	void AddString(string key, string s) { Value v; v.SetString(s); kv[key] = v; }
+	void AddLightUData(string key, void* p) { Value v; v.SetLightUData(int(p)); kv[key] = v; }
+	void AddFunction(string key, Clptr cl) { Value v; v.SetFunction(cl); kv[key] = v; }
+	void AddNativeFunction(string key, SFunc f) { Value v; v.SetNativeFunction(f); kv[key] = v; }
+	void AddTable(string key, Tptr t) { Value v; v.SetTable(t); kv[key] = v; }
+	void AddCoroutine(string key, Coroutine* co) { Value v; v.SetCoroutine(co); kv[key] = v; }
+	void AddValue(string key, Value v) { kv[key] = v; }
+
+	Value GetValue(string key) {
+		if (kv.find(key) != kv.end()){
+			return kv[key];
+		}
+
+		return Value();
+	}
+
+	bool HasValue(string key){
+		return kv.find(key) != kv.end();
+	}
+
+	void Remove(string key){
+		TableIteration ti = kv.find(key);
+		if (ti != kv.end())
+			kv.erase(ti);
+	}
+
+	int GetLength() const{
+		return kv.size();
+	}
+
+	TableIteration Begin(){
+		return kv.begin();
+	}
+
+	TableIteration End(){
+		return kv.end();
 	}
 };
 
