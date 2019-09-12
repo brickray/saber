@@ -1290,6 +1290,20 @@ static int tforeach(SVM* svm, int numParams){
 	return 0;
 }
 
+static int tcopy(SVM* svm, int numParams){
+	checkParamsNum("table.copy", numParams, 2);
+	Value src = svm->PopStack();
+	Value dest = svm->PopStack();
+	checkTable("table.copy", dest);
+	checkTable("table.copy", src, 2);
+
+	Tptr s = src.GetTable();
+	Tptr d = dest.GetTable();
+	*d = *s;
+
+	return 0;
+}
+
 //------------------------------coroutine lib-------------------
 struct CallInfo{
 	int cp;
@@ -1624,6 +1638,7 @@ static RegisterFunction tb[] = {
 	{ "remove", remove },
 	{ "len", tlength },
 	{ "foreach", tforeach },
+	{ "copy", tcopy },
 	{ "", nullptr },
 };
 

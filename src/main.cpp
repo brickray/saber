@@ -27,57 +27,64 @@ public:
 	}
 };
 
-static int create(SVM* svm, int numParams){
-	checkParamsNum("test.create", numParams, 0);
-	CTest* t = new CTest();
-	
-	svm->PushLightUData(int(t));
-
-	return 1;
-}
-
 static int setx(SVM* svm, int numParams){
-	checkParamsNum("test.setx", numParams, 2);
-	Value x = svm->PopStack();
+	checkParamsNum("CTest.setx", numParams);
 	Value v = svm->PopStack();
-	checkLightUData("test.setx", v);
-	checkInteger("test.setx", x, 2);
+	Value x = svm->PopStack();
+	checkTable("CTest.setx", v);
+	checkInteger("CTest.setx", x, 2);
 
-	CTest* t = reinterpret_cast<CTest*>(v.GetLightUData());
+	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->kv[SELF].GetLightUData());
 	t->SetX(x.GetInteger());
 
 	return 0;
 }
 
 static int sety(SVM* svm, int numParams){
-	checkParamsNum("test.sety", numParams, 2);
-	Value x = svm->PopStack();
+	checkParamsNum("CTest.sety", numParams);
 	Value v = svm->PopStack();
-	checkLightUData("test.sety", v);
-	checkInteger("test.sety", x, 2);
+	Value x = svm->PopStack();
+	checkTable("CTest.sety", v);
+	checkInteger("CTest.sety", x, 2);
 
-	CTest* t = reinterpret_cast<CTest*>(v.GetLightUData());
+	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->kv[SELF].GetLightUData());
 	t->SetY(x.GetInteger());
 
 	return 0;
 }
 
 static int add(SVM* svm, int numParams){
-	checkParamsNum("test,add", numParams, 1);
+	checkParamsNum("CTest,add", numParams, 0);
 	Value v = svm->PopStack();
-	checkLightUData("test.add", v);
+	checkTable("CTest.add", v);
 
-	CTest* t = reinterpret_cast<CTest*>(v.GetLightUData());
+	CTest* t = reinterpret_cast<CTest*>(v.GetTable()->kv[SELF].GetLightUData());
 	svm->PushInt(t->Add());
 
-	return numParams;
+	return 1;
+}
+
+static int create(SVM* svm, int numParams){
+	checkParamsNum("CTest.create", numParams, 0);
+	CTest* t = new CTest();
+	Tptr table = Tptr(new Table());
+	Value self, f;
+	f.SetNativeFunction(setx);
+	table->kv["setx"] = f;
+	f.SetNativeFunction(sety);
+	table->kv["sety"] = f;
+	f.SetNativeFunction(add);
+	table->kv["add"] = f;
+	self.SetLightUData(int(t));
+	table->kv[SELF] = self;
+	
+	svm->PushTable(table);
+
+	return 1;
 }
 
 RegisterFunction test[] = {
 	{ "create", create },
-	{ "setx", setx },
-	{ "sety", sety },
-	{ "add", add },
 	{ "", nullptr },
 };
 

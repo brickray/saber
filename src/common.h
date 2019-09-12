@@ -15,6 +15,7 @@ using namespace std;
 #define SABER_NAMESPACE_USING using namespace Saber;
 
 #define PI                  3.14159265358f
+#define SELF                "self"
 
 inline float RadiansToDegree(float radians) {
 	float degrees = radians * 180.0 / PI;

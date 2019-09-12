@@ -144,8 +144,11 @@ void Lexer::parse(){
 			else if (code[p + 1] == '*'){
 				for (int j = p + 2; j < size; ++j){
 					if (code[j] == '*' && code[j + 1] == '/'){
-						p = j + 2;
+						p = j + 1;
 						break;
+					}
+					else if (code[j] == '\n'){
+						lineNo++;
 					}
 				}
 			}

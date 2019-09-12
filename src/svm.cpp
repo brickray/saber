@@ -462,8 +462,13 @@ void SVM::execute(){
 		}
 
 		if (!operand){
-			stack[sp - 2] = value;
-			sp--;
+			if (value.IsNativeFunction() && t->kv.find(SELF) != t->kv.end()){
+				stack[sp - 1] = value;
+			}
+			else{
+				stack[sp - 2] = value;
+				sp--;
+			}
 		}
 
 		break;
