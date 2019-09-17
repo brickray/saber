@@ -635,7 +635,6 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 			shared_ptr<Astree> args = shared_ptr<Astree>(new AstPrimary());
 			args->SetToken(tdot);
 			def->AddChild(args);
-			dynamic_cast<AstDef*>(def.get())->SetVariable();
 			break;
 		}
 		else{
@@ -740,7 +739,6 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 			shared_ptr<Astree> args = shared_ptr<Astree>(new AstPrimary());
 			args->SetToken(tdot);
 			closure->AddChild(args);
-			dynamic_cast<AstClosure*>(closure.get())->SetVariable();
 			break;
 		}
 		else{

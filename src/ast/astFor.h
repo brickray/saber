@@ -18,7 +18,6 @@ public:
 
 		BlockCnt subBc;
 		subBc.isloop = true;
-		subBc.rets = bc.rets;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
@@ -43,7 +42,6 @@ public:
 			svm->SetCode(subBc.cps[i], jumpc);
 		}
 
-		bc.rets = subBc.rets;
 		bc.variableIndex = subBc.variableIndex;
 	}
 };

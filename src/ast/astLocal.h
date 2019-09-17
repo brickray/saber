@@ -26,8 +26,7 @@ public:
 				bc.nearstS = tok->GetToken();
 
 				if (bc.cl){
-					v.SetInt(idx);
-					bc.cl->variables[tok->GetToken()] = v;
+					bc.cl->variables[tok->GetToken()] = idx;
 				}
 			}
 			else{
@@ -43,8 +42,7 @@ public:
 			bc.nearstS = tok->GetToken();
 
 			if (bc.cl){
-				v.SetInt(idx);
-				bc.cl->variables[tok->GetToken()] = v;
+				bc.cl->variables[tok->GetToken()] = idx;
 			}
 		}
 	}

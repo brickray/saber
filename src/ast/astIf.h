@@ -33,7 +33,6 @@ public:
 		subBc.isloop = bc.isloop;
 		subBc.bps = bc.bps;
 		subBc.cps = bc.cps;
-		subBc.rets = bc.rets;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
@@ -56,7 +55,6 @@ public:
 
 		bc.bps = subBc.bps;
 		bc.cps = subBc.cps;
-		bc.rets = subBc.rets;
 		bc.variableIndex = subBc.variableIndex;
 	}
 };

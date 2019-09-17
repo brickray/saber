@@ -37,8 +37,7 @@ public:
 			bc.nearstS = tok->GetToken();
 
 			if (bc.cl){
-				v.SetInt(idx);
-				bc.cl->variables[tok->GetToken()] = v;
+				bc.cl->variables[tok->GetToken()] = idx;
 			}
 		}
 		else{
@@ -47,19 +46,8 @@ public:
 			bool local = si.local;
 			if (level != 0){
 				if (level < bc.maxLevel){
-					idx = si.address;
-					idx |= (level << 24);
-					int i = 0;
-					for (; i < bc.cl->cvs.size(); ++i){
-						if (bc.cl->cvs[i] == idx)
-							break;
-					}
-					if (i == bc.cl->cvs.size()){
-						int size = bc.cl->cvs.size();
-						bc.cl->cvs.push_back(idx);
-					}
-					i |= (1 << 30);
-					bc.nearst = i;
+					bc.cl->hascv = true;
+					bc.nearst = 1 << 30;
 					bc.nearstS = tok->GetToken();
 				}
 				else{

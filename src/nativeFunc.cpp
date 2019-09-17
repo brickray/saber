@@ -105,10 +105,30 @@ static int load(SVM* svm, int numParams){
 	}
 
 	Value func;
-	Clptr cl = shared_ptr<Closure>(new Closure());
+	Clptr cl = Clptr(new Closure());
+	cl->hascv = false;
+	cl->vararg = false;
 	cl->entry = idx;
+	cl->fp = 0;
 	func.SetFunction(cl);
 	svm->PushStack(func);
+
+	return 1;
+}
+
+static int reverseBit(SVM* svm, int numParams){
+	checkParamsNum("reverseBit", numParams);
+	Value v = svm->PopStack();
+	checkInteger("reverseBit", v);
+
+	int n = v.GetInteger();
+	n = (n << 16) | (n >> 16);
+	n = ((n & 0x00ff00ff) << 8) | ((n & 0xff00ff00) >> 8);
+	n = ((n & 0x0f0f0f0f) << 4) | ((n & 0xf0f0f0f0) >> 4);
+	n = ((n & 0x33333333) << 2) | ((n & 0xcccccccc) >> 2);
+	n = ((n & 0x55555555) << 1) | ((n & 0xaaaaaaaa) >> 1);
+	
+	svm->PushInt(n);
 
 	return 1;
 }
@@ -582,9 +602,9 @@ static int getclock(SVM* svm, int numParams){
 	checkParamsNum("os.getclock", numParams, 0);
 	
 	clock_t t = clock();
-	t /= CLOCKS_PER_SEC;
+	float c = float(t) / CLOCKS_PER_SEC;
 
-	svm->PushInt(t);
+	svm->PushFloat(c);
 
 	return 1;
 }
@@ -1468,6 +1488,19 @@ static int cdestroy(SVM* svm, int numParams){
 }
 
 //------------------------------func register-------------------
+void registerConstant(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	Value table;
+	Tptr t = Tptr(new Table());
+	table.SetTable(t);
+	int idx = svm->AddGlobal(table);
+	SymbolInfo si = { table, idx };
+	e->SetSymbol("constant", si);
+	t->AddInt("INT_MAX", 2147483647);
+	t->AddInt("INT_MIN", (-2147483647 - 1));
+	t->AddFloat("INFINITY", (1e+300)*(1e+300));
+	t->AddFloat("PI", 3.14159265358f);
+	t->AddFloat("E", 2.718281828459f);
+}
 
 static RegisterFunction basic[] = {
 	{ "print", print },
@@ -1476,6 +1509,7 @@ static RegisterFunction basic[] = {
 	{ "uniformInt", uniformInt },
 	{ "uniformFloat", uniformFloat },
 	{ "load", load },
+	{ "reverseBit", reverseBit },
 	{ "toint", toint },
 	{ "tostring", tostring },
 	{ "isnull", isnull },
@@ -1530,7 +1564,7 @@ static RegisterFunction math[] = {
 
 void registerMath(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Tptr t = shared_ptr<Table>(new Table());
+	Tptr t = Tptr(new Table());
 	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
@@ -1554,7 +1588,7 @@ static RegisterFunction os[] = {
 
 void registerOs(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Tptr t = shared_ptr<Table>(new Table());
+	Tptr t = Tptr(new Table());
 	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
@@ -1587,7 +1621,7 @@ static RegisterFunction str[] = {
 
 void registerStr(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Tptr t = shared_ptr<Table>(new Table());
+	Tptr t = Tptr(new Table());
 	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
@@ -1612,7 +1646,7 @@ static RegisterFunction io[] = {
 
 void registerIo(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Tptr t = shared_ptr<Table>(new Table());
+	Tptr t = Tptr(new Table());
 	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
@@ -1635,7 +1669,7 @@ static RegisterFunction tb[] = {
 
 void registerTable(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Tptr t = shared_ptr<Table>(new Table());
+	Tptr t = Tptr(new Table());
 	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
@@ -1659,7 +1693,7 @@ static RegisterFunction co[] = {
 
 void registerCoroutine(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	Value table;
-	Tptr t = shared_ptr<Table>(new Table());
+	Tptr t = Tptr(new Table());
 	table.SetTable(t);
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
@@ -1673,6 +1707,7 @@ void registerCoroutine(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 }
 
 void NativeFunc::Register(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
+	registerConstant(e, svm);
 	registerBasic(e, svm);
 	registerMath(e, svm);
 	registerOs(e, svm);

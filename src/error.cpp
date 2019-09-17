@@ -9,7 +9,7 @@ Error* Error::instance = nullptr;
 void Error::ProcessError(const char* format, ...){
 	va_list args;
 	va_start(args, format);
-	char errorBuf[2048];
+	char errorBuf[2048] = { 0 };
 	vsnprintf_s(errorBuf, sizeof(errorBuf), _TRUNCATE, format, args);
 
 	printf("%s\n", errorBuf);

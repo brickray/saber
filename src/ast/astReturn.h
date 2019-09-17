@@ -26,11 +26,8 @@ public:
 		for (int i = 0; i < children.size(); ++i)
 			children[i]->Compile(e, svm, subBc);
 
-		SVM::Instruction ret(Opcode::RET, 0);
-		ret.operand |= (numRetParams << 16);
+		SVM::Instruction ret(Opcode::RET, numRetParams);
 		int rp = svm->AddCode(ret);
-
-		bc.rets.push_back(rp);
 	}
 };
 

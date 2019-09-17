@@ -21,7 +21,6 @@ struct BlockCnt{
 	vector<int> bps; //break points
 	vector<int> cps; //continue points
 	vector<int> elifs; //else if
-	vector<int> rets; //return points
 
 	BlockCnt(){
 		isloop = false;

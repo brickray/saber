@@ -115,7 +115,7 @@ public:
 	Value operator-(){
 		Value va;
 		if (!IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行求负操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行求负操作[%s]", GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
@@ -137,7 +137,7 @@ public:
 			return va;
 		}
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
@@ -165,7 +165,7 @@ public:
 	Value operator-(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
@@ -193,7 +193,7 @@ public:
 	Value operator*(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
@@ -221,7 +221,7 @@ public:
 	Value operator/(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
@@ -249,7 +249,7 @@ public:
 	Value operator%(Value& v){
 		Value va;
 		if (!IsInteger() || !v.IsInteger()){
-			Error::GetInstance()->ProcessError("尝试对非Integer值取模\n");
+			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
@@ -265,7 +265,7 @@ public:
 		}
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
 			return *this;
 		}
@@ -293,7 +293,7 @@ public:
 	Value operator-=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
 			return *this;
 		}
@@ -321,7 +321,7 @@ public:
 	Value operator*=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
 			return *this;
 		}
@@ -349,7 +349,7 @@ public:
 	Value operator/=(Value& v){
 		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作\n");
+			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
 			return *this;
 		}
@@ -377,7 +377,7 @@ public:
 	Value operator%=(Value& v){
 		SValue sv;
 		if (!IsInteger() || !IsInteger()){
-			Error::GetInstance()->ProcessError("尝试对非Integer值取模\n");
+			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
 			return *this;
 		}
@@ -389,7 +389,7 @@ public:
 	Value operator<(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
@@ -407,7 +407,7 @@ public:
 	Value operator>(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
@@ -425,7 +425,7 @@ public:
 	Value operator<=(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
@@ -443,7 +443,7 @@ public:
 	Value operator>=(Value& v){
 		Value va;
 		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值\n");
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
@@ -655,17 +655,18 @@ public:
 };
 
 struct Closure{
-	int entry;
-	int level;
+	bool hascv;  //是否有非局部变量 
+	bool vararg; //是否可变参
+	int entry;   //入口地址
+	int cp;
+	int of;
+	int ap;
+	int fp;       //形参数量
 
-	//在该函数体内定义的变量
-	typedef hash_map<string, Value>::iterator VariableIterator;
-	typedef hash_set<Value*>::iterator ClosureIterator;
-	hash_map<string, Value> variables;
-	//closure values or non local variables
-	vector<int> cvs; //函数生命周期之内的非局部变量
-	hash_map<string, Value> ocvs; //函数生命周期之外的非局部变量
-	hash_set<Value*> childs;
+	Clptr parent;
+	hash_map<string, int> variables; //在该函数体内定义的变量
+	hash_map<string, Value> cvs; //非局部变量
+	hash_set<Clptr> cls; //该函数内定义的函数
 };
 
 SABER_NAMESPACE_END

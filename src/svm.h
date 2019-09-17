@@ -115,11 +115,13 @@ private:
 	int decodeGlobalIndex(int idx);
 
 	void constructTDot(Tptr t, int fp, int ap);
-	Value getClosureValue(int op);
-	void setClosureValue(int op, Value v);
+	int getAbsoluteAddress(int op);
 	Clptr createClosure(Clptr o);
 	void overrideOp(Value t, string opname, int np, string op);
-	void move(int operand, string operands);
+	Value* getAddress(Instruction ins);
+	void move(Instruction ins);
+
+	void dumpStack();
 };
 
 SABER_NAMESPACE_END

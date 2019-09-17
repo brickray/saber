@@ -8,12 +8,9 @@ SABER_NAMESPACE_BEGIN
 class AstClosure : public Astree{
 private:
 	int numParams = 0;
-	bool variable = false;
 public:
 	void SetNumParams(int n) { numParams = n; }
 	int GetNumParams() const { return numParams; }
-	void SetVariable() { variable = true; }
-	bool GetVariable() const { return variable; }
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
@@ -26,11 +23,15 @@ public:
 		int reserveAddress = svm->AddCode(reserve);
 		Value func;
 		//set closure
-		Clptr cl = shared_ptr<Closure>(new Closure());
-		cl->entry = start | (numParams << 24) | (variable << 31);
-		cl->level = bc.maxLevel;
+		Clptr cl = Clptr(new Closure());
+		cl->hascv = false;
+		cl->vararg = false;
+		cl->entry = start;
+		cl->fp = numParams;
+		cl->parent = bc.cl;
 		func.SetFunction(cl);
 		int funcAddress = svm->AddGlobal(func);
+		if (bc.cl) bc.cl->cls.insert(cl);
 
 		//set environment
 		shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
@@ -43,18 +44,15 @@ public:
 				si.address = numParams + 7;
 				local->SetSymbol(name, si);
 
-				Value v;
-				v.SetInt(numParams + 7);
-				cl->variables[name] = v;
+				cl->variables[name] = numParams + 7;
+				cl->vararg = true;
 			}
 			else{
 				SymbolInfo si;
 				si.address = i;
 				local->SetSymbol(name, si);
 
-				Value v;
-				v.SetInt(i);
-				cl->variables[name] = v;
+				cl->variables[name] = i;
 			}
 		}
 
@@ -70,20 +68,9 @@ public:
 		svm->SetCode(reserveAddress, reserve);
 
 		SVM::Instruction ret(Opcode::RET, numParams);
-		for (int i = 0; i < subBc.rets.size(); ++i){
-			int idx = subBc.rets[i];
-			SVM::Instruction r = svm->GetCode(idx);
-			r.operand |= (numParams & 0x0000ffff);
-			svm->SetCode(idx, r);
-		}
-
-		int r = svm->AddCode(nop);
-		if (subBc.rets.size() == 0 || subBc.rets[subBc.rets.size() - 1] != r - 1){
-			svm->RemoveLastCode();
+		SVM::Instruction last = svm->GetLastCode();
+		if (last.opcode != Opcode::RET){
 			svm->AddCode(ret);
-		}
-		else{
-			svm->RemoveLastCode();
 		}
 
 		next = svm->AddCode(nop);

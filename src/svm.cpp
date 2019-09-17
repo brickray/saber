@@ -144,18 +144,16 @@ void SVM::CallScript(int numParams){
 	}
 	else if (func.IsFunction()){
 		Clptr curCl = func.GetFunction();
-		curCl->childs.clear();
 		int p = curCl->entry;
-		int nfp = (p & 0x7f000000) >> 24;
-		bool variable = p & 0x80000000;
-		bool outer = curCl->level <= (cl ? cl->level : 0);
+		int nfp = curCl->fp;
+		bool vararg = curCl->vararg;
 		int nap = numParams;
-		if ((!variable) && (nfp != nap)){
+		int ncp = sp - nap;
+		int nextip = ip + 1;
+		if ((!vararg) && (nfp != nap)){
 			Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 		}
 
-		int ncp = sp - nap;
-		int nextip = ip + 1;
 		stack[sp++].SetInt(nextip);
 		stack[sp++].SetInt(ncp);
 		stack[sp++].SetInt(cp);
@@ -169,22 +167,19 @@ void SVM::CallScript(int numParams){
 		ap = nap;
 		offset = ap - fp;
 		cp = ncp;
-		if (variable){
-			Tptr t = shared_ptr<Table>(new Table());
+
+		curCl->cp = cp;
+		curCl->of = offset;
+		curCl->ap = ap;
+		if (vararg){
+			Tptr t = Tptr(new Table());
 			stack[sp - 1].SetTable(t);
 			//construct ...
 			constructTDot(t, fp, ap);
 		}
 
-		if (cl && !outer){
-			Closure::VariableIterator vit = cl->ocvs.begin();
-			for (; vit != cl->ocvs.end(); ++vit){
-				curCl->ocvs[vit->first] = vit->second;
-			}
-		}
-
 		cl = curCl;
-		ip = p & 0x00ffffff;
+		ip = p;
 
 		while (true){
 			execute();
@@ -208,7 +203,7 @@ void SVM::execute(){
 	float operandf = ins.operandf;
 	switch (op){
 	case Opcode::MOVE:{
-		move(operand, ins.operands);
+		move(ins);
 
 		break;
 	}
@@ -228,10 +223,11 @@ void SVM::execute(){
 
 		break;
 	}
-	case Opcode::JUMP:
+	case Opcode::JUMP:{
 		ip = operand;
 
 		return;
+	}
 	case Opcode::CALL:{
 		Value func = stack[sp - 1];
 		sp--; //pop
@@ -241,17 +237,15 @@ void SVM::execute(){
 		}
 		else if (func.IsFunction()){
 			Clptr curCl = func.GetFunction();
-			curCl->childs.clear();
 			int p = curCl->entry;
-			int nfp = (p & 0x7f000000) >> 24;
-			bool variable = p & 0x80000000;
-			bool outer = curCl->level <= (cl ? cl->level : 0);
+			int nfp = curCl->fp;
+			bool vararg = curCl->vararg;
 			int nap = operand;
-			if ((!variable) && (nfp != nap)){
+			int ncp = sp - nap;
+			if ((!vararg) && (nfp != nap)){
 				Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 			}
 
-			int ncp = sp - nap;
 			stack[sp++].SetInt(ip + 1);
 			stack[sp++].SetInt(ncp);
 			stack[sp++].SetInt(cp);
@@ -265,22 +259,19 @@ void SVM::execute(){
 			ap = nap;
 			offset = ap - fp;
 			cp = ncp;
-			if (variable){
-				Tptr t = shared_ptr<Table>(new Table());
+
+			curCl->cp = cp;
+			curCl->of = offset;
+			curCl->ap = ap;
+			if (vararg){
+				Tptr t = Tptr(new Table());
 				stack[sp - 1].SetTable(t);
 				//construct ...
 				constructTDot(t, fp, ap);
 			}
 
-			if (cl && !outer){
-				Closure::VariableIterator vit = cl->ocvs.begin();
-				for (; vit != cl->ocvs.end(); ++vit){
-					curCl->ocvs[vit->first] = vit->second;
-				}
-			}
-
 			cl = curCl;
-			ip = p & 0x00ffffff;
+			ip = p;
 			return;
 		}
 		else{
@@ -290,7 +281,7 @@ void SVM::execute(){
 	}
 	case Opcode::RET:{
 		Value ret = stack[sp - 1];
-		int numRetVariable = (operand & 0xffff0000) >> 16;
+		int numRetVariable = operand;
 		int base = cp + ap;
 		Tptr t       = stack[base + 7].GetTable();
 		Clptr ocl    = stack[base + 6].GetFunction();
@@ -303,19 +294,30 @@ void SVM::execute(){
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 
-		if (ocl){
-			Closure::VariableIterator vit = ocl->ocvs.begin();
-			for (; vit != ocl->ocvs.end(); ++vit){
-				ocl->ocvs[vit->first] = cl->ocvs[vit->first];
+		//set closure value
+		//只有返回值为table类型时,函数内定义的函数才创建闭包，因为只有这个时候闭包才有意义
+		if (numRetVariable && ret.IsTable()){
+			Tptr table = ret.GetTable();
+			TableIteration it = table->Begin();
+			for (; it != table->End(); ++it){
+				if (it->second.IsFunction()){
+					Clptr r = it->second.GetFunction();
+					if (r->hascv && cl->cls.find(r) != cl->cls.end())
+						it->second.SetFunction(createClosure(r));
+				}
 			}
 		}
-		//set closure value
-		Closure::ClosureIterator it = cl->childs.begin();
-		Closure::ClosureIterator ited = cl->childs.end();
-		for (; it != ited; ++it) (*it)->SetFunction(createClosure((*it)->GetFunction()));
-		
-		if (numRetVariable && ret.IsFunction() && (ret.GetFunction() != cl)){
-			ret.SetFunction(createClosure(ret.GetFunction()));
+
+		//返回值为function类型时，进行闭包设置
+		if (numRetVariable && ret.IsFunction() ){
+			Clptr cur = ret.GetFunction();
+			if (cur->hascv && cur != cl){
+				Clptr r = createClosure(ret.GetFunction());
+				ret.SetFunction(r);
+				for (auto c : r->cls){
+					c->parent = r;
+				}
+			}
 		}
 
 		cl     = ocl;
@@ -375,26 +377,7 @@ void SVM::execute(){
 			stack[sp - 1 + operand].SetNull();
 		}
 		else{
-			bool closure = operand & 0x40000000;
-			int idx = operand & 0x3fffffff;
-			if (closure){
-				if (cl->ocvs.find(ins.operands) != cl->ocvs.end()){
-					src = cl->ocvs[ins.operands];;
-				}
-				else{
-					idx = cl->cvs[idx];
-					src = getClosureValue(idx);
-				}
-			}
-			else{
-				if (isStack(idx)){
-					int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
-					src = stack[o];
-				}
-				else{//global
-					src = global[decodeGlobalIndex(idx)];
-				}
-			}
+			src = *getAddress(ins);
 		}
 
 		stack[sp++] = src;
@@ -412,7 +395,7 @@ void SVM::execute(){
 		Value key = stack[sp - 1];
 		Value table = stack[sp - 2];
 		if (!table.IsTable()){
-			Error::GetInstance()->ProcessError("尝试对非Table对象使用[.]");
+			Error::GetInstance()->ProcessError("尝试对[%s]使用[.], key:[%s]", table.GetTypeString().c_str(), key.GetString().c_str());
 		}
 		if (!key.IsString() && !key.IsInteger()){
 			Error::GetInstance()->ProcessError("key必须为integer或string");
@@ -448,7 +431,7 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::SETTABLE:{
-		Tptr t = shared_ptr<Table>(new Table());
+		Tptr t = Tptr(new Table());
 		stack[sp++].SetTable(t);
 
 		break;
@@ -464,7 +447,7 @@ void SVM::execute(){
 		}
 
 		if (!table.IsTable()){
-			Error::GetInstance()->ProcessError("尝试对非Table对象使用[.]");
+			Error::GetInstance()->ProcessError("尝试对[%s]使用[.], key:[%s]", table.GetTypeString().c_str(), key.GetString().c_str());
 		}
 		if (!key.IsString() && !key.IsInteger()){
 			Error::GetInstance()->ProcessError("key必须为integer或string");
@@ -473,26 +456,16 @@ void SVM::execute(){
 		string s = key.GetString();
 		if (key.IsInteger()) s = to_string(key.GetInteger());
 		t->AddValue(s, value);
-		if (cl){
-			Value* ptr = t->GetValuePtr(s);
-			if (value.IsFunction()){
-				cl->childs.insert(ptr);
-			}
-			else{
-				Closure::ClosureIterator it = cl->childs.find(ptr);
-				if (it != cl->childs.end())
-					cl->childs.erase(it);
-			}
-		}
 
 		if (operand) sp -= 2; //table init
 		else sp -= 3;
 
 		break;
 	}
-	case Opcode::EXIT:
+	case Opcode::EXIT:{
 		ip = code.size();
 		break;
+	}
 	case Opcode::NEG:{
 		Value v = stack[sp - 1];
 		if (v.IsTable()){
@@ -573,7 +546,7 @@ void SVM::execute(){
 			v += stack[sp - 2]; 
 			stack[sp - 2] = v;
 			sp--;
-			move(operand, ins.operands);
+			move(ins);
 		}
 
 		break;
@@ -587,7 +560,7 @@ void SVM::execute(){
 			v -= stack[sp - 2];
 			stack[sp - 2] = v;
 			sp--;
-			move(operand, ins.operands);
+			move(ins);
 		}
 
 		break;
@@ -601,7 +574,7 @@ void SVM::execute(){
 			v *= stack[sp - 2];
 			stack[sp - 2] = v;
 			sp--;
-			move(operand, ins.operands);
+			move(ins);
 		}
 
 		break;
@@ -615,7 +588,7 @@ void SVM::execute(){
 			v /= stack[sp - 2];
 			stack[sp - 2] = v;
 			sp--;
-			move(operand, ins.operands);
+			move(ins);
 		}
 
 		break;
@@ -629,7 +602,7 @@ void SVM::execute(){
 			v %= stack[sp - 2];
 			stack[sp - 2] = v;
 			sp--;
-			move(operand, ins.operands);
+			move(ins);
 		}
 
 		break;
@@ -684,7 +657,7 @@ void SVM::execute(){
 	}
 	case Opcode::EQ:{
 		Value v = stack[sp - 1];
-		if (v.IsTable()){
+		if (v.IsTable() && (v.GetTable()->HasValue("_equal") || v.GetTable()->HasValue("_default"))){
 			overrideOp(v, "_equal", 1, "==");
 		}
 		else{
@@ -696,7 +669,7 @@ void SVM::execute(){
 	}
 	case Opcode::NE:{
 		Value v = stack[sp - 1];
-		if (v.IsTable()){
+		if (v.IsTable() && (v.GetTable()->HasValue("_equal") || v.GetTable()->HasValue("_default"))){
 			overrideOp(v, "_nequal", 1, "!=");
 		}
 		else{
@@ -730,8 +703,9 @@ void SVM::execute(){
 
 		break;
 	}
-	case Opcode::NOP: //do nothing
+	case Opcode::NOP:{//do nothing
 		break;
+	}
 	}
 
 	ip++;
@@ -745,7 +719,7 @@ void SVM::constructTDot(Tptr t, int fp, int ap){
 	}
 }
 
-Value SVM::getClosureValue(int op){
+int SVM::getAbsoluteAddress(int op){
 	int level = (op & 0xff000000) >> 24;
 	int idx = op & 0x00ffffff;
 	if (isStack(idx)){
@@ -753,7 +727,7 @@ Value SVM::getClosureValue(int op){
 		int tap = ap;
 		int tfp = fp;
 		int tof = offset;
-		for (int i = 0; i < level; ++i){
+		for (int i = 0; i < level - 1; ++i){
 			Value vcp = stack[tcp + tap + 2];
 			Value vof = stack[tcp + tap + 3];
 			Value vap = stack[tcp + tap + 4];
@@ -765,52 +739,22 @@ Value SVM::getClosureValue(int op){
 		}
 
 		int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
-		return stack[o];
+		return o;
 	}
 	else{
-		return global[decodeGlobalIndex(idx)];
-	}
-}
-
-void SVM::setClosureValue(int op, Value v){
-	int level = (op & 0xff000000) >> 24;
-	int idx = op & 0x00ffffff;
-	if (isStack(idx)){
-		int tcp = cp;
-		int tap = ap;
-		int tfp = fp;
-		int tof = offset;
-		for (int i = 0; i < level; ++i){
-			Value vcp = stack[tcp + tap + 2];
-			Value vof = stack[tcp + tap + 3];
-			Value vap = stack[tcp + tap + 4];
-			Value vfp = stack[tcp + tap + 5];
-			tcp = vcp.GetInteger();
-			tof = vof.GetInteger();
-			tap = vap.GetInteger();
-			tfp = vfp.GetInteger();
-		}
-
-		int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
-		stack[o] = v;
-	}
-	else{
-		global[decodeGlobalIndex(idx)] = v;
+		return idx;
 	}
 }
 
 Clptr SVM::createClosure(Clptr o){
-	Clptr f = shared_ptr<Closure>(new Closure());
-	f->entry = o->entry;
-	f->variables = o->variables;
-	Closure::VariableIterator vit = cl->ocvs.begin();
-	for (; vit != cl->ocvs.end(); ++vit){
-		f->ocvs[vit->first] = vit->second;
+	Clptr f = Clptr(new Closure(*o));
+	f->parent = cl->parent;
+	for (auto it : cl->cvs){
+		f->cvs[it.first] = it.second;
 	}
-	vit = cl->variables.begin();
-	for (; vit != cl->variables.end(); ++vit){
+	for (auto it : cl->variables){
 		Value v;
-		int idx = vit->second.GetInteger();
+		int idx = it.second;
 		if (isStack(idx)){
 			int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
 			v = stack[o];
@@ -819,7 +763,7 @@ Clptr SVM::createClosure(Clptr o){
 			v = global[decodeGlobalIndex(idx)];
 		}
 
-		f->ocvs[vit->first] = v;
+		f->cvs[it.first] = v;
 	}
 
 	return f;
@@ -848,29 +792,68 @@ void SVM::overrideOp(Value t, string opname, int np, string op){
 	}
 }
 
-void SVM::move(int operand, string operands){
+Value* SVM::getAddress(SVM::Instruction ins){
+	Value* ret;
+	int operand = ins.operand;
+	string operands = ins.operands;
 	bool closure = operand & 0x40000000;
 	int idx = operand & 0x3fffffff;
 	if (closure){
-		if (cl->ocvs.find(operands) != cl->ocvs.end()){
-			cl->ocvs[operands] = stack[sp - 1];
-		}
-		else{
-			idx = cl->cvs[idx];
-			setClosureValue(idx, stack[sp - 1]);
+		Clptr p = cl;
+		while (true){
+			if (p){
+				if (p->cvs.find(operands) != p->cvs.end()){
+					ret = &p->cvs[operands];
+					break;
+				}
+				else if (p->variables.find(operands) != p->variables.end()){
+					idx = p->variables[operands];
+					if (isStack(idx)){
+						int o = p->cp + idx + ((idx >= p->fp + 3) ? p->of : 0);
+						ret = &stack[o];
+					}
+					else{
+						ret = &global[decodeGlobalIndex(idx)];
+					}
+
+					break;
+				}
+				else{
+					p = p->parent;
+				}
+			}
 		}
 	}
 	else{
-		if (isStack(operand)){
-			int o = cp + operand + ((operand >= fp + 3) ? offset : 0);
-			stack[o] = stack[sp - 1];
+		if (isStack(idx)){
+			int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
+			ret = &stack[o];
 		}
 		else{
-			global[decodeGlobalIndex(operand)] = stack[sp - 1];
+			ret = &global[decodeGlobalIndex(idx)];
 		}
 	}
 
+	return ret;
+}
+
+void SVM::move(SVM::Instruction ins){
+	*getAddress(ins) = stack[sp - 1];
+
 	sp--;
+}
+
+void SVM::dumpStack(){
+	string str = "";
+	for (int i = 0; i < sp; i++){
+		Value v = stack[i];
+		str += to_string(i) + ". " + v.GetTypeString();
+		str += ":";
+		str += v.ToString();
+		str += '\n';
+	}
+
+	printf("%s\nip[%d], sp[%d], cp[%d]\n", str.c_str(), ip, sp, cp);
 }
 
 bool SVM::isStack(int idx){
