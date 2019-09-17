@@ -10,6 +10,7 @@ public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
 		int loopAddress = svm->AddCode(nop);
+		svm->RemoveLastCode();
 		children[0]->Compile(e, svm, bc);
 
 		int end = 0;

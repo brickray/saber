@@ -12,6 +12,7 @@ public:
 		children[0]->Compile(e, svm, bc);
 
 		int loopAddress = svm->AddCode(nop);
+		svm->RemoveLastCode();
 		children[1]->Compile(e, svm, bc);
 		SVM::Instruction jz(Opcode::JZ);
 		int jumpAddress = svm->AddCode(jz);
@@ -24,6 +25,7 @@ public:
 		children[children.size() - 1]->Compile(e, svm, subBc);
 
 		int continueAddress = svm->AddCode(nop);
+		svm->RemoveLastCode();
 		if (children.size() == 4){//has step component
 			children[2]->Compile(e, svm, bc);
 		}

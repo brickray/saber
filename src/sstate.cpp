@@ -15,7 +15,8 @@ void SState::Init(){
 void SState::Compile(string code){
 	lexer->Parse(code);
 	parse->Parse(*lexer);
-	parse->Compile(env, svm);
+	BlockCnt bc;
+	parse->Compile(env, svm, bc);
 
 	if (sc) ShowCode();
 }

@@ -18,7 +18,7 @@ public:
 		int next = 0;
 		SVM::Instruction jump(Opcode::JUMP, next);
 		int jumpAddress = svm->AddCode(jump);
-		int start = svm->AddCode(nop);
+		int start = jumpAddress + 1;
 		SVM::Instruction reserve(Opcode::RESERVE, 0);
 		int reserveAddress = svm->AddCode(reserve);
 		Value func;
@@ -74,6 +74,7 @@ public:
 		}
 
 		next = svm->AddCode(nop);
+		svm->RemoveLastCode();
 		jump.operand = next;
 		svm->SetCode(jumpAddress, jump);
 

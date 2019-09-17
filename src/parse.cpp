@@ -45,8 +45,7 @@ void SyntaxParse::Parse(Lexer& lex){
 	}
 }
 
-void SyntaxParse::Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
-	BlockCnt bc;
+void SyntaxParse::Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 	astProgram->Compile(e, svm, bc);
 }
 

@@ -66,7 +66,7 @@ public:
 	SyntaxParse(){}
 
 	void Parse(Lexer& lexer);
-	void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm);
+	void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc);
 
 private:
 	bool match(string name, Token** tok = nullptr);

@@ -26,6 +26,7 @@ public:
 		SVM::Instruction jump(Opcode::JUMP, 0);
 		int endAddress = svm->AddCode(jump);
 		next = svm->AddCode(nop);
+		svm->RemoveLastCode();
 		jz.operand = next;
 		svm->SetCode(jumpAddress, jz);
 
@@ -46,6 +47,7 @@ public:
 		}
 		
 		next = svm->AddCode(nop);
+		svm->RemoveLastCode();
 		jump.operand = next;
 		svm->SetCode(endAddress, jump);
 

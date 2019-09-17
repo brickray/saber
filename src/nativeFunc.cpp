@@ -5,6 +5,7 @@
 
 #include <time.h>
 #include <stdio.h>
+#include <io.h>
 #if WIN32
 #include <windows.h>
 #endif
@@ -91,13 +92,16 @@ static int load(SVM* svm, int numParams){
 
 	SVM::Instruction nop(Opcode::NOP);
 	int idx = svm->AddCode(nop);
+	svm->RemoveLastCode();
 	SState* S = svm->GetSState();
 	S->GetLexer()->Parse(str.GetString());
 	S->GetParser()->Parse(*S->GetLexer());
 	shared_ptr<Environment> e = S->GetEnvironment();
 	shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
 	local->SetOutter(e);
-	S->GetParser()->Compile(local, S->GetSVM());
+	BlockCnt bc;
+	bc.variableIndex = 8;
+	S->GetParser()->Compile(local, S->GetSVM(), bc);
 	SVM::Instruction ret(Opcode::RET, 0);
 	SVM::Instruction last = svm->GetLastCode();
 	if (last.opcode != Opcode::RET){
@@ -1249,6 +1253,72 @@ static int close(SVM* svm, int numParams){
 	return 0;
 }
 
+static int allfile(SVM* svm, int numParams){
+	Value directory, extension;
+	checkParamsNum("io.allfile", numParams, 2);
+	extension = svm->PopStack();
+	directory = svm->PopStack();
+	checkString("io.allfile", directory);
+	checkString("io.allfile", extension);
+
+	Tptr t = Tptr(new Table());
+	string dir = directory.GetString() + "/*." + extension.GetString();
+	int idx = 0;
+	long handle;
+	_finddata_t fi;
+	if ((handle = _findfirst(dir.c_str(), &fi)) != -1L){
+		if (fi.attrib != _A_SUBDIR && (strcmp(fi.name, ".") != 0 && strcmp(fi.name, "..") != 0))
+			t->AddString(to_string(idx++), fi.name);
+		while (_findnext(handle, &fi) == 0){
+			if (fi.attrib == _A_SUBDIR) continue;
+			if (strcmp(fi.name, ".") == 0 || strcmp(fi.name, "..") == 0)
+				continue;
+			t->AddString(to_string(idx++), fi.name);
+		}
+		_findclose(handle);
+
+		svm->PushTable(t);
+	}
+	else
+	{
+		svm->PushInt(-1);
+	}
+
+	return 1;
+}
+
+static int alldirectory(SVM* svm, int numParams){
+	Value directory;
+	checkParamsNum("io.alldirectory", numParams);
+	directory = svm->PopStack();
+	checkString("io.alldirectory", directory);
+
+	Tptr t = Tptr(new Table());
+	string dir = directory.GetString() + "/*.*";
+	int idx = 0;
+	long handle;
+	_finddata_t fi;
+	if ((handle = _findfirst(dir.c_str(), &fi)) != -1L){
+		if (fi.attrib == _A_SUBDIR && (strcmp(fi.name, ".") != 0 && strcmp(fi.name, "..") != 0))
+			t->AddString(to_string(idx++), fi.name);
+		while (_findnext(handle, &fi) == 0){
+			if (fi.attrib != _A_SUBDIR) continue;
+			if (strcmp(fi.name, ".") == 0 || strcmp(fi.name, "..") == 0)
+				continue;
+			t->AddString(to_string(idx++), fi.name);
+		}
+		_findclose(handle);
+
+		svm->PushTable(t);
+	}
+	else
+	{
+		svm->PushInt(-1);
+	}
+
+	return 1;
+}
+
 static int input(SVM* svm, int numParams){
 	checkParamsNum("io.gets", numParams, 0);
 
@@ -1635,11 +1705,13 @@ void registerStr(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 }
 
 static RegisterFunction io[] = {
-	{ "fexist", fexist },
+	{ "exist", fexist },
 	{ "open", open },
 	{ "read", read },
 	{ "write", write },
 	{ "close", close },
+	{ "allfile", allfile },
+	{ "alldirectory", alldirectory },
 	{ "input", input },
 	{ "", nullptr },
 };
