@@ -54,6 +54,16 @@ struct SValue{
 	Tptr   t;
 	Clptr  cl;
 	string sValue;
+
+	SValue(){
+		t = nullptr;
+		cl = nullptr;
+	}
+
+	~SValue(){
+		t = nullptr;
+		cl = nullptr;
+	}
 };
 
 class Value{
@@ -111,6 +121,28 @@ public:
 	int GetLightUData() const { return value.iValue; }
 	Tptr& GetTable() { return value.t; }
 	Coroutine* GetCoroutine() const { return value.co; }
+
+	Value& operator=(Value& v){
+		type = v.type;
+		if (v.IsString()){
+			value.sValue = v.value.sValue;
+		}
+		else if (v.IsTable()){
+			value.t = v.value.t;
+		}
+		else if (v.IsFunction()){
+			value.cl = v.value.cl;
+		}
+		else{
+			value.bValue = v.value.bValue;
+			value.iValue = v.value.iValue;
+			value.fValue = v.value.fValue;
+			value.sfunc = v.value.sfunc;
+			value.co = v.value.co;
+		}
+
+		return *this;
+	}
 
 	Value operator-(){
 		Value va;
@@ -263,7 +295,7 @@ public:
 			value.sValue += v.GetString();
 			return *this;
 		}
-		SValue sv;
+
 		if (!IsNumber() || !v.IsNumber()){
 			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
@@ -291,7 +323,6 @@ public:
 	}
 
 	Value operator-=(Value& v){
-		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
 			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
@@ -319,7 +350,6 @@ public:
 	}
 
 	Value operator*=(Value& v){
-		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
 			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
@@ -347,7 +377,6 @@ public:
 	}
 
 	Value operator/=(Value& v){
-		SValue sv;
 		if (!IsNumber() || !v.IsNumber()){
 			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
@@ -375,7 +404,6 @@ public:
 	}
 
 	Value operator%=(Value& v){
-		SValue sv;
 		if (!IsInteger() || !IsInteger()){
 			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
 			this->SetBool(false);
@@ -616,7 +644,7 @@ public:
 	void AddNativeFunction(string key, SFunc f) { Value v; v.SetNativeFunction(f); kv[key] = v; }
 	void AddTable(string key, Tptr t) { Value v; v.SetTable(t); kv[key] = v; }
 	void AddCoroutine(string key, Coroutine* co) { Value v; v.SetCoroutine(co); kv[key] = v; }
-	void AddValue(string key, Value v) { kv[key] = v; }
+	void AddValue(string key, Value& v) { kv[key] = v; }
 
 	Value GetValue(string key) {
 		if (kv.find(key) != kv.end()){

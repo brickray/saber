@@ -107,6 +107,7 @@ static int load(SVM* svm, int numParams){
 	if (last.opcode != Opcode::RET){
 		svm->AddCode(ret);
 	}
+	svm->UpdateCodeSize();
 
 	Value func;
 	Clptr cl = Clptr(new Closure());
@@ -1367,7 +1368,7 @@ static int tforeach(SVM* svm, int numParams){
 	TableIteration tied = t->End();
 	for (; ti != tied; ++ti){
 		Value key, value;
-		key.SetString(ti->first);
+		key.SetString(ti->first.c_str());
 		value = ti->second;
 
 		svm->PushStack(key);

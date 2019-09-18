@@ -43,7 +43,7 @@ public:
 	};
 
 protected:
-#define STACK_SIZE 1024
+#define STACK_SIZE 4096
 	vector<Instruction> code;
 	vector<Value> stack;
 	vector<Value> global;
@@ -69,20 +69,21 @@ protected:
 	int ap;
 	int fp;
 	Clptr cl;
+	int codeSize; //代码长度
 
 	SState* S;
 
 public:
 	SVM(SState* s);
 
-	int AddCode(Instruction c);
+	int AddCode(Instruction& c);
 	void RemoveLastCode();
 	Instruction GetLastCode();
 	Instruction GetCode(int idx);
-	void SetCode(int idx, Instruction c);
-	int AddGlobal(Value v);
-	void SetStack(int i, Value v);
-	void PushStack(Value v);
+	void SetCode(int idx, Instruction& c);
+	int AddGlobal(Value& v);
+	void SetStack(int i, Value& v);
+	void PushStack(Value& v);
 	void PushBool(bool b);
 	void PushInt(int i);
 	void PushFloat(float f);
@@ -100,7 +101,7 @@ public:
 	SState* GetSState() const { return S; }
 	Register GetRegister() const { return{ ip, sp, cp, offset, ap, fp }; }
 	void SetRegister(Register r) { ip = r.ip; sp = r.sp; cp = r.cp; offset = r.offset; ap = r.ap; fp = r.fp; }
-	bool IsEnd() const { return ip >= code.size(); }
+	void UpdateCodeSize() { codeSize = code.size(); }
 	//压入到辅助结构
 	void PushCo(Coroutine* c); 
 	Coroutine* PopCo(); 
@@ -117,9 +118,9 @@ private:
 	void constructTDot(Tptr t, int fp, int ap);
 	int getAbsoluteAddress(int op);
 	Clptr createClosure(Clptr o);
-	void overrideOp(Value t, string opname, int np, string op);
-	Value* getAddress(Instruction ins);
-	void move(Instruction ins);
+	void overrideOp(Value& t, const char* opname, int np, const char* op);
+	Value* getAddress(Instruction& ins);
+	void move(Instruction& ins);
 
 	void dumpStack();
 };
