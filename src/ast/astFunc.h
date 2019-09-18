@@ -43,9 +43,12 @@ public:
 						children[0]->Compile(e, svm, bc);
 					}
 				}
+				else{
+					SVM::Instruction push(Opcode::PUSH, -numParams, true);
+					svm->AddCode(push);
+				}
 			}
-
-			if (j != start){
+			else{
 				SVM::Instruction push(Opcode::PUSH, -numParams, true);
 				svm->AddCode(push);
 			}
