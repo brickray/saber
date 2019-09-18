@@ -403,12 +403,12 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 				op->SetToken(tok);
 				op->AddChild(l);
 				shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-				if (matchAndorExpr(stat)){
+				if (matchClosure(stat)){
 					op->AddChild(stat);
 					astree->AddChild(op);
 					return true;
 				}
-				else if (matchClosure(stat)){
+				else if (matchAndorExpr(stat)){
 					op->AddChild(stat);
 					astree->AddChild(op);
 					return true;
@@ -445,12 +445,12 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree){
 			op->SetToken(tok);
 			op->AddChild(g);
 			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-			if (matchAndorExpr(stat)){
+			if (matchClosure(stat)){
 				op->AddChild(stat);
 				astree->AddChild(op);
 				return true;
 			}
-			else if (matchClosure(stat)){
+			else if (matchAndorExpr(stat)){
 				op->AddChild(stat);
 				astree->AddChild(op);
 				return true;
@@ -700,10 +700,10 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 		bool first = true;
 		do{
 			shared_ptr<Astree> param = shared_ptr<Astree>(new AstStatement());
-			if (matchExpr(param)){
+			if (matchClosure(param)){
 				parent->AddChild(param);
 			}
-			else if (matchClosure(param)){
+			else if (matchExpr(param)){
 				parent->AddChild(param);
 			}
 			else{
@@ -745,8 +745,14 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 
 bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> closure = shared_ptr<Astree>(new AstClosure());
+	int p = lexer.GetTkptr();
+	int numParentheses = 0;
+	while (match("(")) numParentheses++;
 	Token* tok;
-	if (!match("def", &tok)) return false;
+	if (!match("def", &tok)){
+		lexer.SetTkptr(p);
+		return false;
+	}
 	if (!match("(")){
 		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少'('", tok->GetLineNumber());
 		return false;
@@ -795,7 +801,16 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 	if (!match("end")) return false;
 
 	astree->AddChild(closure);
-	matchFunc(astree, true);
+
+	int num = numParentheses;
+	while (num){
+		if (!match(")")) break;
+		num--;
+	}
+	if (matchFunc(astree, true) && (numParentheses == 0 || num != 0)){
+		Error::GetInstance()->ProcessError("行数:%d, 匿名函数调用语法错误,缺少')'", tok->GetLineNumber());
+		return false;
+	}
 
 	return true;
 }
@@ -811,12 +826,12 @@ bool SyntaxParse::matchTableInit(shared_ptr<Astree>& astree){
 		op->SetToken(tok);
 		op->AddChild(name);
 		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-		if (matchAndorExpr(stat)){
+		if (matchClosure(stat)){
 			op->AddChild(stat);
 			astree->AddChild(op);
 			return true;
 		}
-		else if (matchClosure(stat)){
+		else if (matchAndorExpr(stat)){
 			op->AddChild(stat);
 			astree->AddChild(op);
 			return true;
