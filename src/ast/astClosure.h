@@ -24,6 +24,7 @@ public:
 		Value func;
 		//set closure
 		Clptr cl = Clptr(new Closure());
+		cl->closure = false;
 		cl->hascv = false;
 		cl->vararg = false;
 		cl->entry = start;

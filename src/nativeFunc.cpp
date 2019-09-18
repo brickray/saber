@@ -1368,7 +1368,7 @@ static int tforeach(SVM* svm, int numParams){
 	TableIteration tied = t->End();
 	for (; ti != tied; ++ti){
 		Value key, value;
-		key.SetString(ti->first.c_str());
+		key.SetString(ti->first);
 		value = ti->second;
 
 		svm->PushStack(key);

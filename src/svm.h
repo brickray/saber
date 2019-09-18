@@ -116,7 +116,6 @@ private:
 	int decodeGlobalIndex(int idx);
 
 	void constructTDot(Tptr t, int fp, int ap);
-	int getAbsoluteAddress(int op);
 	Clptr createClosure(Clptr o);
 	void overrideOp(Value& t, const char* opname, int np, const char* op);
 	Value* getAddress(Instruction& ins);

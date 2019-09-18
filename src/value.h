@@ -683,9 +683,10 @@ public:
 };
 
 struct Closure{
-	bool hascv;  //是否有非局部变量 
-	bool vararg; //是否可变参
-	int entry;   //入口地址
+	bool closure; //是否时新建的闭包
+	bool hascv;   //是否有非局部变量 
+	bool vararg;  //是否可变参
+	int entry;    //入口地址
 	int cp;
 	int of;
 	int ap;

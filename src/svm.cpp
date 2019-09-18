@@ -171,6 +171,7 @@ void SVM::CallScript(int numParams){
 		curCl->cp = cp;
 		curCl->of = offset;
 		curCl->ap = ap;
+		curCl->parent = cl;
 		if (vararg){
 			Tptr t = Tptr(new Table());
 			stack[sp - 1].SetTable(t);
@@ -196,6 +197,7 @@ void SVM::CallScript(int numParams){
 }
 
 void SVM::execute(){
+	//使用引用避免拷贝构造，可大幅度提升速度
 	Instruction& ins = code[ip];
 	switch (ins.opcode){
 	case Opcode::MOVE:{
@@ -258,6 +260,7 @@ void SVM::execute(){
 			curCl->cp = cp;
 			curCl->of = offset;
 			curCl->ap = ap;
+			curCl->parent = cl;
 			if (vararg){
 				Tptr t = Tptr(new Table());
 				stack[sp - 1].SetTable(t);
@@ -309,9 +312,6 @@ void SVM::execute(){
 			if (cur->hascv && cur != cl){
 				Clptr r = createClosure(ret.GetFunction());
 				ret.SetFunction(r);
-				for (auto c : r->cls){
-					c->parent = r;
-				}
 			}
 		}
 
@@ -431,11 +431,10 @@ void SVM::execute(){
 	}
 	case Opcode::STFILED:{
 		int operand = ins.operand;
-		Value key = stack[sp - 1];
+		Value& key = stack[sp - 1];
 		Value table = stack[sp - 2];
 		Value value = stack[sp - 3];
 		if (operand){//table init
-			key = stack[sp - 1];
 			value = stack[sp - 2];
 			table = stack[sp - 3];
 		}
@@ -706,32 +705,8 @@ void SVM::constructTDot(Tptr t, int fp, int ap){
 	}
 }
 
-int SVM::getAbsoluteAddress(int op){
-	int level = (op & 0xff000000) >> 24;
-	int idx = op & 0x00ffffff;
-	if (isStack(idx)){
-		int tcp = cp;
-		int tap = ap;
-		int tfp = fp;
-		int tof = offset;
-		for (int i = 0; i < level - 1; ++i){
-			tcp = stack[tcp + tap + 2].GetInteger();
-			tof = stack[tcp + tap + 3].GetInteger();
-			tap = stack[tcp + tap + 4].GetInteger();
-			tfp = stack[tcp + tap + 5].GetInteger();
-		}
-
-		int o = tcp + idx + ((idx >= tfp + 3) ? tof : 0);
-		return o;
-	}
-	else{
-		return idx;
-	}
-}
-
 Clptr SVM::createClosure(Clptr o){
 	Clptr f = Clptr(new Closure(*o));
-	f->parent = cl->parent;
 	for (auto it : cl->cvs){
 		f->cvs[it.first] = it.second;
 	}
