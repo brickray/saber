@@ -90,7 +90,7 @@ private:
 	bool matchWhile(shared_ptr<Astree>& astree);
 	bool matchFor(shared_ptr<Astree>& astree);
 	bool matchDef(shared_ptr<Astree>& astree);
-	bool matchFunc(shared_ptr<Astree>& astree);
+	bool matchFunc(shared_ptr<Astree>& astree, bool fromClosure = false);
 	bool matchClosure(shared_ptr<Astree>& astree);
 	bool matchTableInit(shared_ptr<Astree>& astree);
 	bool matchTable(shared_ptr<Astree>& astree);

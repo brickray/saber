@@ -616,6 +616,8 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 			return false;
 		}
 
+		lexer.Back();
+
 		return false;
 	}
 	if (!match("(")){
@@ -670,23 +672,28 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	return true;
 }
 
-bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
+bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 	shared_ptr<Astree> func = shared_ptr<Astree>(new AstFunc());
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+	Token* tok = nullptr;
 	int p = lexer.GetTkptr();
-	if (!matchLValue(name)) return false;
-	
-	Token* tok;
+	if (!fromClosure){
+		if (!matchLValue(name)) return false;
+		
+		bool istable = name->GetToken()->GetToken() == "." ||
+			name->GetToken()->GetToken() == "[";
+		func->SetTable(istable);
+
+		name = RotateBTree(name);
+		func->AddChild(name);
+	}
+
 	if (!match("(", &tok)){
 		lexer.SetTkptr(p);
 		return false;
 	}
-	bool istable = name->GetToken()->GetToken() == "." ||
-		name->GetToken()->GetToken() == "[";
-	func->SetTable(istable);
 
-	name = RotateBTree(name);
-	func->AddChild(name);
+	(dynamic_cast<AstFunc*>(func.get())->SetFunc(fromClosure));
 
 	do{	
 		shared_ptr<Astree> parent = shared_ptr<Astree>(new AstStatement());
@@ -694,6 +701,9 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 		do{
 			shared_ptr<Astree> param = shared_ptr<Astree>(new AstStatement());
 			if (matchExpr(param)){
+				parent->AddChild(param);
+			}
+			else if (matchClosure(param)){
 				parent->AddChild(param);
 			}
 			else{
@@ -714,6 +724,21 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree){
 	} while (match("(", &tok));
 
 	astree->AddChild(func);
+	shared_ptr<Astree> t = shared_ptr<Astree>(new AstDot());
+	if (matchLValue(t, true)){
+		(dynamic_cast<AstDot*>(t.get()))->SetFunc(true);
+		shared_ptr<Astree> c = t->GetChild(0);
+		while (c){
+			AstDot* dot = dynamic_cast<AstDot*>(c.get());
+			if (dot) dot->SetFunc(true);
+			if (c->GetNumChildren() > 1)
+				c = c->GetChild(1);
+			else
+				c = nullptr;
+		}
+		astree->AddChild(t);
+		matchFunc(astree, true);
+	}
 
 	return true;
 }
@@ -770,6 +795,7 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 	if (!match("end")) return false;
 
 	astree->AddChild(closure);
+	matchFunc(astree, true);
 
 	return true;
 }
