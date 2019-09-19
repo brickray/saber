@@ -44,12 +44,12 @@ public:
 					}
 				}
 				else{
-					SVM::Instruction push(Opcode::PUSH, -numParams, true);
+					SVM::Instruction push(Opcode::PUSH, numParams, true);
 					svm->AddCode(push);
 				}
 			}
 			else{
-				SVM::Instruction push(Opcode::PUSH, -numParams, true);
+				SVM::Instruction push(Opcode::PUSH, numParams, true);
 				svm->AddCode(push);
 			}
 

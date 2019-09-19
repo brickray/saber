@@ -365,10 +365,12 @@ void SVM::execute(){
 	case Opcode::PUSH:{
 		if (ins.relative){
 			//这个位置必定是函数地址
-			int o = sp - 1 + ins.operand;
-			stack[sp++] = stack[o];
-			//将函数引用计数减一
-			stack[o].SetNull();
+			int operand = ins.operand;
+			if (!operand) break;
+			int o = sp - 1 - operand;
+			Value v = stack[o];
+			memcpy(&stack[o], &stack[o + 1], sizeof(Value)*operand);
+			stack[sp - 1] = v;
 		}
 		else{
 			stack[sp++] = *getAddress(ins);
