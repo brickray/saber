@@ -174,6 +174,8 @@ public:
 			SVM::Instruction ins(Opcode::AND);
 			svm->AddCode(ins);
 		}
+
+		bc.tailcall = false;
 	}
 
 	virtual string ToString() const{

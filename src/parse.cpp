@@ -96,6 +96,7 @@ bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
 		if (matchExpr(stat)){
 			astReturn->AddChild(stat);
 			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
+			dynamic_cast<AstReturn*>(astReturn.get())->SetMaybeTailCall();
 		}
 		else if (matchClosure(stat)){
 			astReturn->AddChild(stat);

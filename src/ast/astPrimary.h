@@ -26,6 +26,7 @@ public:
 				SVM::Instruction ins(Opcode::PUSHI, v);
 				svm->AddCode(ins);
 			}
+
 			break;
 		}
 		case ETokenType::EIDENTIFIER:{
@@ -34,12 +35,12 @@ public:
 				int i = tok == "true" ? 1 : 0;
 				SVM::Instruction ins(Opcode::PUSHB, i);
 				svm->AddCode(ins);
-				return;
+				break;
 			}
 			if (tok == "null"){
 				SVM::Instruction ins(Opcode::PUSHN);
 				svm->AddCode(ins);
-				return;
+				break;
 			}
 
 			if (istable){
@@ -64,7 +65,7 @@ public:
 
 				bc.nearst = p;
 				bc.nearstS = tok;
-				return;
+				break;
 			}
 
 			Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", token->GetLineNumber(), token->GetToken().c_str());
@@ -78,6 +79,8 @@ public:
 			break;
 		}
 		}
+
+		bc.tailcall = false;
 	}
 };
 

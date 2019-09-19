@@ -67,9 +67,15 @@ public:
 			children[i]->Compile(local, svm, subBc);
 		}
 		reserve.operand = subBc.variableIndex - numParams - numSpace;
-		svm->SetCode(reserveAddress, reserve);
+		if (!reserve.operand){
+			//如果函数内的局部变量不存在，直接将reserve指令清除
+			svm->SetCode(reserveAddress, nop);
+		}
+		else {
+			svm->SetCode(reserveAddress, reserve);
+		}
 
-		SVM::Instruction ret(Opcode::RET, numParams);
+		SVM::Instruction ret(Opcode::RET, 0);
 		SVM::Instruction last = svm->GetLastCode();
 		if (last.opcode != Opcode::RET){
 			svm->AddCode(ret);

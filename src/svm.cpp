@@ -271,6 +271,18 @@ void SVM::execute(){
 			break;
 		}
 	}
+	case Opcode::TAILCALL:{
+		Value& func = stack[--sp];
+		Clptr curCl = func.GetFunction();
+		int p = curCl->entry;
+		int ncp = sp - ap;
+		sp = ncp;
+
+		memcpy(&stack[cp], &stack[ncp], sizeof(Value)*ap);
+
+		ip = p;
+		break;
+	}
 	case Opcode::RET:{
 		Value& ret = stack[sp - 1];
 		int numRetVariable = ins.operand;
@@ -533,7 +545,9 @@ void SVM::execute(){
 			overrideOp(v, "_pluseq", 1, "+=");
 		}
 		else{
-			stack[sp - 1] += v;
+			//如果变量类型为字符串，这里顺序很重要
+			Value& v2 = stack[sp - 1];
+			v2 = v + v2;
 			move(ins);
 		}
 
@@ -558,7 +572,8 @@ void SVM::execute(){
 			overrideOp(v, "_muleq", 1, "*=");
 		}
 		else{
-			stack[sp - 1] *= v;
+			Value& v2 = stack[sp - 1];
+			v2 = v * v2;
 			move(ins);
 		}
 
@@ -861,6 +876,7 @@ string SVM::ShowCode(){
 		"JZ",
 		"JUMP",
 		"CALL",
+		"TAILCALL",
 		"RET",
 		"RESERVE",
 		"PUSHB",

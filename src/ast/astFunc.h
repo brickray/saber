@@ -24,7 +24,14 @@ public:
 			}
 		}
 		
+		bool tailcall = false;
 		SymbolInfo si = e->GetSymbol(funcName);
+		if (bc.ret && !fromFunc && children.size() == 2){
+			//尾递归不支持可变参
+			if (si.value.IsFunction() && si.value.GetFunction() == bc.cl && !bc.cl->vararg){
+				tailcall = bc.tailcall;
+			}
+		}
 		int func = si.address;
 		int start = fromFunc ? 0 : 1;
 		for (int j = start; j < children.size(); ++j){
@@ -54,8 +61,11 @@ public:
 			}
 
 			SVM::Instruction call(Opcode::CALL, numParams);
-			svm->AddCode(call);
+			int address = svm->AddCode(call);
+			bc.nearst = address;
 		}
+
+		bc.tailcall = tailcall;
 	}
 };
 
