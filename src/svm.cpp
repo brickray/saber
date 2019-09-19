@@ -14,7 +14,7 @@ SVM::SVM(SState* s){
 	ip = 0;
 	sp = 0;
 	cp = 0;
-	offset = 0;
+	of = 0;
 	ap = 0;
 	fp = 0;
 	cl = nullptr;
@@ -104,7 +104,7 @@ void SVM::PushTable(Tptr t){
 	PushStack(v);
 }
 
-void SVM::PushCoroutine(Coroutine* co){
+void SVM::PushCoroutine(Coptr co){
 	Value v;
 	v.SetCoroutine(co);
 	PushStack(v);
@@ -114,14 +114,14 @@ Value SVM::PopStack(){
 	return stack[--sp];
 }
 
-void SVM::PushCo(Coroutine* c) {
+void SVM::PushCo(Coptr c) {
 	co.push_back(c);
 }
 
-Coroutine* SVM::PopCo() {
+Coptr SVM::PopCo() {
 	if (co.size() == 0)
 		return nullptr;
-	Coroutine* c = co[co.size() - 1]; 
+	Coptr c = co[co.size() - 1]; 
 	co.pop_back();
 	return c;
 }
@@ -154,24 +154,21 @@ void SVM::CallScript(int numParams){
 			Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 		}
 
-		stack[sp++].SetInt(nextip);
-		stack[sp++].SetInt(ncp);
-		stack[sp++].SetInt(cp);
-		stack[sp++].SetInt(offset);
-		stack[sp++].SetInt(ap);
-		stack[sp++].SetInt(fp);
-		stack[sp++].SetFunction(cl);
-		sp++; //variable parameters table
+		stack[sp + IP_ADDRESS].SetInt(nextip);
+		stack[sp + SP_ADDRESS].SetInt(ncp);
+		stack[sp + CP_ADDRESS].SetInt(cp);
+		stack[sp + OF_ADDRESS].SetInt(of);
+		stack[sp + AP_ADDRESS].SetInt(ap);
+		stack[sp + FP_ADDRESS].SetInt(fp);
+		stack[sp + CL_ADDRESS].SetFunction(cl);
+		stack[sp + TB_ADDRESS].SetNull(); //variable parameters table
+		sp += NUM_ADDRESS;
 
 		fp = nfp;
 		ap = nap;
-		offset = ap - fp;
+		of = ap - fp;
 		cp = ncp;
 
-		curCl->cp = cp;
-		curCl->of = offset;
-		curCl->ap = ap;
-		curCl->parent = cl;
 		if (vararg){
 			Tptr t = Tptr(new Table());
 			stack[sp - 1].SetTable(t);
@@ -243,24 +240,21 @@ void SVM::execute(){
 				Error::GetInstance()->ProcessError("形参和实参数量不匹配");
 			}
 
-			stack[sp++].SetInt(ip + 1);
-			stack[sp++].SetInt(ncp);
-			stack[sp++].SetInt(cp);
-			stack[sp++].SetInt(offset);
-			stack[sp++].SetInt(ap);
-			stack[sp++].SetInt(fp);
-			stack[sp++].SetFunction(cl);
-			sp++; //variable parameters table
+			stack[sp + IP_ADDRESS].SetInt(ip + 1);
+			stack[sp + SP_ADDRESS].SetInt(ncp);
+			stack[sp + CP_ADDRESS].SetInt(cp);
+			stack[sp + OF_ADDRESS].SetInt(of);
+			stack[sp + AP_ADDRESS].SetInt(ap);
+			stack[sp + FP_ADDRESS].SetInt(fp);
+			stack[sp + CL_ADDRESS].SetFunction(cl);
+			stack[sp + TB_ADDRESS].SetNull(); //variable parameters table
+			sp += NUM_ADDRESS;
 
 			fp = nfp;
 			ap = nap;
-			offset = ap - fp;
+			of = ap - fp;
 			cp = ncp;
 
-			curCl->cp = cp;
-			curCl->of = offset;
-			curCl->ap = ap;
-			curCl->parent = cl;
 			if (vararg){
 				Tptr t = Tptr(new Table());
 				stack[sp - 1].SetTable(t);
@@ -281,14 +275,14 @@ void SVM::execute(){
 		Value& ret = stack[sp - 1];
 		int numRetVariable = ins.operand;
 		int base = cp + ap;
-		Tptr t       = stack[base + 7].GetTable();
-		Clptr ocl    = stack[base + 6].GetFunction();
-		int ofp      = stack[base + 5].GetInteger();
-		int oap      = stack[base + 4].GetInteger();
-		int ooffset  = stack[base + 3].GetInteger();
-		int ocp      = stack[base + 2].GetInteger();
-		int esp      = stack[base + 1].GetInteger();
-		int eip      = stack[base + 0].GetInteger();
+		Tptr t       = stack[base + TB_ADDRESS].GetTable();
+		Clptr ocl    = stack[base + CL_ADDRESS].GetFunction();
+		int ofp      = stack[base + FP_ADDRESS].GetInteger();
+		int oap      = stack[base + AP_ADDRESS].GetInteger();
+		int oof      = stack[base + OF_ADDRESS].GetInteger();
+		int ocp      = stack[base + CP_ADDRESS].GetInteger();
+		int esp      = stack[base + SP_ADDRESS].GetInteger();
+		int eip      = stack[base + IP_ADDRESS].GetInteger();
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 
@@ -318,7 +312,7 @@ void SVM::execute(){
 		cl     = ocl;
 		fp     = ofp;
 		ap     = oap;
-		offset = ooffset;
+		of     = oof;
 		cp     = ocp;
 		sp     = esp;
 		ip     = eip;
@@ -369,6 +363,7 @@ void SVM::execute(){
 			if (!operand) break;
 			int o = sp - 1 - operand;
 			Value v = stack[o];
+			//memcpy可以避免拷贝构造
 			memcpy(&stack[o], &stack[o + 1], sizeof(Value)*operand);
 			stack[sp - 1] = v;
 		}
@@ -715,13 +710,7 @@ Clptr SVM::createClosure(Clptr o){
 	for (auto it : cl->variables){
 		Value& v = f->cvs[it.first];
 		int idx = it.second;
-		if (isStack(idx)){
-			int o = cp + idx + ((idx >= fp + 3) ? offset : 0);
-			v = stack[o];
-		}
-		else{
-			v = global[decodeGlobalIndex(idx)];
-		}
+		v = *getAddress(Instruction(Opcode::NOP, idx));
 	}
 
 	return f;
@@ -755,6 +744,10 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 	if (closure){
 		Clptr p = cl;
 		string& operands = ins.operands;
+		int tcp = cp;
+		int tap = ap;
+		int tfp = fp;
+		int tof = of;
 		while (true){
 			if (p){
 				if (p->cvs.find(operands) != p->cvs.end()){
@@ -764,8 +757,8 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 				else if (p->variables.find(operands) != p->variables.end()){
 					int idx = p->variables[operands];
 					if (isStack(idx)){
-						int o = p->cp + idx;
-						if(p->of) o += (idx >= p->fp + 3) ? p->of : 0;
+						int o = tcp + idx;
+						if(tof) o += (idx >= tfp + 3) ? tof : 0;
 						ret = &stack[o];
 					}
 					else{
@@ -775,7 +768,15 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 					break;
 				}
 				else{
-					p = p->parent;
+					//不能使用parent这一变量来寻找上一级
+					//因为当碰到递归函数时会无限循环
+					//只能通过栈去寻找
+					int base = tcp + tap;
+					p   = stack[base + CL_ADDRESS].GetFunction();
+					tof = stack[base + OF_ADDRESS].GetInteger();
+					tfp = stack[base + FP_ADDRESS].GetInteger();
+					tap = stack[base + AP_ADDRESS].GetInteger();
+					tcp = stack[base + CP_ADDRESS].GetInteger();
 				}
 			}
 		}
@@ -783,7 +784,7 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 	else{
 		if (isStack(operand)){
 			int o = cp + operand;
-			if (offset) o += ((operand >= fp + 3) ? offset : 0);
+			if (of) o += ((operand >= fp + 3) ? of : 0);
 			ret = &stack[o];
 		}
 		else{

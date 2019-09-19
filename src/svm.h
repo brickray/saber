@@ -6,6 +6,17 @@
 
 SABER_NAMESPACE_BEGIN
 
+#define STACK_SIZE   4096
+#define IP_ADDRESS   0
+#define SP_ADDRESS   1
+#define CP_ADDRESS   2
+#define OF_ADDRESS   3
+#define AP_ADDRESS   4
+#define FP_ADDRESS   5 
+#define CL_ADDRESS   6
+#define TB_ADDRESS   7
+#define NUM_ADDRESS  8
+
 class SState;
 class SVM{
 public:
@@ -37,24 +48,23 @@ public:
 		int ip;
 		int sp;
 		int cp;
-		int offset;
+		int of;
 		int ap;
 		int fp;
 	};
 
 protected:
-#define STACK_SIZE 4096
 	vector<Instruction> code;
 	vector<Value> stack;
 	vector<Value> global;
-	vector<Coroutine*> co; //协程栈
+	vector<Coptr> co; //协程栈
 
 	/*call stack
 	 |  param  |    parameters
 	 |    ip   |
 	 |    sp   |
 	 |    cp   |
-	 |  offset |
+	 |    of   |
 	 |    ap   |    number of actual param
 	 |    fp   |    number of formal param
 	 | closure |
@@ -65,7 +75,7 @@ protected:
 	int ip; //代码计数器
 	int sp;	//栈顶指针
 	int cp; //函数栈指针
-	int offset;
+	int of;
 	int ap;
 	int fp;
 	Clptr cl;
@@ -92,19 +102,19 @@ public:
 	void PushNativeFunc(SFunc f);
 	void PushLightUData(int i);
 	void PushTable(Tptr t);
-	void PushCoroutine(Coroutine* co); //压入到全局栈
+	void PushCoroutine(Coptr co); //压入到全局栈
 	Value PopStack();
 
 	void Run();
 	void CallScript(int numParams);
 
 	SState* GetSState() const { return S; }
-	Register GetRegister() const { return{ ip, sp, cp, offset, ap, fp }; }
-	void SetRegister(Register r) { ip = r.ip; sp = r.sp; cp = r.cp; offset = r.offset; ap = r.ap; fp = r.fp; }
+	Register GetRegister() const { return{ ip, sp, cp, of, ap, fp }; }
+	void SetRegister(Register r) { ip = r.ip; sp = r.sp; cp = r.cp; of = r.of; ap = r.ap; fp = r.fp; }
 	void UpdateCodeSize() { codeSize = code.size(); }
 	//压入到辅助结构
-	void PushCo(Coroutine* c); 
-	Coroutine* PopCo(); 
+	void PushCo(Coptr c); 
+	Coptr PopCo(); 
 	int GetCoSize() const { return co.size(); }
 	string ShowCode();
 

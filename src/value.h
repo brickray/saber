@@ -35,8 +35,10 @@ enum class ECoroutineStatus{
 class Value;
 class Closure;
 struct Table;
+struct Coroutine;
 typedef shared_ptr<Closure> Clptr;
 typedef shared_ptr<Table> Tptr;
+typedef shared_ptr<Coroutine> Coptr;
 struct Coroutine{
 	ECoroutineStatus status;
 	Clptr cl;
@@ -49,20 +51,22 @@ struct SValue{
 		int        iValue;
 		float      fValue;
 		SFunc      sfunc;
-		Coroutine* co;
 	};
 	Tptr   t;
 	Clptr  cl;
+	Coptr  co;
 	string sValue;
 
 	SValue(){
 		t = nullptr;
 		cl = nullptr;
+		co = nullptr;
 	}
 
 	~SValue(){
 		t = nullptr;
 		cl = nullptr;
+		co = nullptr;
 	}
 };
 
@@ -99,7 +103,7 @@ public:
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; value.cl = nullptr; value.t = nullptr; }
 	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; value.t = nullptr; }
 	void SetTable(Tptr t) { type = EValueType::ETABLE; value.t = t; value.cl = nullptr; }
-	void SetCoroutine(Coroutine* co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; value.t = nullptr; }
+	void SetCoroutine(Coptr co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; value.t = nullptr; }
 	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; value.t = nullptr; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
@@ -120,7 +124,7 @@ public:
 	SFunc GetNativeFunction() const { return value.sfunc; }
 	int GetLightUData() const { return value.iValue; }
 	Tptr& GetTable() { return value.t; }
-	Coroutine* GetCoroutine() const { return value.co; }
+	Coptr& GetCoroutine() { return value.co; }
 
 	Value& operator=(Value& v){
 		type = v.type;
@@ -643,7 +647,7 @@ public:
 	void AddFunction(string key, Clptr cl) { Value v; v.SetFunction(cl); kv[key] = v; }
 	void AddNativeFunction(string key, SFunc f) { Value v; v.SetNativeFunction(f); kv[key] = v; }
 	void AddTable(string key, Tptr t) { Value v; v.SetTable(t); kv[key] = v; }
-	void AddCoroutine(string key, Coroutine* co) { Value v; v.SetCoroutine(co); kv[key] = v; }
+	void AddCoroutine(string key, Coptr co) { Value v; v.SetCoroutine(co); kv[key] = v; }
 	void AddValue(string key, Value& v) { kv[key] = v; }
 
 	Value GetValue(string key) {
@@ -687,12 +691,8 @@ struct Closure{
 	bool hascv;   //是否有非局部变量 
 	bool vararg;  //是否可变参
 	int entry;    //入口地址
-	int cp;
-	int of;
-	int ap;
 	int fp;       //形参数量
 
-	Clptr parent;
 	hash_map<string, int> variables; //在该函数体内定义的变量
 	hash_map<string, Value> cvs; //非局部变量
 	hash_set<Clptr> cls; //该函数内定义的函数

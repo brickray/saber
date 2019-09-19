@@ -29,7 +29,6 @@ public:
 		cl->vararg = false;
 		cl->entry = start;
 		cl->fp = numParams;
-		cl->parent = bc.cl;
 		func.SetFunction(cl);
 		int funcAddress = svm->AddGlobal(func);
 		SymbolInfo si = { func, funcAddress };
@@ -44,10 +43,10 @@ public:
 			if (name == "..."){
 				name = "args";
 				SymbolInfo si;
-				si.address = numParams + 7;
+				si.address = numParams + TB_ADDRESS;
 				local->SetSymbol(name, si);
 
-				cl->variables[name] = numParams + 7;
+				cl->variables[name] = si.address;
 				cl->vararg = true;
 			}
 			else{
@@ -62,7 +61,7 @@ public:
 		BlockCnt subBc;
 		subBc.cl = cl;
 		subBc.maxLevel = bc.maxLevel + 1;
-		int numSpace = 8;
+		int numSpace = NUM_ADDRESS;
 		subBc.variableIndex = numParams + numSpace;
 		for (int i = numParams + 1; i < children.size(); ++i){
 			children[i]->Compile(local, svm, subBc);

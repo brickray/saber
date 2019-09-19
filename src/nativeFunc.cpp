@@ -100,7 +100,7 @@ static int load(SVM* svm, int numParams){
 	shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
 	local->SetOutter(e);
 	BlockCnt bc;
-	bc.variableIndex = 8;
+	bc.variableIndex = NUM_ADDRESS;
 	S->GetParser()->Compile(local, S->GetSVM(), bc);
 	SVM::Instruction ret(Opcode::RET, 0);
 	SVM::Instruction last = svm->GetLastCode();
@@ -1399,12 +1399,12 @@ struct CallInfo{
 	int cp;
 	int ap;
 	int fp;
-	int offset;
+	int of;
 };
-static hash_map<Coroutine*, vector<CallInfo> > ccmap;
+static hash_map<Coptr, vector<CallInfo> > ccmap;
 
 void cocallback(SVM* svm){
-	Coroutine* co = svm->PopCo();
+	Coptr co = svm->PopCo();
 	co->status = ECoroutineStatus::EDEAD;
 	ccmap.erase(ccmap.find(co));
 }
@@ -1415,7 +1415,7 @@ static int cocreate(SVM* svm, int numParams){
 	checkFunction("coroutine.create", func);
 
 	int p = func.GetFunction()->entry;
-	Coroutine* co = new Coroutine();
+	Coptr co = Coptr(new Coroutine());
 	co->cl = func.GetFunction();
 	co->ip = p;
 	co->status = ECoroutineStatus::ESTART;
@@ -1432,7 +1432,7 @@ static int coresume(SVM* svm, int numParams){
 
 	checkCoroutine("coroutine.resume", p[0]);
 
-	Coroutine* co = p[0].GetCoroutine();
+	Coptr co = p[0].GetCoroutine();
 	svm->PushCo(co);
 
 	ECoroutineStatus status = co->status;
@@ -1452,7 +1452,7 @@ static int coresume(SVM* svm, int numParams){
 		co->ip = r.ip; 
 		int ap = numParams - 1;
 		int cp = r.sp;
-		int fp = (func.GetInteger() & 0x7f000000) >> 24;
+		int fp = co->cl->fp;
 		int offset = ap - fp;
 		ccmap[co].push_back({ cp, ap, fp, offset });
 		ap = r.ap;
@@ -1471,12 +1471,12 @@ static int coresume(SVM* svm, int numParams){
 
 		CallInfo ci = ccmap[co][ccmap[co].size() - 1];
 		ccmap[co].pop_back();
-		ccmap[co].push_back({ r.cp, r.ap, r.fp, r.offset });
+		ccmap[co].push_back({ r.cp, r.ap, r.fp, r.of });
 		SVM::Register restore;
 		restore.ip = co->ip;
 		restore.sp = r.sp;
 		restore.cp = ci.cp;
-		restore.offset = ci.offset;
+		restore.of = ci.of;
 		restore.fp = ci.fp;
 		restore.ap = ci.ap;
 		svm->SetRegister(restore);
@@ -1495,7 +1495,7 @@ static int coresume(SVM* svm, int numParams){
 static int coyield(SVM* svm, int numParams){
 	checkParamsNuml("coroutine.yield", numParams);
 	
-	Coroutine* co = svm->PopCo();
+	Coptr co = svm->PopCo();
 	if (!co) return 0;
 	co->status = ECoroutineStatus::ESUSPENDED;
 	SVM::Register r = svm->GetRegister();
@@ -1504,12 +1504,12 @@ static int coyield(SVM* svm, int numParams){
 	ccmap[co].pop_back();
 	int ip = r.ip;
 	int cp = r.cp;
-	int offset = r.offset;
+	int offset = r.of;
 	int ap = r.ap;
 	int fp = r.fp;
 	r.ip = co->ip;
 	r.cp = ci.cp;
-	r.offset = ci.offset;
+	r.of = ci.of;
 	r.fp = ci.fp;
 	r.ap = ci.ap;
 	svm->SetRegister(r);
@@ -1526,7 +1526,7 @@ static int costatus(SVM* svm, int numParams){
 	checkCoroutine("coroutine.status", v);
 
 	string ret;
-	Coroutine* co = v.GetCoroutine();
+	Coptr co = v.GetCoroutine();
 	ECoroutineStatus status = co->status;
 	switch(status){
 	case ECoroutineStatus::ESTART:
@@ -1546,16 +1546,6 @@ static int costatus(SVM* svm, int numParams){
 	svm->PushString(ret);
 
 	return 1;
-}
-
-static int cdestroy(SVM* svm, int numParams){
-	checkParamsNum("coroutine.destroy", numParams);
-	Value co = svm->PopStack();
-	checkCoroutine("coroutine.destroy", co);
-
-	delete co.GetCoroutine();
-
-	return 0;
 }
 
 //------------------------------func register-------------------
@@ -1760,7 +1750,6 @@ static RegisterFunction co[] = {
 	{ "resume", coresume },
 	{ "yield", coyield },
 	{ "status", costatus },
-	{ "destroy", cdestroy },
 	{ "", nullptr },
 };
 
