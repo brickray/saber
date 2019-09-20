@@ -79,8 +79,6 @@ public:
 			break;
 		}
 		}
-
-		bc.tailcall = false;
 	}
 };
 

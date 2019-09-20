@@ -175,7 +175,8 @@ public:
 			svm->AddCode(ins);
 		}
 
-		bc.tailcall = false;
+		bc.anyOperator = true;
+		bc.lasttail = false;
 	}
 
 	virtual string ToString() const{

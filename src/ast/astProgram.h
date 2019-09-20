@@ -8,6 +8,7 @@ SABER_NAMESPACE_BEGIN
 class AstProgram : public Astree{
 public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+		SVM::Instruction nop(Opcode::NOP);
 		SVM::Instruction reserve(Opcode::RESERVE);
 		int reserveAddress = svm->AddCode(reserve);
 
@@ -15,7 +16,12 @@ public:
 			children[i]->Compile(e, svm, bc);
 
 		reserve.operand = bc.variableIndex;
-		svm->SetCode(reserveAddress, reserve);
+		if (!reserve.operand){
+			svm->SetCode(reserveAddress, nop);
+		}
+		else{
+			svm->SetCode(reserveAddress, reserve);
+		}
 	}
 };
 

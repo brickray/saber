@@ -661,10 +661,8 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	while (true){
 		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
 		if (!matchStatement(statement)) break;
-		stat->AddChild(statement);
+		def->AddChild(statement);
 	}
-
-	def->AddChild(stat);
 	
 	if (!match("end")) return false;
 

@@ -13,8 +13,8 @@ SABER_NAMESPACE_BEGIN
 
 struct BlockCnt{
 	bool isloop;
-	bool tailcall;
-	bool ret;
+	bool lasttail;
+	bool anyOperator; //只在return语句中使用
 	int nearst;
 	int variableIndex;
 	int maxLevel;
@@ -26,8 +26,8 @@ struct BlockCnt{
 
 	BlockCnt(){
 		isloop = false;
-		tailcall = true;
-		ret = false;
+		lasttail = false;
+		anyOperator = false;
 		nearst = 0;
 		variableIndex = 0;
 		maxLevel = 0;

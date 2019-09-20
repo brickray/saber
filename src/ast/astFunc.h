@@ -24,12 +24,13 @@ public:
 			}
 		}
 		
-		bool tailcall = false;
+		bool lasttail = false;
+		bool anyOperator = bc.anyOperator;
 		SymbolInfo si = e->GetSymbol(funcName);
-		if (bc.ret && !fromFunc && children.size() == 2){
+		if (!fromFunc && children.size() == 2){
 			//尾递归不支持可变参
 			if (si.value.IsFunction() && si.value.GetFunction() == bc.cl && !bc.cl->vararg){
-				tailcall = bc.tailcall;
+				lasttail = true;
 			}
 		}
 		int func = si.address;
@@ -65,7 +66,8 @@ public:
 			bc.nearst = address;
 		}
 
-		bc.tailcall = tailcall;
+		bc.lasttail = lasttail;
+		bc.anyOperator = anyOperator;
 	}
 };
 

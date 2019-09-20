@@ -24,18 +24,27 @@ public:
 
 		BlockCnt subBc;
 		subBc.cl = bc.cl;
-		subBc.ret = true;
 		subBc.maxLevel = bc.maxLevel;
 		for (int i = 0; i < children.size(); ++i)
 			children[i]->Compile(e, svm, subBc);
 
-		if (maybeTailCall && subBc.tailcall && numRetParams != 0){
-			SVM::Instruction tail(Opcode::TAILCALL);
+		SVM::Instruction tail(Opcode::TAILCALL);
+		if (maybeTailCall && subBc.lasttail && !subBc.anyOperator){
+			//return语句后面接递归调用并且没有任何操作符
+			//则为尾递归
 			svm->SetCode(subBc.nearst, tail);
 		}
 
+		if (numRetParams == 0 && bc.lasttail){
+			//最近一次为递归调用，且接下来是return语句
+			//并且没有返回值，为尾递归
+			svm->SetCode(bc.nearst, tail);
+		}
+
+		bc.lasttail = false;
+
 		SVM::Instruction ret(Opcode::RET, numRetParams);
-		int rp = svm->AddCode(ret);
+		svm->AddCode(ret);
 	}
 };
 
