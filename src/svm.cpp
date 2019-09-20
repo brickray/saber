@@ -278,10 +278,17 @@ void SVM::execute(){
 		int ncp = sp - ap;
 		sp = ncp;
 
-		memcpy(&stack[cp], &stack[ncp], sizeof(Value)*ap);
-
+		//额,开始以为通过memcpy可以避免拷贝构造进行加速,
+		//后来仔细一想这造成了另外的问题,引用计数没法正常工作了
+		//因为智能指针正是通过拷贝构造对指针的引用次数进行操作的
+		//所以老老实实改回原版,额。。。 以下同理
+		//memcpy(&stack[cp], &stack[ncp], sizeof(Value)*ap);
+		for (int i = 0; i < ap; ++i){
+			stack[cp + i] = stack[ncp + i];
+		}
+	
 		ip = p;
-		break;
+		return;
 	}
 	case Opcode::RET:{
 		Value& ret = stack[sp - 1];
@@ -375,8 +382,11 @@ void SVM::execute(){
 			if (!operand) break;
 			int o = sp - 1 - operand;
 			Value v = stack[o];
-			//memcpy可以避免拷贝构造
-			memcpy(&stack[o], &stack[o + 1], sizeof(Value)*operand);
+			
+			//memcpy(&stack[o], &stack[o + 1], sizeof(Value)*operand);
+			for (int i = 0; i < operand; ++i){
+				stack[o + i] = stack[o + 1 + i];
+			}
 			stack[sp - 1] = v;
 		}
 		else{

@@ -64,9 +64,9 @@ struct SValue{
 	}
 
 	~SValue(){
-		t = nullptr;
-		cl = nullptr;
-		co = nullptr;
+		if(t) t = nullptr;
+		if(cl) cl = nullptr;
+		if(co) co = nullptr;
 	}
 };
 

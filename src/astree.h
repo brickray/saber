@@ -14,6 +14,7 @@ SABER_NAMESPACE_BEGIN
 struct BlockCnt{
 	bool isloop;
 	bool lasttail;
+	bool anytail;
 	bool anyOperator; //只在return语句中使用
 	int nearst;
 	int variableIndex;
@@ -27,6 +28,7 @@ struct BlockCnt{
 	BlockCnt(){
 		isloop = false;
 		lasttail = false;
+		anytail = false;
 		anyOperator = false;
 		nearst = 0;
 		variableIndex = 0;

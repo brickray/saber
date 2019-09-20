@@ -11,17 +11,18 @@ public:
 		SVM::Instruction nop(Opcode::NOP);
 		int loopAddress = svm->AddCode(nop);
 		svm->RemoveLastCode();
-		children[0]->Compile(e, svm, bc);
-
-		int end = 0;
-		SVM::Instruction jz(Opcode::JZ, end);
-		int jumpAddress = svm->AddCode(jz);
 
 		BlockCnt subBc;
 		subBc.isloop = true;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
+		children[0]->Compile(e, svm, subBc);
+
+		int end = 0;
+		SVM::Instruction jz(Opcode::JZ, end);
+		int jumpAddress = svm->AddCode(jz);
+
 		for (int i = 1; i < children.size(); ++i){
 			children[i]->Compile(e, svm, subBc);
 		}

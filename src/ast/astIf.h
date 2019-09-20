@@ -17,19 +17,6 @@ public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
 
-		children[0]->Compile(e, svm, bc);
-		
-		int next = 0;
-		SVM::Instruction jz(Opcode::JZ, next);
-		int jumpAddress = svm->AddCode(jz);
-		children[1]->Compile(e, svm, bc);
-		SVM::Instruction jump(Opcode::JUMP, 0);
-		int endAddress = svm->AddCode(jump);
-		next = svm->AddCode(nop);
-		svm->RemoveLastCode();
-		jz.operand = next;
-		svm->SetCode(jumpAddress, jz);
-
 		BlockCnt subBc;
 		subBc.isloop = bc.isloop;
 		subBc.bps = bc.bps;
@@ -37,6 +24,19 @@ public:
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
+		children[0]->Compile(e, svm, subBc);
+		
+		int next = 0;
+		SVM::Instruction jz(Opcode::JZ, next);
+		int jumpAddress = svm->AddCode(jz);
+		children[1]->Compile(e, svm, subBc);
+		SVM::Instruction jump(Opcode::JUMP, 0);
+		int endAddress = svm->AddCode(jump);
+		next = svm->AddCode(nop);
+		svm->RemoveLastCode();
+		jz.operand = next;
+		svm->SetCode(jumpAddress, jz);
+
 		int size = hasElseBlock ? children.size() - 1 : children.size();
 		for (int i = 2; i < size; ++i){
 			children[i]->Compile(e, svm, subBc);
