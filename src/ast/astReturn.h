@@ -35,7 +35,7 @@ public:
 			svm->SetCode(subBc.nearst, tail);
 		}
 
-		if (numRetParams == 0 && bc.lasttail && !bc.anytail){
+		if (numRetParams == 0 && bc.lasttail){
 			//最近一次为递归调用，且接下来是return语句
 			//并且没有返回值，为尾递归
 			svm->SetCode(bc.nearst, tail);

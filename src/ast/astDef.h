@@ -75,7 +75,7 @@ public:
 			svm->SetCode(reserveAddress, reserve);
 		}
 
-		if (subBc.lasttail && !subBc.anytail){
+		if (subBc.lasttail){
 			//函数末尾没return，且递归调用的情况为尾递归
 			SVM::Instruction tail(Opcode::TAILCALL);
 			svm->SetCode(subBc.nearst, tail);
