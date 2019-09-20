@@ -62,13 +62,13 @@ void SVM::PushBool(bool b){
 	PushStack(v);
 }
 
-void SVM::PushInt(int i){
+void SVM::PushInt(Integer i){
 	Value v;
 	v.SetInt(i);
 	PushStack(v);
 }
 
-void SVM::PushFloat(float f){
+void SVM::PushFloat(Float f){
 	Value v;
 	v.SetFloat(f);
 	PushStack(v);
@@ -92,7 +92,7 @@ void SVM::PushNativeFunc(SFunc f){
 	PushStack(v);
 }
 
-void SVM::PushLightUData(int i){
+void SVM::PushLightUData(Integer i){
 	Value v;
 	v.SetLightUData(i);
 	PushStack(v);
@@ -296,12 +296,12 @@ void SVM::execute(){
 		int base = cp + ap;
 		Tptr t       = stack[base + TB_ADDRESS].GetTable();
 		Clptr ocl    = stack[base + CL_ADDRESS].GetFunction();
-		int ofp      = stack[base + FP_ADDRESS].GetInteger();
-		int oap      = stack[base + AP_ADDRESS].GetInteger();
-		int oof      = stack[base + OF_ADDRESS].GetInteger();
-		int ocp      = stack[base + CP_ADDRESS].GetInteger();
-		int esp      = stack[base + SP_ADDRESS].GetInteger();
-		int eip      = stack[base + IP_ADDRESS].GetInteger();
+		int ofp = stack[base + FP_ADDRESS].GetInteger();
+		int oap = stack[base + AP_ADDRESS].GetInteger();
+		int oof = stack[base + OF_ADDRESS].GetInteger();
+		int ocp = stack[base + CP_ADDRESS].GetInteger();
+		int esp = stack[base + SP_ADDRESS].GetInteger();
+		int eip = stack[base + IP_ADDRESS].GetInteger();
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 

@@ -95,12 +95,12 @@ public:
 	void SetStack(int i, Value& v);
 	void PushStack(Value& v);
 	void PushBool(bool b);
-	void PushInt(int i);
-	void PushFloat(float f);
+	void PushInt(Integer i);
+	void PushFloat(Float f);
 	void PushString(string s);
 	void PushFunc(Clptr cl);
 	void PushNativeFunc(SFunc f);
-	void PushLightUData(int i);
+	void PushLightUData(Integer i);
 	void PushTable(Tptr t);
 	void PushCoroutine(Coptr co); //压入到全局栈
 	Value PopStack();

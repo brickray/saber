@@ -54,14 +54,14 @@ static int uniformInt(SVM* svm, int numParams){
 		Error::GetInstance()->ProcessError("uniformInt只接受0个或2个参数");
 		svm->PushBool(false);
 	}
-	int s = 0;
-	int e = 1;
+	Integer s = 0;
+	Integer e = 1;
 	if (numParams == 2){
 		e = svm->PopStack().GetInteger();
 		s = svm->PopStack().GetInteger();
 	}
 
-	float r = float(rand()) / RAND_MAX;
+	Float r = Float(rand()) / RAND_MAX;
 	svm->PushInt((e - s)*r + s);
 
 	return 1;
@@ -72,14 +72,14 @@ static int uniformFloat(SVM* svm, int numParams){
 		Error::GetInstance()->ProcessError("uniformFloat只接受0个或2个参数");
 		svm->PushBool(false);
 	}
-	int s = 0;
-	int e = 1;
+	Integer s = 0;
+	Integer e = 1;
 	if (numParams == 2){
 		e = svm->PopStack().GetInteger();
 		s = svm->PopStack().GetInteger();
 	}
 
-	float r = float(rand()) / RAND_MAX;
+	Float r = Float(rand()) / RAND_MAX;
 	svm->PushFloat((e - s)*r + s);
 
 	return 1;
@@ -126,7 +126,7 @@ static int reverseBit(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkInteger("reverseBit", v);
 
-	int n = v.GetInteger();
+	Integer n = v.GetInteger();
 	n = (n << 16) | (n >> 16);
 	n = ((n & 0x00ff00ff) << 8) | ((n & 0xff00ff00) >> 8);
 	n = ((n & 0x0f0f0f0f) << 4) | ((n & 0xf0f0f0f0) >> 4);
@@ -153,7 +153,7 @@ static int toint(SVM* svm, int numParams){
 		svm->PushStack(v);
 	}
 	else if (v.IsFloat()){
-		float f = v.GetFloat();
+		Float f = v.GetFloat();
 		svm->PushInt(f);
 	}
 	else{
@@ -176,12 +176,10 @@ static int tostring(SVM* svm, int numParams){
 		else svm->PushString("false");
 	}
 	if (v.IsInteger()){
-		int i = v.GetInteger();
-		svm->PushString(to_string(i));
+		svm->PushString(to_string(v.GetInteger()));
 	}
 	else if (v.IsFloat()){
-		float f = v.GetFloat();
-		svm->PushString(to_string(f));
+		svm->PushString(to_string(v.GetFloat()));
 	}
 	else{
 		svm->PushStack(v);
@@ -312,7 +310,7 @@ static int sin(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.sin", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = sinf(DegreeToRadians(v.GetFloat()));
 	else if (v.IsInteger()) ret = sinf(DegreeToRadians(v.GetInteger()));
 
@@ -326,7 +324,7 @@ static int asin(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.asin", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = asinf(v.GetFloat());
 	else if (v.IsInteger()) ret = asinf(v.GetInteger());
 
@@ -340,7 +338,7 @@ static int cos(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.cos", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = cosf(DegreeToRadians(v.GetFloat()));
 	else if (v.IsInteger()) ret = cosf(DegreeToRadians(v.GetInteger()));
 
@@ -354,7 +352,7 @@ static int acos(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.acos", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = acosf(v.GetFloat());
 	else if (v.IsInteger()) ret = acosf(v.GetInteger());
 
@@ -368,7 +366,7 @@ static int tan(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.tan", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = tanf(DegreeToRadians(v.GetFloat()));
 	else if (v.IsInteger()) ret = tanf(DegreeToRadians(v.GetInteger()));
 
@@ -382,7 +380,7 @@ static int atan(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.atan", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = atanf(v.GetFloat());
 	else if (v.IsInteger()) ret = atanf(v.GetInteger());
 
@@ -396,7 +394,7 @@ static int radians(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.radians", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = DegreeToRadians(v.GetFloat());
 	else if (v.IsInteger()) ret = DegreeToRadians(v.GetInteger());
 
@@ -410,7 +408,7 @@ static int degree(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.degree", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = RadiansToDegree(v.GetFloat());
 	else if (v.IsInteger()) ret = RadiansToDegree(v.GetInteger());
 
@@ -424,7 +422,7 @@ static int abs(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.abs", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = fabsf(v.GetFloat());
 	else if (v.IsInteger()) ret = fabsf(v.GetInteger());
 
@@ -438,7 +436,7 @@ static int log(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.log", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = logf(v.GetFloat());
 	else if (v.IsInteger()) ret = logf(v.GetInteger());
 
@@ -452,8 +450,8 @@ static int log2(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.log2", v);
 
-	static float lg2 = logf(2);
-	float ret;
+	static Float lg2 = logf(2);
+	Float ret;
 	if (v.IsFloat()) ret = logf(v.GetFloat()) / lg2;
 	else if (v.IsInteger()) ret = logf(v.GetInteger()) / lg2;
 
@@ -467,8 +465,8 @@ static int log10(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.log10", v);
 
-	static float lg10 = logf(10);
-	float ret;
+	static Float lg10 = logf(10);
+	Float ret;
 	if (v.IsFloat()) ret = logf(v.GetFloat()) / lg10;
 	else if (v.IsInteger()) ret = logf(v.GetInteger()) / lg10;
 
@@ -482,7 +480,7 @@ static int exp(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.exp", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = expf(v.GetFloat());
 	else if (v.IsInteger()) ret = expf(v.GetInteger());
 
@@ -496,7 +494,7 @@ static int sqrt(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.sqrt", v);
 
-	float ret;
+	Float ret;
 	if (v.IsFloat()) ret = sqrtf(v.GetFloat());
 	else if (v.IsInteger()) ret = sqrtf(v.GetInteger());
 
@@ -512,13 +510,13 @@ static int pow(SVM* svm, int numParams){
 	checkNumber("math.pow", base);
 	checkNumber("math.pow", exponent, 2);
 
-	float b = 1, e = 1;
+	Float b = 1, e = 1;
 	if (base.IsFloat()) b = base.GetFloat();
 	else if (base.IsInteger()) b = base.GetInteger();
 	if (exponent.IsFloat()) e = exponent.GetFloat();
 	else if (exponent.IsInteger()) e = exponent.GetInteger();
 
-	float ret = powf(b, e);
+	Float ret = powf(b, e);
 	svm->PushFloat(ret);
 
 	return 1;
@@ -533,7 +531,7 @@ static int floor(SVM* svm, int numParams){
 		svm->PushStack(n);
 	}
 	else{
-		float f = n.GetFloat();
+		Float f = n.GetFloat();
 		f = floorf(f);
 		n.SetFloat(f);
 		svm->PushStack(n);
@@ -551,7 +549,7 @@ static int ceil(SVM* svm, int numParams){
 		svm->PushStack(n);
 	}
 	else{
-		float f = n.GetFloat();
+		Float f = n.GetFloat();
 		f = ceilf(f);
 		n.SetFloat(f);
 		svm->PushStack(n);
@@ -607,7 +605,7 @@ static int getclock(SVM* svm, int numParams){
 	checkParamsNum("os.getclock", numParams, 0);
 	
 	clock_t t = clock();
-	float c = float(t) / CLOCKS_PER_SEC;
+	Float c = Float(t) / CLOCKS_PER_SEC;
 
 	svm->PushFloat(c);
 
@@ -627,7 +625,7 @@ static int osleep(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkInteger("os.sleep", v);
 
-	int t = v.GetInteger();
+	Integer t = v.GetInteger();
 #if WIN32
 	Sleep(t);
 #endif
@@ -655,9 +653,9 @@ static int substr(SVM* svm, int numParams){
 	checkInteger("string.substr", startV, 2);
 	checkInteger("string.substr", endV, 3);
 
-	int start = startV.GetInteger();
-	int end = endV.GetInteger();
-	int length = end - start + 1;
+	Integer start = startV.GetInteger();
+	Integer end = endV.GetInteger();
+	Integer length = end - start + 1;
 	string str = strV.GetString();
 	svm->PushString(str.substr(start, length));
 
@@ -688,7 +686,7 @@ static int findfirst(SVM* svm, int numParams){
 
 	string str = strV.GetString();
 	string find = findV.GetString();
-	int start = 0;
+	Integer start = 0;
 	if (numParams == 3) start = startV.GetInteger();
 
 	svm->PushInt(str.find_first_of(find, start));
@@ -720,7 +718,7 @@ static int findlast(SVM* svm, int numParams){
 
 	string str = strV.GetString();
 	string find = findV.GetString();
-	int start = str.length();
+	Integer start = str.length();
 	if (numParams == 3) start = startV.GetInteger();
 
 	svm->PushInt(str.find_last_of(find, start));
@@ -752,7 +750,7 @@ static int findsub(SVM* svm, int numParams){
 
 	string str = strV.GetString();
 	string find = findV.GetString();
-	int start = 0;
+	Integer start = 0;
 	if (numParams == 3) start = startV.GetInteger();
 
 	svm->PushInt(str.find(find, start));
@@ -771,7 +769,7 @@ static int insert(SVM* svm, int numParams){
 
 	string str = strV.GetString();
 	string i = insertV.GetString();
-	int p0 = pV.GetInteger();
+	Integer p0 = pV.GetInteger();
 	
 	svm->PushString(str.insert(p0, i));
 
@@ -804,7 +802,7 @@ static int at(SVM* svm, int numParams){
 	checkInteger("string.at", p, 2);
 
 	string str = strV.GetString();
-	int p0 = p.GetInteger();
+	Integer p0 = p.GetInteger();
 	if (p0 >= str.length()){
 		Error::GetInstance()->ProcessError("索引[%d]需小于字符串长度[%d]", p0, str.length());
 	}
@@ -867,7 +865,7 @@ static int format(SVM* svm, int numParams){
 					Error::GetInstance()->ProcessError("格式化选项[%%c]需要integer类型的参数");
 				}
 
-				char cc = v.GetInteger();
+				char cc = char(v.GetInteger());
 				ret += cc;
 				break;
 			}
@@ -940,7 +938,7 @@ static int format(SVM* svm, int numParams){
 					Error::GetInstance()->ProcessError("格式化选项[%%e]需要number类型的参数");
 				}
 
-				float value;
+				Float value;
 				if (v.IsInteger()) value = v.GetInteger();
 				else value = v.GetFloat();
 				char buf[256] = { 0 };
@@ -970,7 +968,7 @@ static int format(SVM* svm, int numParams){
 					Error::GetInstance()->ProcessError("格式化选项[%%f]需要number类型的参数");
 				}
 
-				float value;
+				Float value;
 				if (v.IsInteger()) value = v.GetInteger();
 				else value = v.GetFloat();
 
@@ -1227,12 +1225,12 @@ static int write(SVM* svm, int numParams){
 		fwrite(&b, sizeof(bool), 1, f);
 	}
 	else if (data.IsInteger()){
-		int i = data.GetInteger();
-		fwrite(&i, sizeof(int), 1, f);
+		Integer i = data.GetInteger();
+		fwrite(&i, sizeof(Integer), 1, f);
 	}
 	else if (data.IsFloat()){
-		float fl = data.GetFloat();
-		fwrite(&fl, sizeof(float), 1, f);
+		Float fl = data.GetFloat();
+		fwrite(&fl, sizeof(Float), 1, f);
 	}
 	else if (data.IsString()){
 		string s = data.GetString(); 
@@ -1556,11 +1554,11 @@ void registerConstant(shared_ptr<Environment>& e, shared_ptr<SVM>& svm){
 	int idx = svm->AddGlobal(table);
 	SymbolInfo si = { table, idx };
 	e->SetSymbol("constant", si);
-	t->AddInt("INT_MAX", 2147483647);
-	t->AddInt("INT_MIN", (-2147483647 - 1));
-	t->AddFloat("INFINITY", (1e+300)*(1e+300));
-	t->AddFloat("PI", 3.14159265358f);
-	t->AddFloat("E", 2.718281828459f);
+	t->AddInt("INT_MAX", SABER_MAX_INTEGER);
+	t->AddInt("INT_MIN", SABER_MIN_INTEGER);
+	t->AddFloat("INFINITY", SABER_INFINITY);
+	t->AddFloat("PI", PI);
+	t->AddFloat("E", E);
 }
 
 static RegisterFunction basic[] = {

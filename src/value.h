@@ -48,8 +48,8 @@ struct Coroutine{
 struct SValue{
 	union{
 		bool       bValue;
-		int        iValue;
-		float      fValue;
+		Integer        iValue;
+		Float      fValue;
 		SFunc      sfunc;
 	};
 	Tptr   t;
@@ -96,12 +96,12 @@ public:
 		return ret;
 	}
 	void SetBool(bool b) { type = EValueType::EBOOLEAN; value.bValue = b; value.cl = nullptr; value.t = nullptr; }
-	void SetInt(int i) { type = EValueType::EINTEGER; value.iValue = i;  value.cl = nullptr; value.t = nullptr; }
-	void SetFloat(float f) { type = EValueType::EFLOAT; value.fValue = f; value.cl = nullptr; value.t = nullptr; }
+	void SetInt(Integer i) { type = EValueType::EINTEGER; value.iValue = i;  value.cl = nullptr; value.t = nullptr; }
+	void SetFloat(Float f) { type = EValueType::EFLOAT; value.fValue = f; value.cl = nullptr; value.t = nullptr; }
 	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; value.cl = nullptr; value.t = nullptr; }
 	void SetFunction(Clptr cl) { type = EValueType::EFUNC; value.cl = cl; value.t = nullptr; }
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; value.cl = nullptr; value.t = nullptr; }
-	void SetLightUData(int i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; value.t = nullptr; }
+	void SetLightUData(Integer i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; value.t = nullptr; }
 	void SetTable(Tptr t) { type = EValueType::ETABLE; value.t = t; value.cl = nullptr; }
 	void SetCoroutine(Coptr co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; value.t = nullptr; }
 	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; value.t = nullptr; }
@@ -117,12 +117,12 @@ public:
 	bool IsCoroutine() const { return type == EValueType::ECOROUTINE; }
 	bool IsNull() const { return type == EValueType::ENULL; }
 	bool GetBoolean() const { return value.bValue; }
-	int GetInteger() const { return value.iValue; }
-	float GetFloat() const { return value.fValue; }
+	Integer GetInteger() const { return value.iValue; }
+	Float GetFloat() const { return value.fValue; }
 	string GetString() const { return value.sValue; }
 	Clptr& GetFunction() { return value.cl; }
 	SFunc GetNativeFunction() const { return value.sfunc; }
-	int GetLightUData() const { return value.iValue; }
+	Integer GetLightUData() const { return value.iValue; }
 	Tptr& GetTable() { return value.t; }
 	Coptr& GetCoroutine() { return value.co; }
 
@@ -188,7 +188,7 @@ public:
 			return va;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -216,7 +216,7 @@ public:
 			return va;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -244,7 +244,7 @@ public:
 			return va;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -272,7 +272,7 @@ public:
 			return va;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -316,7 +316,7 @@ public:
 			return *this;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -343,7 +343,7 @@ public:
 			return *this;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -370,7 +370,7 @@ public:
 			return *this;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -397,7 +397,7 @@ public:
 			return *this;
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -425,7 +425,7 @@ public:
 			va.SetBool(false);
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -443,7 +443,7 @@ public:
 			va.SetBool(false);
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -461,7 +461,7 @@ public:
 			va.SetBool(false);
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -479,7 +479,7 @@ public:
 			va.SetBool(false);
 		}
 		else{
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -493,7 +493,7 @@ public:
 	Value operator==(Value& v){
 		Value va;
 		if (IsNumber() && v.IsNumber()){
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -535,7 +535,7 @@ public:
 	Value operator!=(Value& v){
 		Value va;
 		if (IsNumber() && v.IsNumber()){
-			float a, b;
+			Float a, b;
 			if (IsInteger()) a = value.iValue;
 			else a = value.fValue;
 			if (v.IsInteger()) b = v.value.iValue;
@@ -640,10 +640,10 @@ private:
 
 public:
 	void AddBool(string key, bool b) { Value v; v.SetBool(b); kv[key] = v; }
-	void AddInt(string key, int i) { Value v; v.SetInt(i); kv[key] = v; }
-	void AddFloat(string key, float f) { Value v; v.SetFloat(f); kv[key] = v; }
+	void AddInt(string key, Integer i) { Value v; v.SetInt(i); kv[key] = v; }
+	void AddFloat(string key, Float f) { Value v; v.SetFloat(f); kv[key] = v; }
 	void AddString(string key, string s) { Value v; v.SetString(s); kv[key] = v; }
-	void AddLightUData(string key, void* p) { Value v; v.SetLightUData(int(p)); kv[key] = v; }
+	void AddLightUData(string key, void* p) { Value v; v.SetLightUData(Integer(p)); kv[key] = v; }
 	void AddFunction(string key, Clptr cl) { Value v; v.SetFunction(cl); kv[key] = v; }
 	void AddNativeFunction(string key, SFunc f) { Value v; v.SetNativeFunction(f); kv[key] = v; }
 	void AddTable(string key, Tptr t) { Value v; v.SetTable(t); kv[key] = v; }
