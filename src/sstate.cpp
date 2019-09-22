@@ -13,6 +13,7 @@ void SState::Init(){
 }
 
 void SState::Compile(string code){
+	InitSLib(code);
 	lexer->Parse(code);
 	parse->Parse(*lexer);
 	BlockCnt bc;

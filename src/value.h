@@ -48,7 +48,7 @@ struct Coroutine{
 struct SValue{
 	union{
 		bool       bValue;
-		Integer        iValue;
+		Integer    iValue;
 		Float      fValue;
 		SFunc      sfunc;
 	};
@@ -637,8 +637,22 @@ typedef hash_map<string, Value>::iterator TableIteration;
 struct Table{
 private:
 	hash_map<string, Value> kv;
+	TableIteration ti;
+	bool iterFirst;
+	Tptr iterTable;
 
 public:
+	Table(){ iterFirst = true; }
+	~Table() { iterTable = nullptr; }
+
+	Table& operator=(Table& t){
+		kv = t.kv;
+		//³õÊ¼»¯µü´ú
+		iterFirst = true;
+
+		return *this;
+	}
+
 	void AddBool(string key, bool b) { Value v; v.SetBool(b); kv[key] = v; }
 	void AddInt(string key, Integer i) { Value v; v.SetInt(i); kv[key] = v; }
 	void AddFloat(string key, Float f) { Value v; v.SetFloat(f); kv[key] = v; }
@@ -677,12 +691,33 @@ public:
 		return kv.size();
 	}
 
+	bool Foreach(){
+		if (!iterTable) iterTable = Tptr(new Table());
+		if (iterFirst){
+			ti = kv.begin();
+			iterFirst = false;
+		}
+		else ++ti;
+		if (ti == kv.end()){
+			iterFirst = true;
+			return false;
+		}
+
+		iterTable->AddString("0", ti->first);
+		iterTable->AddValue("1", ti->second);
+		return true;
+	}
+
 	TableIteration Begin(){
 		return kv.begin();
 	}
 
 	TableIteration End(){
 		return kv.end();
+	}
+
+	Tptr GetIterTable(){
+		return iterTable;
 	}
 };
 

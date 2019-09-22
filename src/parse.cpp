@@ -93,14 +93,14 @@ bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
 	if (match("return", &tok)){
 		astReturn->SetToken(tok);
 		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-		if (matchExpr(stat)){
+		if (matchClosure(stat)){
+			astReturn->AddChild(stat);
+			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
+		}
+		else if (matchExpr(stat)){
 			astReturn->AddChild(stat);
 			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
 			dynamic_cast<AstReturn*>(astReturn.get())->SetMaybeTailCall();
-		}
-		else if (matchClosure(stat)){
-			astReturn->AddChild(stat);
-			dynamic_cast<AstReturn*>(astReturn.get())->SetNumRetParams(1);
 		}
 		else if (matchTable(stat)){
 			astReturn->AddChild(stat);
@@ -555,7 +555,7 @@ bool SyntaxParse::matchWhile(shared_ptr<Astree>& astree){
 	return true;
 }
 
-bool SyntaxParse::matchFor(shared_ptr<Astree>& astree){
+bool SyntaxParse::matchForNormal(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> astFor = shared_ptr<Astree>(new AstFor());
 	Token* tok;
 	if (!match("for", &tok)) return false;
@@ -580,10 +580,66 @@ bool SyntaxParse::matchFor(shared_ptr<Astree>& astree){
 			return false;
 		}
 	}
-	else if (match("in")){
-		//generic
-		
+
+	if (!match("do")){
+		Error::GetInstance()->ProcessError("ÐÐÊý:%d, forÓï¾äÓï·¨´íÎó,È±ÉÙ¹Ø¼ü×Ö[do]", tok->GetLineNumber());
+		return false;
 	}
+
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	while (true){
+		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
+		if (!matchStatement(statement)) break;
+		stat->AddChild(statement);
+	}
+	astFor->AddChild(stat);
+
+	if (!match("end")) return false;
+
+	return true;
+}
+
+bool SyntaxParse::matchForGeneric(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> astFor = shared_ptr<Astree>(new AstFor());
+	int p = lexer.GetTkptr();
+	Token* tok;
+	if (!match("for", &tok)) return false;
+	astFor->SetToken(tok);
+	if (match("local")){
+		shared_ptr<Astree> l = shared_ptr<Astree>(new AstLocal());
+		shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+		if (!matchIdentifier(name)){
+			lexer.SetTkptr(p);
+			return false;
+		}
+		l->AddChild(name);
+		astFor->AddChild(l);
+	}
+	else{
+		shared_ptr<Astree> g = shared_ptr<Astree>(new AstGlobal());
+		shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+		if (!matchIdentifier(name)){
+			lexer.SetTkptr(p);
+			return false;
+		}
+		g->AddChild(name);
+		astFor->AddChild(g);
+	}
+
+	if (!match("in")){
+		lexer.SetTkptr(p);
+		return false;
+	}
+
+	(dynamic_cast<AstFor*>(astFor.get()))->SetGeneric();
+	astree->AddChild(astFor);
+
+	shared_ptr<Astree> func = shared_ptr<Astree>(new AstStatement());
+	if (!matchFunc(func)){
+		Error::GetInstance()->ProcessError("ÐÐÊý:%d, forÓï¾äÓï·¨´íÎó,È±ÉÙµü´úÆ÷", tok->GetLineNumber());
+		return false;
+	}
+	astFor->AddChild(func);
 
 	if (!match("do")){
 		Error::GetInstance()->ProcessError("ÐÐÊý:%d, forÓï¾äÓï·¨´íÎó,È±ÉÙ¹Ø¼ü×Ö[do]", tok->GetLineNumber());
@@ -816,7 +872,8 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 
 bool SyntaxParse::matchTableInit(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
-	if (!matchString(name)) return false;
+	if (!matchString(name) && !matchIdentifier(name)) return false;
+	name->SetTable(true);
 	Token* tok;
 	if (match("=", &tok)){
 		shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
@@ -884,7 +941,9 @@ bool SyntaxParse::matchStatement(shared_ptr<Astree>& astree){
 
 	if (matchWhile(astree)) return true;
 
-	if (matchFor(astree)) return true;
+	if (matchForGeneric(astree)) return true;
+
+	if (matchForNormal(astree)) return true;
 
 	if (matchDef(astree)) return true;
 

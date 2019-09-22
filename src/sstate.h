@@ -5,6 +5,7 @@
 #include "parse.h"
 #include "svm.h"
 #include "nativeFunc.h"
+#include "slib.h"
 
 SABER_NAMESPACE_BEGIN
 

@@ -296,12 +296,12 @@ void SVM::execute(){
 		int base = cp + ap;
 		Tptr t       = stack[base + TB_ADDRESS].GetTable();
 		Clptr ocl    = stack[base + CL_ADDRESS].GetFunction();
-		int ofp = stack[base + FP_ADDRESS].GetInteger();
-		int oap = stack[base + AP_ADDRESS].GetInteger();
-		int oof = stack[base + OF_ADDRESS].GetInteger();
-		int ocp = stack[base + CP_ADDRESS].GetInteger();
-		int esp = stack[base + SP_ADDRESS].GetInteger();
-		int eip = stack[base + IP_ADDRESS].GetInteger();
+		int ofp		 = stack[base + FP_ADDRESS].GetInteger();
+		int oap		 = stack[base + AP_ADDRESS].GetInteger();
+		int oof		 = stack[base + OF_ADDRESS].GetInteger();
+		int ocp		 = stack[base + CP_ADDRESS].GetInteger();
+		int esp		 = stack[base + SP_ADDRESS].GetInteger();
+		int eip		 = stack[base + IP_ADDRESS].GetInteger();
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 

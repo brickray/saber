@@ -121,6 +121,21 @@ static int load(SVM* svm, int numParams){
 	return 1;
 }
 
+static int next(SVM* svm, int numParams){
+	checkParamsNum("next", numParams);
+	Value v = svm->PopStack();
+	if (!v.IsTable()){
+		svm->PushBool(false);
+		return 1;
+	}
+
+	Tptr table = v.GetTable();
+	if (table->Foreach()) svm->PushTable(table->GetIterTable());
+	else svm->PushBool(false);
+
+	return 1;
+}
+
 static int reverseBit(SVM* svm, int numParams){
 	checkParamsNum("reverseBit", numParams);
 	Value v = svm->PopStack();
@@ -1568,6 +1583,7 @@ static RegisterFunction basic[] = {
 	{ "uniformInt", uniformInt },
 	{ "uniformFloat", uniformFloat },
 	{ "load", load },
+	{ "next", next },
 	{ "reverseBit", reverseBit },
 	{ "toint", toint },
 	{ "tostring", tostring },

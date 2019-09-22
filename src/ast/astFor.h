@@ -6,35 +6,85 @@
 SABER_NAMESPACE_BEGIN
 
 class AstFor : public Astree{
+private:
+	bool generic = false;
 public:
+	void SetGeneric() { generic = true; }
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
-		children[0]->Compile(e, svm, bc);
-
-		int loopAddress = svm->AddCode(nop);
-		svm->RemoveLastCode();
 
 		BlockCnt subBc;
 		subBc.isloop = true;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
-		children[1]->Compile(e, svm, bc);
-		SVM::Instruction jz(Opcode::JZ);
-		int jumpAddress = svm->AddCode(jz);
+		int end;
+		int continueAddress;
+		if (!generic){
+			children[0]->Compile(e, svm, subBc);
 
-		children[children.size() - 1]->Compile(e, svm, subBc);
+			int loopAddress = svm->AddCode(nop);
+			svm->RemoveLastCode();
 
-		int continueAddress = svm->AddCode(nop);
-		svm->RemoveLastCode();
-		if (children.size() == 4){//has step component
-			children[2]->Compile(e, svm, subBc);
+			children[1]->Compile(e, svm, subBc);
+			SVM::Instruction jz(Opcode::JZ);
+			int jumpAddress = svm->AddCode(jz);
+
+			children[children.size() - 1]->Compile(e, svm, subBc);
+
+			continueAddress = svm->AddCode(nop);
+			svm->RemoveLastCode();
+			if (children.size() == 4){//has step component
+				children[2]->Compile(e, svm, subBc);
+			}
+
+			SVM::Instruction jump(Opcode::JUMP, loopAddress);
+			end = svm->AddCode(jump);
+			jz.operand = end + 1;
+			svm->SetCode(jumpAddress, jz);
 		}
+		else{
+			int numChilds = GetNumChildren();
+			children[numChilds - 2]->Compile(e, svm, subBc);
+			int idx = svm->AddGlobal(Value());
+			SVM::Instruction mov(Opcode::MOVE, idx);
+			svm->AddCode(mov);
 
-		SVM::Instruction jump(Opcode::JUMP, loopAddress);
-		int end = svm->AddCode(jump);
-		jz.operand = end + 1;
-		svm->SetCode(jumpAddress, jz);
+			int loopAddress = svm->AddCode(nop);
+			continueAddress = loopAddress;	
+			svm->RemoveLastCode();
+
+			SVM::Instruction push(Opcode::PUSH, idx);
+			SVM::Instruction call(Opcode::CALL, 0);
+			svm->AddCode(push);
+			svm->AddCode(call);
+
+			int nearst; 
+			string nearstS;
+			for (int i = 0; i < numChilds - 2; ++i){
+				children[i]->Compile(e, svm, subBc);
+				mov.operand = subBc.nearst;
+				mov.operands = subBc.nearstS;
+				svm->AddCode(mov);
+				if (i == 0){
+					nearst = subBc.nearst;
+					nearstS = subBc.nearstS;
+				}
+			}
+
+			push.operand = nearst;
+			push.operands = nearstS;
+			svm->AddCode(push);
+			SVM::Instruction jz(Opcode::JZ);
+			int jumpAddress = svm->AddCode(jz);
+
+			children[numChilds - 1]->Compile(e, svm, subBc);
+
+			SVM::Instruction jump(Opcode::JUMP, loopAddress);
+			end = svm->AddCode(jump);
+			jz.operand = end + 1;
+			svm->SetCode(jumpAddress, jz);
+		}
 
 		SVM::Instruction jumpb(Opcode::JUMP, end + 1);
 		for (int i = 0; i < subBc.bps.size(); ++i){
