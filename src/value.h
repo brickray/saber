@@ -598,6 +598,18 @@ public:
 		return ret;
 	}
 
+	Value operator!(){
+		bool t = false;
+		if (IsNull()) t = true;
+		else if (IsBoolean()) t = !GetBoolean();
+		else if (IsInteger()) t = !GetInteger();
+		else if (IsFloat()) t = !GetFloat();
+
+		Value ret;
+		ret.SetBool(t);
+		return ret;
+	}
+
 	string ToString(){
 		string ret;
 		if (IsBoolean()){

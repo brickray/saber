@@ -309,14 +309,7 @@ void SVM::execute(){
 		//只有返回值为table类型时,函数内定义的函数才创建闭包，因为只有这个时候闭包才有意义
 		if (numRetVariable && ret.IsTable()){
 			Tptr table = ret.GetTable();
-			TableIteration it = table->Begin();
-			for (; it != table->End(); ++it){
-				if (it->second.IsFunction()){
-					Clptr r = it->second.GetFunction();
-					if (r->hascv && cl->cls.find(r) != cl->cls.end())
-						it->second.SetFunction(createClosure(r));
-				}
-			}
+			createClosure(table);
 		}
 
 		//返回值为function类型时，进行闭包设置
@@ -711,6 +704,16 @@ void SVM::execute(){
 
 		break;
 	}
+	case Opcode::NOT:{
+		Value& v = stack[sp - 1];
+		if (v.IsTable()){
+			overrideOp(v, "_not", 0, "!");
+		}
+		else{
+			stack[sp - 1] = !v;
+		}
+		break;
+	}
 	case Opcode::NOP:{//do nothing
 		break;
 	}
@@ -724,6 +727,20 @@ void SVM::constructTDot(Tptr t, int fp, int ap){
 	for (int i = fp - 1; i < ap; ++i){
 		Value& p = stack[cp + i];
 		t->AddValue(to_string(i - fp + 1), p);
+	}
+}
+
+void SVM::createClosure(Tptr table){
+	TableIteration it = table->Begin();
+	for (; it != table->End(); ++it){
+		if (it->second.IsFunction()){
+			Clptr r = it->second.GetFunction();
+			if (r->hascv && cl->cls.find(r) != cl->cls.end())
+				it->second.SetFunction(createClosure(r));
+		}
+		else if (it->second.IsTable()){
+			createClosure(it->second.GetTable());
+		}
 	}
 }
 

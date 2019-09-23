@@ -818,7 +818,9 @@ static int at(SVM* svm, int numParams){
 
 	string str = strV.GetString();
 	Integer p0 = p.GetInteger();
-	if (p0 >= str.length()){
+	//string的索引为[0, len - 1]
+	//string在len处的字符为终结符'\0'
+	if (p0 > str.length()){
 		Error::GetInstance()->ProcessError("索引[%d]需小于字符串长度[%d]", p0, str.length());
 	}
 

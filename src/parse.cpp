@@ -270,9 +270,9 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 	return false;
 }
 
-bool SyntaxParse::matchNegExpr(shared_ptr<Astree>& astree){
+bool SyntaxParse::matchNegnotExpr(shared_ptr<Astree>& astree){
 	Token* tok;
-	if (match("-", &tok)){
+	if (match("-", &tok) || match("!", &tok)){
 		if (tok->GetTokenType() == ETokenType::EOPERATOR){
 			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 			shared_ptr<Astree> op = shared_ptr <Astree>(new AstOperator());
@@ -292,7 +292,7 @@ bool SyntaxParse::matchNegExpr(shared_ptr<Astree>& astree){
 
 bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-	if (!matchNegExpr(stat)) return false;
+	if (!matchNegnotExpr(stat)) return false;
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("*", &tok) || match("/", &tok) || 
@@ -495,14 +495,14 @@ bool SyntaxParse::matchIf(shared_ptr<Astree>& astree){
 		if (!matchStatement(statement)) break;
 	}
 
-	while (match("elif")){
+	Token* eliftok;
+	while (match("elif", &eliftok)){
 		shared_ptr<Astree> elif = shared_ptr<Astree>(new AstElif());
 		astIf->AddChild(elif);
 		shared_ptr<Astree> expr = shared_ptr<Astree>(new AstStatement());
 		if (!matchExpr(expr)) return false;
 		elif->AddChild(expr);
-		Token* eliftok;
-		if (!match("then", &eliftok)){
+		if (!match("then")){
 			Error::GetInstance()->ProcessError("ÐÐÊý:%d, elifÓï¾äÓï·¨´íÎó,È±ÉÙ¹Ø¼ü×Ö[then]", eliftok->GetLineNumber());
 			return false;
 		}

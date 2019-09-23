@@ -174,6 +174,11 @@ public:
 			SVM::Instruction ins(Opcode::AND);
 			svm->AddCode(ins);
 		}
+		else if (op == "!"){
+			children[0]->Compile(e, svm, bc);
+			SVM::Instruction ins(Opcode::NOT);
+			svm->AddCode(ins);
+		}
 
 		bc.anyOperator = true;
 		bc.lasttail = false;
