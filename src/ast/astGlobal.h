@@ -23,7 +23,13 @@ public:
 		}
 
 		if (istable){
+			bool getad = bc.getad;
 			children[0]->Compile(e, svm, bc);
+			if (getad){
+				SVM::Instruction dot(Opcode::GTFILED);
+				dot.getad = true;
+				svm->SetCode(bc.nearst, dot);
+			}
 			return;
 		}
 

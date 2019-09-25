@@ -16,7 +16,8 @@ enum EValueType{
 	ELIGHTUDATA = 1 << 6,
 	ETABLE      = 1 << 7,
 	ECOROUTINE  = 1 << 8,
-	ENULL       = 1 << 9,
+	EPOINTER    = 1 << 9,
+	ENULL       = 1 << 10,
 	ENUMBER     = EINTEGER | EFLOAT,
 };
 
@@ -91,6 +92,7 @@ public:
 		else if (IsLightUData()) ret = "lightudata";
 		else if (IsTable()) ret = "table";
 		else if (IsCoroutine()) ret = "coroutine";
+		else if (IsPointer()) ret = "pointer";
 		else if (IsNull()) ret = "null";
 
 		return ret;
@@ -101,9 +103,10 @@ public:
 	void SetString(string s) { type = EValueType::ESTRING; value.sValue = s; value.cl = nullptr; value.t = nullptr; }
 	void SetFunction(Clptr cl) { type = EValueType::EFUNC; value.cl = cl; value.t = nullptr; }
 	void SetNativeFunction(SFunc f) { type = EValueType::ENATIVEFUNC; value.sfunc = f; value.cl = nullptr; value.t = nullptr; }
-	void SetLightUData(Integer i) { type = EValueType::ELIGHTUDATA; value.iValue = i; value.cl = nullptr; value.t = nullptr; }
+	void SetLightUData(void* p) { type = EValueType::ELIGHTUDATA; value.iValue = Integer(p); value.cl = nullptr; value.t = nullptr; }
 	void SetTable(Tptr t) { type = EValueType::ETABLE; value.t = t; value.cl = nullptr; }
 	void SetCoroutine(Coptr co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; value.t = nullptr; }
+	void SetPointer(Value* p) { type = EValueType::EPOINTER; value.iValue = Integer(p); value.cl = nullptr; value.t = nullptr; }
 	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; value.t = nullptr; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
@@ -115,6 +118,7 @@ public:
 	bool IsLightUData() const { return type == EValueType::ELIGHTUDATA; }
 	bool IsTable() const { return type == EValueType::ETABLE; }
 	bool IsCoroutine() const { return type == EValueType::ECOROUTINE; }
+	bool IsPointer() const { return type == EValueType::EPOINTER; }
 	bool IsNull() const { return type == EValueType::ENULL; }
 	bool GetBoolean() const { return value.bValue; }
 	Integer GetInteger() const { return value.iValue; }
@@ -125,6 +129,7 @@ public:
 	Integer GetLightUData() const { return value.iValue; }
 	Tptr& GetTable() { return value.t; }
 	Coptr& GetCoroutine() { return value.co; }
+	Value* GetPointer() { return (Value*)value.iValue; }
 
 	Value& operator=(Value& v){
 		type = v.type;
@@ -634,6 +639,9 @@ public:
 		else if (IsCoroutine()){
 			ret = "coroutine";
 		}
+		else if (IsPointer()){
+			ret = "pointer";
+		}
 		else if (IsNull()){
 			ret = "null";
 		}
@@ -669,7 +677,7 @@ public:
 	void AddInt(string key, Integer i) { Value v; v.SetInt(i); kv[key] = v; }
 	void AddFloat(string key, Float f) { Value v; v.SetFloat(f); kv[key] = v; }
 	void AddString(string key, string s) { Value v; v.SetString(s); kv[key] = v; }
-	void AddLightUData(string key, void* p) { Value v; v.SetLightUData(Integer(p)); kv[key] = v; }
+	void AddLightUData(string key, void* p) { Value v; v.SetLightUData(p); kv[key] = v; }
 	void AddFunction(string key, Clptr cl) { Value v; v.SetFunction(cl); kv[key] = v; }
 	void AddNativeFunction(string key, SFunc f) { Value v; v.SetNativeFunction(f); kv[key] = v; }
 	void AddTable(string key, Tptr t) { Value v; v.SetTable(t); kv[key] = v; }

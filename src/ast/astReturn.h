@@ -7,13 +7,10 @@ SABER_NAMESPACE_BEGIN
 
 class AstReturn : public Astree{
 private:
-	int numRetParams = 0;
 	bool maybeTailCall = false;
 
 public:
-	void SetNumRetParams(int n){ numRetParams = n; }
-	int GetNumRetParams() const { return numRetParams; }
-	void SetMaybeTailCall() { maybeTailCall = true; }
+	void SetMaybeTailCall(bool b) { maybeTailCall = b; }
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		if (!e->GetOutter()){
@@ -22,10 +19,12 @@ public:
 			return;
 		}
 
+		int numRetParams = children.size();
+
 		BlockCnt subBc;
 		subBc.cl = bc.cl;
 		subBc.maxLevel = bc.maxLevel;
-		for (int i = 0; i < children.size(); ++i)
+		for (int i = 0; i < numRetParams; ++i)
 			children[i]->Compile(e, svm, subBc);
 
 		SVM::Instruction tail(Opcode::TAILCALL);

@@ -302,6 +302,15 @@ static int iscoroutine(SVM* svm, int numParams){
 	return 1;
 }
 
+static int ispointer(SVM* svm, int numParams){
+	checkParamsNum("ispointer", numParams);
+	Value v = svm->PopStack();
+
+	svm->PushBool(v.IsPointer());
+
+	return 1;
+}
+
 static int test(SVM* svm, int numParams){
 	if (numParams == 1){
 		svm->CallScript(0);
@@ -1205,7 +1214,7 @@ static int open(SVM* svm, int numParams){
 	FILE* f = nullptr;
 	f = fopen(file.c_str(), mode.c_str());
 	
-	svm->PushLightUData(int(f));
+	svm->PushLightUData(f);
 
 	return 1;
 }
@@ -1599,6 +1608,7 @@ static RegisterFunction basic[] = {
 	{ "isnativefunction", isnativefunction },
 	{ "istable", istable },
 	{ "iscoroutine", iscoroutine },
+	{ "ispointer", ispointer },
 //	{ "test", test },
 	{ "", nullptr },
 };

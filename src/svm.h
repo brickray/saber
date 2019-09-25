@@ -23,8 +23,8 @@ public:
 	struct Instruction{
 		char opcode;
 		bool relative;
+		bool getad;
 		char padding0;
-		char padding1;
 		union{
 			int operand;
 			float operandf;
@@ -32,16 +32,16 @@ public:
 		string operands;
 
 		Instruction(char opc, int ope = 0, bool r = false)
-		:opcode(opc), operand(ope), relative(r){}
+		:opcode(opc), operand(ope), relative(r), getad(false){}
 
 		Instruction(char opc, float ope)
-			:opcode(opc), operandf(ope), relative(false){}
+			:opcode(opc), operandf(ope), relative(false), getad(false){}
 
 		Instruction(char opc, string ope)
-			:opcode(opc), operands(ope), relative(false){}
+			:opcode(opc), operands(ope), relative(false), getad(false){}
 
 		Instruction(char opc, int ope1, string ope2)
-			:opcode(opc), operand(ope1), operands(ope2), relative(false){}
+			:opcode(opc), operand(ope1), operands(ope2), relative(false), getad(false){}
 	};
 
 	struct Register{
@@ -94,13 +94,14 @@ public:
 	int AddGlobal(Value& v);
 	void SetStack(int i, Value& v);
 	void PushStack(Value& v);
+	void PushNull();
 	void PushBool(bool b);
 	void PushInt(Integer i);
 	void PushFloat(Float f);
 	void PushString(string s);
 	void PushFunc(Clptr cl);
 	void PushNativeFunc(SFunc f);
-	void PushLightUData(Integer i);
+	void PushLightUData(void* p);
 	void PushTable(Tptr t);
 	void PushCoroutine(Coptr co); //压入到全局栈
 	Value PopStack();

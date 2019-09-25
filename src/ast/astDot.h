@@ -12,6 +12,7 @@ public:
 	void SetFunc(bool f) { fromFunc = f; }
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		AstDot* d = dynamic_cast<AstDot*>(children[0].get());
+		if (bc.getad) bc.getad = false;
 		children[0]->Compile(e, svm, bc);
 		if (!fromFunc){
 			children[1]->Compile(e, svm, bc);

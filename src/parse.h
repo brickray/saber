@@ -23,6 +23,7 @@
 #include "ast\astDot.h"
 #include "ast\astTable.h"
 #include "ast\astHash.h"
+#include "ast\astGa.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +
@@ -84,8 +85,8 @@ private:
 	bool matchAddsubExpr(shared_ptr<Astree>& astree);
 	bool matchCompExpr(shared_ptr<Astree>& astree);
 	bool matchAndorExpr(shared_ptr<Astree>& astree);
-	bool matchAssignExpr(shared_ptr<Astree>& astree);
-	bool matchExpr(shared_ptr<Astree>& astree);
+	bool matchAssignExpr(shared_ptr<Astree>& astree, bool norFor = false);
+	bool matchExpr(shared_ptr<Astree>& astree, bool norFor = false);
 	bool matchIf(shared_ptr<Astree>& astree);
 	bool matchWhile(shared_ptr<Astree>& astree);
 	bool matchForNormal(shared_ptr<Astree>& astree);

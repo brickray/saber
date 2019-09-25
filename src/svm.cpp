@@ -56,6 +56,11 @@ void SVM::PushStack(Value& v){
 	stack[sp++] = v;
 }
 
+void SVM::PushNull(){
+	Value v;
+	PushStack(v);
+}
+
 void SVM::PushBool(bool b){
 	Value v;
 	v.SetBool(b);
@@ -92,9 +97,9 @@ void SVM::PushNativeFunc(SFunc f){
 	PushStack(v);
 }
 
-void SVM::PushLightUData(Integer i){
+void SVM::PushLightUData(void* p){
 	Value v;
-	v.SetLightUData(i);
+	v.SetLightUData(p);
 	PushStack(v);
 }
 
@@ -151,7 +156,22 @@ void SVM::CallScript(int numParams){
 		int ncp = sp - nap;
 		int nextip = ip + 1;
 		if ((!vararg) && (nfp != nap)){
-			Error::GetInstance()->ProcessError("形参和实参数量不匹配");
+			if (nfp > nap){
+				//如果形参大于实参，则用null补齐
+				int delta = nfp - nap;
+				for (int i = 0; i < delta; ++i){
+					stack[sp++].SetNull();
+				}
+			}
+			else{
+				//如果形参小于实参，则舍弃多余参数
+				int delta = nap - nfp;
+				for (int i = 0; i < delta; ++i){
+					--sp;
+				}
+			}
+
+			nap = nfp;
 		}
 
 		stack[sp + IP_ADDRESS].SetInt(nextip);
@@ -237,7 +257,22 @@ void SVM::execute(){
 			int nap = ins.operand;
 			int ncp = sp - nap;
 			if ((!vararg) && (nfp != nap)){
-				Error::GetInstance()->ProcessError("形参和实参数量不匹配");
+				if (nfp > nap){
+					//如果形参大于实参，则用null补齐
+					int delta = nfp - nap;
+					for (int i = 0; i < delta; ++i){
+						stack[sp++].SetNull();
+					}
+				}
+				else{
+					//如果形参小于实参，则舍弃多余参数
+					int delta = nap - nfp;
+					for (int i = 0; i < delta; ++i){
+						--sp;
+					}
+				}
+
+				nap = nfp;
 			}
 
 			stack[sp + IP_ADDRESS].SetInt(ip + 1);
@@ -294,14 +329,14 @@ void SVM::execute(){
 		Value& ret = stack[sp - 1];
 		int numRetVariable = ins.operand;
 		int base = cp + ap;
-		Tptr t       = stack[base + TB_ADDRESS].GetTable();
-		Clptr ocl    = stack[base + CL_ADDRESS].GetFunction();
-		int ofp		 = stack[base + FP_ADDRESS].GetInteger();
-		int oap		 = stack[base + AP_ADDRESS].GetInteger();
-		int oof		 = stack[base + OF_ADDRESS].GetInteger();
-		int ocp		 = stack[base + CP_ADDRESS].GetInteger();
-		int esp		 = stack[base + SP_ADDRESS].GetInteger();
-		int eip		 = stack[base + IP_ADDRESS].GetInteger();
+		Tptr t = stack[base + TB_ADDRESS].GetTable();
+		Clptr ocl = stack[base + CL_ADDRESS].GetFunction();
+		int ofp = stack[base + FP_ADDRESS].GetInteger();
+		int oap = stack[base + AP_ADDRESS].GetInteger();
+		int oof = stack[base + OF_ADDRESS].GetInteger();
+		int ocp = stack[base + CP_ADDRESS].GetInteger();
+		int esp = stack[base + SP_ADDRESS].GetInteger();
+		int eip = stack[base + IP_ADDRESS].GetInteger();
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 
@@ -313,7 +348,7 @@ void SVM::execute(){
 		}
 
 		//返回值为function类型时，进行闭包设置
-		if (numRetVariable && ret.IsFunction() ){
+		if (numRetVariable && ret.IsFunction()){
 			Clptr cur = ret.GetFunction();
 			if (cur->hascv && cur != cl){
 				Clptr r = createClosure(ret.GetFunction());
@@ -321,15 +356,15 @@ void SVM::execute(){
 			}
 		}
 
-		cl     = ocl;
-		fp     = ofp;
-		ap     = oap;
-		of     = oof;
-		cp     = ocp;
-		sp     = esp;
-		ip     = eip;
+		cl = ocl;
+		fp = ofp;
+		ap = oap;
+		of = oof;
+		cp = ocp;
+		sp = esp;
+		ip = eip;
 		if (numRetVariable) stack[sp++] = ret;
-			
+
 		if (isCoroutine) cocallback(this);
 
 		return;
@@ -383,7 +418,8 @@ void SVM::execute(){
 			stack[sp - 1] = v;
 		}
 		else{
-			stack[sp++] = *getAddress(ins);
+			if (ins.getad) stack[sp++].SetPointer(getAddress(ins));
+			else stack[sp++] = *getAddress(ins);
 		}
 		break;
 	}
@@ -420,7 +456,8 @@ void SVM::execute(){
 			}
 		}
 		else{
-			value = t->GetValue(s);
+			if (ins.getad) value.SetPointer(t->GetValuePtr(s));
+			else value = t->GetValue(s);
 		}
 
 		if (!operand){
@@ -752,7 +789,9 @@ Clptr SVM::createClosure(Clptr o){
 	for (auto it : cl->variables){
 		Value& v = f->cvs[it.first];
 		int idx = it.second;
-		v = *getAddress(Instruction(Opcode::NOP, idx));
+		Value* src = getAddress(Instruction(Opcode::NOP, idx));
+		if (src->IsPointer()) v = *src->GetPointer();
+		else v = *src;
 	}
 
 	return f;
@@ -838,7 +877,13 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 }
 
 void SVM::move(SVM::Instruction& ins){
-	*getAddress(ins) = stack[--sp];
+	Value* v = getAddress(ins);
+	if (v->IsPointer()){
+		*(v->GetPointer()) = stack[--sp];
+	}
+	else{
+		*v = stack[--sp];
+	}
 }
 
 void SVM::dumpStack(){
@@ -892,6 +937,7 @@ string SVM::ShowCode(){
 		"NE",
 		"OR",
 		"AND",
+		"NOT",
 		"SETTABLE",
 		"STFILED",
 		"EXIT",

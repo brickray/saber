@@ -59,21 +59,15 @@ public:
 			svm->AddCode(push);
 			svm->AddCode(call);
 
-			int nearst; 
-			string nearstS;
-			for (int i = 0; i < numChilds - 2; ++i){
+			for (int i = numChilds - 3; i >= 0; --i){
 				children[i]->Compile(e, svm, subBc);
 				mov.operand = subBc.nearst;
 				mov.operands = subBc.nearstS;
 				svm->AddCode(mov);
-				if (i == 0){
-					nearst = subBc.nearst;
-					nearstS = subBc.nearstS;
-				}
 			}
 
-			push.operand = nearst;
-			push.operands = nearstS;
+			push.operand = subBc.nearst;
+			push.operands = subBc.nearstS;
 			svm->AddCode(push);
 			SVM::Instruction jz(Opcode::JZ);
 			int jumpAddress = svm->AddCode(jz);

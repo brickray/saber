@@ -15,6 +15,7 @@ struct BlockCnt{
 	bool isloop;
 	bool lasttail;
 	bool anyOperator; //只在return语句中使用
+	bool getad;
 	int nearst;
 	int variableIndex;
 	int maxLevel;
@@ -28,6 +29,7 @@ struct BlockCnt{
 		isloop = false;
 		lasttail = false;
 		anyOperator = false;
+		getad = false;
 		nearst = 0;
 		variableIndex = 0;
 		maxLevel = 0;
@@ -39,7 +41,7 @@ class Astree{
 protected:
 	Token* token = nullptr;
 	vector<shared_ptr<Astree>> children;
-	bool istable = false;
+	Integer istable = 0;
 
 public:
 	virtual ~Astree(){};
@@ -66,7 +68,7 @@ public:
 	shared_ptr<Astree > GetChild(int n) const { return children[n]; }
 	void AddChild(shared_ptr<Astree>& ast){ children.push_back(ast); }
 	void RemoveAllChild() { children.clear(); }
-	void SetTable(bool t) { istable = t; }
+	void SetTable(bool t, int idx = 0) { istable |= (t << idx); }
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc) = 0;
 
