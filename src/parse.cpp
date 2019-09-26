@@ -285,7 +285,7 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 	}
 
 	if (match("(", &tok)){
-		if (!matchAndorExpr(astree)) return false;
+		if (!matchOrExpr(astree)) return false;
 		if (!match(")")){
 			Error::GetInstance()->ProcessError("行数:%d, 表达式语法错误,缺少')'", tok->GetLineNumber());
 			return false;
@@ -317,104 +317,152 @@ bool SyntaxParse::matchNegnotExpr(shared_ptr<Astree>& astree){
 	return matchTerm(astree);
 }
 
-bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
-	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-	if (!matchNegnotExpr(stat)) return false;
+bool SyntaxParse::matchMuldivExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
-	if (match("*", &tok) || match("/", &tok) || 
+	if (match("*", &tok) || match("/", &tok) ||
 		match("*=", &tok) || match("/=", &tok) ||
 		match("%", &tok) || match("%=", &tok)){
 		if (tok->GetTokenType() == ETokenType::EOPERATOR){
 			if (tok->GetToken() == "*=" || tok->GetToken() == "/=" || tok->GetToken() == "%="){
-				if (!stat->GetToken() || stat->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+				if (!term->GetToken() || term->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
 					Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 					return false;
 				}
 			}
+			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 			op->SetToken(tok);
+			op->AddChild(term);
+			if (!matchNegnotExpr(stat)) return false;
 			op->AddChild(stat);
-			if (!matchMuldivExpr(op)) return false;
-			astree->AddChild(op);
-			return true;
+			return matchMuldivExprTail(astree, op);
 		}
 
 		lexer.Back();
 	}
-
-	astree->AddChild(stat);
-	return true;
+	else{
+		astree->AddChild(term);
+		return true;
+	}
 }
 
-bool SyntaxParse::matchAddsubExpr(shared_ptr<Astree>& astree){
+bool SyntaxParse::matchMuldivExpr(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-	if (!matchMuldivExpr(stat)) return false;
+	if (!matchNegnotExpr(stat)) return false;
+
+	return matchMuldivExprTail(astree, stat);
+}
+
+bool SyntaxParse::matchAddsubExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
 	if (match("+", &tok) || match("-", &tok) || match("+=", &tok) || match("-=", &tok)){
 		if (tok->GetTokenType() == ETokenType::EOPERATOR){
 			if (tok->GetToken() == "+=" || tok->GetToken() == "-="){
-				if (!stat->GetChild(0)->GetToken() || stat->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+				if (!term->GetChild(0)->GetToken() || term->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
 					Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 					return false;
 				}
 			}
 			op->SetToken(tok);
-			op->AddChild(stat);
-			if (!matchAddsubExpr(op)) return false;
-			astree->AddChild(op);
-			return true;
+			op->AddChild(term);
+			if (!matchMuldivExpr(op)) return false;
+			return matchAddsubExprTail(astree, op);
 		}
 
 		lexer.Back();
 	}
+	else{
+		astree->AddChild(term);
+		return true;
+	}
+}
 
-	astree->AddChild(stat);
-	return true;
+bool SyntaxParse::matchAddsubExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchMuldivExpr(stat)) return false;
+	
+	return matchAddsubExprTail(astree, stat);
+}
+
+bool SyntaxParse::matchCompExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term){
+	Token* tok;
+	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+	if (match("==", &tok) || match("!=", &tok) ||
+		match(">", &tok) || match("<", &tok) ||
+		match(">=", &tok) || match("<=", &tok)){
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			op->SetToken(tok);
+			op->AddChild(term);
+			if (!matchAddsubExpr(op)) return false;
+			return matchCompExprTail(astree, op);
+		}
+
+		lexer.Back();
+	}
+	else{
+		astree->AddChild(term);
+		return true;
+	}
 }
 
 bool SyntaxParse::matchCompExpr(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 	if (!matchAddsubExpr(stat)) return false;
-	Token* tok;
-	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
-	if (match("==", &tok) || match("!=", &tok) || 
-		match(">", &tok) || match("<", &tok) ||
-		match(">=", &tok) || match("<=", &tok)){
-		if (tok->GetTokenType() == ETokenType::EOPERATOR){
-			op->SetToken(tok);
-			op->AddChild(stat);
-			if (!matchCompExpr(op)) return false;
-			astree->AddChild(op);
-			return true;
-		}
 
-		lexer.Back();
-	}
-
-	astree->AddChild(stat);
-	return true;
+	return matchCompExprTail(astree, stat);
 }
 
-bool SyntaxParse::matchAndorExpr(shared_ptr<Astree>& astree){
-	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-	if (!matchCompExpr(stat)) return false;
+bool SyntaxParse::matchAndExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term){
 	Token* tok;
 	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
-	if (match("&&", &tok) || match("||", &tok)){
+	if (match("&&", &tok)){
 		if (tok->GetTokenType() == ETokenType::EOPERATOR){
 			op->SetToken(tok);
-			op->AddChild(stat);
-			if (!matchAndorExpr(op)) return false;
-			astree->AddChild(op);
-			return true;
+			op->AddChild(term);
+			if (!matchCompExpr(op)) return false;
+			return matchAndExprTail(astree, op);
 		}
 
 		lexer.Back();
 	}
+	else{
+		astree->AddChild(term);
+		return true;
+	}
+}
 
-	astree->AddChild(stat);
-	return true;
+bool SyntaxParse::matchAndExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchCompExpr(stat)) return false;
+
+	return matchAndExprTail(astree, stat);
+}
+
+//与运算符优先级比或高
+bool SyntaxParse::matchOrExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term){
+	Token* tok;
+	shared_ptr<Astree> op = shared_ptr<Astree>(new AstOperator());
+	if (match("||", &tok)){
+		if (tok->GetTokenType() == ETokenType::EOPERATOR){
+			op->SetToken(tok);
+			op->AddChild(term);
+			if (!matchAndExpr(op)) return false;
+			return matchOrExprTail(astree, op);
+		}
+
+		lexer.Back();
+	}
+	else{
+		astree->AddChild(term);
+		return true;
+	}
+}
+bool SyntaxParse::matchOrExpr(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (!matchAndExpr(stat)) return false;
+
+	return matchOrExprTail(astree, stat);
 }
 
 bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
@@ -449,7 +497,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 				if (matchClosure(stat)){
 					op->AddChild(stat);
 				}
-				else if (matchAndorExpr(stat)){
+				else if (matchOrExpr(stat)){
 					op->AddChild(stat);
 				}
 				else if (matchTable(stat)){
@@ -510,7 +558,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 			if (matchClosure(stat)){
 				op->AddChild(stat);
 			}
-			else if (matchAndorExpr(stat)){
+			else if (matchOrExpr(stat)){
 				op->AddChild(stat);
 			}
 			else if (matchTable(stat)){
@@ -531,7 +579,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 
 	lexer.SetTkptr(p);
 
-	return matchAndorExpr(astree);
+	return matchOrExpr(astree);
 }
 
 bool SyntaxParse::matchExpr(shared_ptr<Astree>& astree, bool norFor){
@@ -943,7 +991,7 @@ bool SyntaxParse::matchTableInit(shared_ptr<Astree>& astree){
 			astree->AddChild(op);
 			return true;
 		}
-		else if (matchAndorExpr(stat)){
+		else if (matchOrExpr(stat)){
 			op->AddChild(stat);
 			astree->AddChild(op);
 			return true;

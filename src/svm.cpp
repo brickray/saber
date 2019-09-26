@@ -224,14 +224,20 @@ void SVM::execute(){
 	}
 	case Opcode::JZ:{
 		Value& v = stack[--sp];
-		bool t;
-		if (v.IsBoolean()) t = v.GetBoolean();
-		else if (v.IsFloat()) t = v.GetFloat() != 0;
-		else if (v.IsInteger()) t = v.GetInteger() != 0;
-		else if (v.IsNull()) t = false;
-		else break;
+		bool t = getBool(v);
 
 		if (!t){
+			ip = ins.operand;
+			return;
+		}
+
+		break;
+	}
+	case Opcode::JNZ:{
+		Value& v = stack[--sp];
+		bool t = getBool(v);
+
+		if (t){
 			ip = ins.operand;
 			return;
 		}
@@ -418,7 +424,11 @@ void SVM::execute(){
 			stack[sp - 1] = v;
 		}
 		else{
-			if (ins.getad) stack[sp++].SetPointer(getAddress(ins));
+			if (ins.getad){
+				Value* v = getAddress(ins);
+				if (v->IsPointer()) stack[sp++].SetPointer(v->GetPointer());
+				else stack[sp++].SetPointer(v);
+			}
 			else stack[sp++] = *getAddress(ins);
 		}
 		break;
@@ -428,7 +438,11 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::RESERVE:{
-		sp += ins.operand;
+		for (int i = 0; i < ins.operand; ++i){
+			//局部变量初始化
+			stack[sp++].SetNull();
+		}
+
 		break;
 	}
 	case Opcode::GTFILED:{
@@ -509,12 +523,13 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::NEG:{
-		Value& v = stack[sp - 1];
+		Value& v = stack[--sp];
 		if (v.IsTable()){
 			overrideOp(v, "_neg", 0, "-");
 		}
 		else{
-			stack[sp - 1] = -v;
+			v = -v;
+			sp++;
 		}
 
 		break;
@@ -723,8 +738,8 @@ void SVM::execute(){
 			overrideOp(v, "_or", 1, "||");
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v || v2;
+			v.SetBool(getBool(v));
+			sp++;
 		}
 
 		break;
@@ -735,8 +750,8 @@ void SVM::execute(){
 			overrideOp(v, "_and", 1, "&&");
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v && v2;
+			v.SetBool(getBool(v));
+			sp++;
 		}
 
 		break;
@@ -886,6 +901,17 @@ void SVM::move(SVM::Instruction& ins){
 	}
 }
 
+bool SVM::getBool(Value& v){
+	bool t;
+	if (v.IsBoolean()) t = v.GetBoolean();
+	else if (v.IsFloat()) t = v.GetFloat() != 0;
+	else if (v.IsInteger()) t = v.GetInteger() != 0;
+	else if (v.IsNull()) t = false;
+	else t = true;
+
+	return t;
+}
+
 void SVM::dumpStack(){
 	string str = "";
 	for (int i = 0; i < sp; i++){
@@ -947,6 +973,7 @@ string SVM::ShowCode(){
 		"GTFILED",
 		"MOVE",
 		"JZ",
+		"JNZ",
 		"JUMP",
 		"CALL",
 		"TAILCALL",

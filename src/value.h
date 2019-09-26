@@ -142,6 +142,9 @@ public:
 		else if (v.IsFunction()){
 			value.cl = v.value.cl;
 		}
+		else if (v.IsCoroutine()){
+			value.co = v.value.co;
+		}
 		else{
 			value.bValue = v.value.bValue;
 			value.iValue = v.value.iValue;
@@ -155,17 +158,21 @@ public:
 
 	Value operator-(){
 		Value va;
-		if (!IsNumber()){
+		Value* v;
+		if (IsPointer()) v = GetPointer();
+		else v = this;
+		
+		if (!v->IsNumber()){
 			Error::GetInstance()->ProcessError("尝试对非Number值进行求负操作[%s]", GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
 
-		if (IsInteger()){
-			va.SetInt(-value.iValue);
+		if (v->IsInteger()){
+			va.SetInt(-v->GetInteger());
 		}
 		else{
-			va.SetFloat(-value.fValue);
+			va.SetFloat(-v->GetFloat());
 		}
 
 		return va;
@@ -173,31 +180,37 @@ public:
 
 	Value operator+(Value& v){
 		Value va;
-		if (IsString() && v.IsString()){
-			va.SetString(value.sValue + v.GetString());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (v1->IsString() && v2->IsString()){
+			va.SetString(v1->GetString() + v2->GetString());
 			return va;
 		}
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				va.SetInt(value.iValue + v.GetInteger());
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				va.SetInt(v1->GetInteger() + v2->GetInteger());
 			}
-			else if (IsFloat()){
-				va.SetFloat(value.fValue + v.GetFloat());
+			else if (v1->IsFloat()){
+				va.SetFloat(v1->GetFloat() + v2->GetFloat());
 			}
 
 			return va;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetFloat(a + b);
 			return va;
 		}
@@ -205,27 +218,33 @@ public:
 
 	Value operator-(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				va.SetInt(value.iValue - v.GetInteger());
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				va.SetInt(v1->GetInteger() - v2->GetInteger());
 			}
-			else if (IsFloat()){
-				va.SetFloat(value.fValue - v.GetFloat());
+			else if (v1->IsFloat()){
+				va.SetFloat(v1->GetFloat() - v2->GetFloat());
 			}
 
 			return va;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetFloat(a - b);
 			return va;
 		}
@@ -233,27 +252,33 @@ public:
 
 	Value operator*(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				va.SetInt(value.iValue * v.GetInteger());
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				va.SetInt(v1->GetInteger() * v2->GetInteger());
 			}
-			else if (IsFloat()){
-				va.SetFloat(value.fValue * v.GetFloat());
+			else if (v1->IsFloat()){
+				va.SetFloat(v1->GetFloat() * v2->GetFloat());
 			}
 
 			return va;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetFloat(a * b);
 			return va;
 		}
@@ -261,27 +286,33 @@ public:
 
 	Value operator/(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				va.SetInt(value.iValue / v.GetInteger());
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				va.SetInt(v1->GetInteger() / v2->GetInteger());
 			}
-			else if (IsFloat()){
-				va.SetFloat(value.fValue / v.GetFloat());
+			else if (v1->IsFloat()){
+				va.SetFloat(v1->GetFloat() / v2->GetFloat());
 			}
 
 			return va;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetFloat(a / b);
 			return va;
 		}
@@ -289,152 +320,193 @@ public:
 
 	Value operator%(Value& v){
 		Value va;
-		if (!IsInteger() || !v.IsInteger()){
-			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+		if (!v1->IsInteger() || !v2->IsInteger()){
+			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 			return va;
 		}
 
-		va.SetInt(value.iValue % v.GetInteger());
+		va.SetInt(v1->GetInteger() % v2->GetInteger());
 		return va;
 	}
 
 	Value operator+=(Value& v){
-		if (IsString() && v.IsString()){
-			value.sValue += v.GetString();
-			return *this;
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (v1->IsString() && v2->IsString()){
+			v1->SetString(v1->GetString() + v2->GetString());
+			return *v1;
 		}
 
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行加操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			this->SetBool(false);
-			return *this;
+			return *v1;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				value.iValue += v.GetInteger();
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				v1->SetInt(v1->GetInteger() + v2->GetInteger());
 			}
 			else if (IsFloat()){
-				value.fValue += v.GetFloat();
+				v1->SetFloat(v1->GetFloat() + v2->GetFloat());
 			}
 
-			return *this;
+			return *v1;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
-			this->SetFloat(a + b);
-			return *this;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
+			v1->SetFloat(a + b);
+			return *v1;
 		}
 	}
 
 	Value operator-=(Value& v){
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行减操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			this->SetBool(false);
-			return *this;
+			return *v1;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				value.iValue -= v.GetInteger();
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				v1->SetInt(v1->GetInteger() - v2->GetInteger());
 			}
 			else if (IsFloat()){
-				value.fValue -= v.GetFloat();
+				v1->SetFloat(v1->GetFloat() - v2->GetFloat());
 			}
 
-			return *this;
+			return *v1;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
-			this->SetFloat(a - b);
-			return *this;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
+			v1->SetFloat(a - b);
+			return *v1;
 		}
 	}
 
 	Value operator*=(Value& v){
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行乘操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			this->SetBool(false);
-			return *this;
+			return *v1;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				value.iValue *= v.GetInteger();
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				v1->SetInt(v1->GetInteger() * v2->GetInteger());
 			}
 			else if (IsFloat()){
-				value.fValue *= v.GetFloat();
+				v1->SetFloat(v1->GetFloat() * v2->GetFloat());
 			}
 
-			return *this;
+			return *v1;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
-			this->SetFloat(a * b);
-			return *this;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
+			v1->SetFloat(a * b);
+			return *v1;
 		}
 	}
 
 	Value operator/=(Value& v){
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试对非Number值进行除操作[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			this->SetBool(false);
-			return *this;
+			return *v1;
 		}
-		if (type == v.GetType()){
-			if (IsInteger()){
-				value.iValue /= v.GetInteger();
+		if (v1->GetType() == v2->GetType()){
+			if (v1->IsInteger()){
+				v1->SetInt(v1->GetInteger() / v2->GetInteger());
 			}
 			else if (IsFloat()){
-				value.fValue /= v.GetFloat();
+				v1->SetFloat(v1->GetFloat() / v2->GetFloat());
 			}
 
-			return *this;
+			return *v1;
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
-			this->SetFloat(a / b);
-			return *this;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
+			v1->SetFloat(a / b);
+			return *v1;
 		}
 	}
 
 	Value operator%=(Value& v){
-		if (!IsInteger() || !IsInteger()){
-			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
-			this->SetBool(false);
-			return *this;
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsInteger() || !v2->IsInteger()){
+			Error::GetInstance()->ProcessError("尝试对非Integer值取模[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
+			v1->SetBool(false);
+			return *v1;
 		}
 
-		value.iValue %= v.GetInteger();
-		return *this;
+		v1->SetInt(v1->GetInteger() % v2->GetInteger());
+		return *v1;
 	}
 
 	Value operator<(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetBool(a < b);
 		}
 
@@ -443,16 +515,22 @@ public:
 
 	Value operator>(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetBool(a > b);
 		}
 
@@ -461,16 +539,22 @@ public:
 
 	Value operator<=(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetBool(a <= b);
 		}
 
@@ -479,16 +563,22 @@ public:
 
 	Value operator>=(Value& v){
 		Value va;
-		if (!IsNumber() || !v.IsNumber()){
-			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", GetTypeString().c_str(), v.GetTypeString().c_str());
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (!v1->IsNumber() || !v2->IsNumber()){
+			Error::GetInstance()->ProcessError("尝试比较非Number值[%s, %s]", v1->GetTypeString().c_str(), v2->GetTypeString().c_str());
 			va.SetBool(false);
 		}
 		else{
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetBool(a >= b);
 		}
 
@@ -497,40 +587,46 @@ public:
 
 	Value operator==(Value& v){
 		Value va;
-		if (IsNumber() && v.IsNumber()){
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (v1->IsNumber() && v2->IsNumber()){
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetBool(a == b);
 			return va;
 		}
 
-		if (type != v.GetType()){
+		if (v1->GetType() != v2->GetType()){
 			va.SetBool(false);
 		}
 		else {
-			if (IsNull()){
+			if (v1->IsNull()){
 				va.SetBool(true);
 			}
-			if (IsBoolean()){
-				va.SetBool(value.bValue == v.value.bValue);
+			else if (v1->IsBoolean()){
+				va.SetBool(v1->GetBoolean() == v2->GetBoolean());
 			}
-			else if (IsString()){
-				va.SetBool(value.sValue == v.value.sValue);
+			else if (v1->IsString()){
+				va.SetBool(v1->GetString() == v2->GetString());
 			}
-			else if (IsNativeFunction()){
-				va.SetBool(value.sfunc == v.value.sfunc);
+			else if (v1->IsNativeFunction()){
+				va.SetBool(v1->GetNativeFunction() == v2->GetNativeFunction());
 			}
-			else if (IsLightUData()){
-				va.SetBool(value.iValue == v.value.iValue);
+			else if (v1->IsLightUData()){
+				va.SetBool(v1->GetLightUData() == v2->GetLightUData());
 			}
-			else if (IsTable()){
-				va.SetBool(value.t == v.value.t);
+			else if (v1->IsTable()){
+				va.SetBool(v1->GetTable() == v2->GetTable());
 			}
-			else if (IsCoroutine()){
-				va.SetBool(value.cl == v.value.cl);
+			else if (v1->IsCoroutine()){
+				va.SetBool(v1->GetCoroutine() == v2->GetCoroutine());
 			}
 		}
 
@@ -539,40 +635,46 @@ public:
 
 	Value operator!=(Value& v){
 		Value va;
-		if (IsNumber() && v.IsNumber()){
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
+		if (v1->IsNumber() && v2->IsNumber()){
 			Float a, b;
-			if (IsInteger()) a = value.iValue;
-			else a = value.fValue;
-			if (v.IsInteger()) b = v.value.iValue;
-			else b = v.value.fValue;
+			if (v1->IsInteger()) a = v1->GetInteger();
+			else a = v1->GetFloat();
+			if (v2->IsInteger()) b = v2->GetInteger();
+			else b = v2->GetFloat();
 			va.SetBool(a != b);
 			return va;
 		}
 
-		if (type != v.GetType()){
+		if (v1->GetType() != v2->GetType()){
 			va.SetBool(true);
 		}
 		else {
-			if (IsNull()){
+			if (v1->IsNull()){
 				va.SetBool(false);
 			}
-			if (IsBoolean()){
-				va.SetBool(value.bValue != v.value.bValue);
+			else if (v1->IsBoolean()){
+				va.SetBool(v1->GetBoolean() != v2->GetBoolean());
 			}
-			else if (IsString()){
-				va.SetBool(value.sValue != v.value.sValue);
+			else if (v1->IsString()){
+				va.SetBool(v1->GetString() != v2->GetString());
 			}
-			else if (IsNativeFunction()){
-				va.SetBool(value.sfunc != v.value.sfunc);
+			else if (v1->IsNativeFunction()){
+				va.SetBool(v1->GetNativeFunction() != v2->GetNativeFunction());
 			}
-			else if (IsLightUData()){
-				va.SetBool(value.iValue != v.value.iValue);
+			else if (v1->IsLightUData()){
+				va.SetBool(v1->GetLightUData() != v2->GetLightUData());
 			}
-			else if (IsTable()){
-				va.SetBool(value.t != v.value.t);
+			else if (v1->IsTable()){
+				va.SetBool(v1->GetTable() != v2->GetTable());
 			}
-			else if (IsCoroutine()){
-				va.SetBool(value.cl != v.value.cl);
+			else if (v1->IsCoroutine()){
+				va.SetBool(v1->GetCoroutine() != v2->GetCoroutine());
 			}
 		}
 
@@ -580,11 +682,17 @@ public:
 	}
 
 	Value operator||(Value& v){
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
 		bool t1, t2;
-		if (IsFloat()) t1 = GetFloat() != 0;
-		else t1 = GetBoolean();
-		if (v.IsFloat()) t2 = v.GetFloat() != 0;
-		else t2 = v.GetBoolean();
+		if (v1->IsFloat()) t1 = v1->GetFloat() != 0;
+		else t1 = v1->GetBoolean();
+		if (v2->IsFloat()) t2 = v2->GetFloat() != 0;
+		else t2 = v2->GetBoolean();
 
 		Value ret;
 		ret.SetBool(t1 || t2);
@@ -592,11 +700,17 @@ public:
 	}
 
 	Value operator&&(Value& v){
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+		if (v.IsPointer()) v2 = v.GetPointer();
+		else v2 = &v;
+
 		bool t1, t2;
-		if (IsFloat()) t1 = GetFloat() != 0;
-		else t1 = GetBoolean();
-		if (v.IsFloat()) t2 = v.GetFloat() != 0;
-		else t2 = v.GetBoolean();
+		if (v1->IsFloat()) t1 = v1->GetFloat() != 0;
+		else t1 = v1->GetBoolean();
+		if (v2->IsFloat()) t2 = v2->GetFloat() != 0;
+		else t2 = v2->GetBoolean();
 
 		Value ret;
 		ret.SetBool(t1 && t2);
@@ -604,11 +718,15 @@ public:
 	}
 
 	Value operator!(){
+		Value* v1, *v2;
+		if (IsPointer()) v1 = GetPointer();
+		else v1 = this;
+
 		bool t = false;
-		if (IsNull()) t = true;
-		else if (IsBoolean()) t = !GetBoolean();
-		else if (IsInteger()) t = !GetInteger();
-		else if (IsFloat()) t = !GetFloat();
+		if (v1->IsNull()) t = true;
+		else if (v1->IsBoolean()) t = !v1->GetBoolean();
+		else if (v1->IsInteger()) t = !v1->GetInteger();
+		else if (v1->IsFloat()) t = !v1->GetFloat();
 
 		Value ret;
 		ret.SetBool(t);
@@ -640,7 +758,7 @@ public:
 			ret = "coroutine";
 		}
 		else if (IsPointer()){
-			ret = "pointer";
+			ret = "pointer:" + to_string(value.iValue);
 		}
 		else if (IsNull()){
 			ret = "null";

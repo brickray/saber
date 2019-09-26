@@ -132,6 +132,7 @@ private:
 	void overrideOp(Value& t, const char* opname, int np, const char* op);
 	Value* getAddress(Instruction& ins);
 	void move(Instruction& ins);
+	bool getBool(Value& v);
 
 	void dumpStack();
 };

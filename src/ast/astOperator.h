@@ -171,18 +171,39 @@ public:
 			svm->AddCode(ins);
 		}
 		else if (op == "||"){
-			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
 
+			SVM::Instruction jz(Opcode::JZ);
+			int jzAddress = svm->AddCode(jz);
+			SVM::Instruction push(Opcode::PUSHB, true);
+			svm->AddCode(push) + 1;
+			SVM::Instruction jump(Opcode::JUMP);
+			int jumpAddress = svm->AddCode(jump);
+			jz.operand = jumpAddress + 1;
+			svm->SetCode(jzAddress, jz);
+			children[1]->Compile(e, svm, bc);
+
 			SVM::Instruction ins(Opcode::OR);
-			svm->AddCode(ins);
+			int next = svm->AddCode(ins) + 1;
+			jump.operand = next;
+			svm->SetCode(jumpAddress, jump);
 		}
 		else if (op == "&&"){
-			children[1]->Compile(e, svm, bc);
 			children[0]->Compile(e, svm, bc);
+			SVM::Instruction jz(Opcode::JZ);
+			int jzAddress = svm->AddCode(jz);
+			children[1]->Compile(e, svm, bc);
 
 			SVM::Instruction ins(Opcode::AND);
 			svm->AddCode(ins);
+			SVM::Instruction jump(Opcode::JUMP);
+			int jumpAddress = svm->AddCode(jump);
+			jz.operand = jumpAddress + 1;
+			svm->SetCode(jzAddress, jz);
+			SVM::Instruction push(Opcode::PUSHB, false);
+			int next = svm->AddCode(push) + 1;
+			jump.operand = next;
+			svm->SetCode(jumpAddress, jump);
 		}
 		else if (op == "!"){
 			children[0]->Compile(e, svm, bc);

@@ -5,7 +5,7 @@
 
 inline void InitSLib(string& code){
 	string pairs = "def pairs(t)\
-						if istable(t) == false then\
+						if !istable(t) then\
 							return def() return false end\
 						end\
 				   		local copy = {}\

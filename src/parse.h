@@ -81,10 +81,16 @@ private:
 	bool matchLValue(shared_ptr<Astree>& astree, bool array = false);
 	bool matchTerm(shared_ptr<Astree>& astree);
 	bool matchNegnotExpr(shared_ptr<Astree>& astree);
+	bool matchMuldivExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);
 	bool matchMuldivExpr(shared_ptr<Astree>& astree);
+	bool matchAddsubExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);
 	bool matchAddsubExpr(shared_ptr<Astree>& astree);
+	bool matchCompExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);
 	bool matchCompExpr(shared_ptr<Astree>& astree);
-	bool matchAndorExpr(shared_ptr<Astree>& astree);
+	bool matchAndExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);
+	bool matchAndExpr(shared_ptr<Astree>& astree);
+	bool matchOrExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);
+	bool matchOrExpr(shared_ptr<Astree>& astree);
 	bool matchAssignExpr(shared_ptr<Astree>& astree, bool norFor = false);
 	bool matchExpr(shared_ptr<Astree>& astree, bool norFor = false);
 	bool matchIf(shared_ptr<Astree>& astree);
