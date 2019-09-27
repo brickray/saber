@@ -110,7 +110,7 @@ void main(int argc, char** argv){
 	state.Init();
 	state.RegisterLib("test", test);
 
-	state.ShowCode(true);
+//	state.ShowCode(true);
 	state.Compile(code);
 	state.Run();
 

@@ -23,7 +23,6 @@
 #include "ast\astDot.h"
 #include "ast\astTable.h"
 #include "ast\astHash.h"
-#include "ast\astGa.h"
 
 //----------------grammar------------------
 // number     : '0' .. '9' + | number (.) '0' .. '9' +

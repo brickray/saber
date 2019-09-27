@@ -23,8 +23,8 @@ public:
 	struct Instruction{
 		char opcode;
 		bool relative;
-		bool getad;
-		char padding0;
+		bool padding1;
+		char padding2;
 		union{
 			int operand;
 			float operandf;
@@ -32,16 +32,16 @@ public:
 		string operands;
 
 		Instruction(char opc, int ope = 0, bool r = false)
-		:opcode(opc), operand(ope), relative(r), getad(false){}
+			:opcode(opc), operand(ope), relative(r){}
 
 		Instruction(char opc, float ope)
-			:opcode(opc), operandf(ope), relative(false), getad(false){}
+			:opcode(opc), operandf(ope), relative(false){}
 
 		Instruction(char opc, string ope)
-			:opcode(opc), operands(ope), relative(false), getad(false){}
+			:opcode(opc), operands(ope), relative(false){}
 
 		Instruction(char opc, int ope1, string ope2)
-			:opcode(opc), operand(ope1), operands(ope2), relative(false), getad(false){}
+			:opcode(opc), operand(ope1), operands(ope2), relative(false){}
 	};
 
 	struct Register{
@@ -129,10 +129,11 @@ private:
 	void constructTDot(Tptr t, int fp, int ap);
 	void createClosure(Tptr t);
 	Clptr createClosure(Clptr o);
-	void overrideOp(Value& t, const char* opname, int np, const char* op);
 	Value* getAddress(Instruction& ins);
-	void move(Instruction& ins);
-	bool getBool(Value& v);
+	void moveto(Instruction& ins);
+	bool isfalse(Value& o);
+	bool isequal(Value&l, Value& r);
+	void tryOverrideOp(Value& t, int np, const char* op);
 
 	void dumpStack();
 };

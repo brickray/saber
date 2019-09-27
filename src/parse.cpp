@@ -242,7 +242,6 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 	if (match("#", &tok)){
 		shared_ptr<Astree> astHash = shared_ptr<Astree>(new AstHash());
 		astree = astHash;
-		shared_ptr<Astree> p = shared_ptr<Astree>(new AstPrimary());
 		if (!matchLValue(left)){
 			Error::GetInstance()->ProcessError("行数:%d,[#]只能应用在左值上", tok->GetLineNumber());
 			return false;
@@ -250,30 +249,6 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 
 		left = RotateBTree(left);
 		astree->AddChild(left);
-		return true;
-	}
-	else if (match("&", &tok)){
-		shared_ptr<Astree> astGa = shared_ptr<Astree>(new AstGa());
-		astree = astGa;
-		shared_ptr<Astree> p = shared_ptr<Astree>(new AstPrimary());
-		if (!matchLValue(left)){
-			Error::GetInstance()->ProcessError("行数:%d,[&]只能应用在左值上", tok->GetLineNumber());
-			return false;
-		}
-
-		bool istable = left->GetToken()->GetToken() == "." ||
-			left->GetToken()->GetToken() == "[";
-		if (istable){
-			left = RotateBTree(left);
-			shared_ptr<Astree> g = shared_ptr<Astree>(new AstGlobal());
-			g->SetTable(true);
-			g->AddChild(left);
-			astree->AddChild(g);
-		}
-		else{
-			astree->AddChild(left);
-		}
-
 		return true;
 	}
 
@@ -730,7 +705,7 @@ bool SyntaxParse::matchForGeneric(shared_ptr<Astree>& astree){
 	else{
 		shared_ptr<Astree> g = shared_ptr<Astree>(new AstGlobal());
 		shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
-		if (matchIdentifier(name)){
+		if (!matchIdentifier(name)){
 			lexer.SetTkptr(p);
 			return false;
 		}

@@ -344,9 +344,7 @@ static int sin(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.sin", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = sinf(DegreeToRadians(v.GetFloat()));
-	else if (v.IsInteger()) ret = sinf(DegreeToRadians(v.GetInteger()));
+	Float ret = sinf(DegreeToRadians(v.GetNumber()));
 
 	svm->PushFloat(ret);
 
@@ -358,9 +356,7 @@ static int asin(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.asin", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = asinf(v.GetFloat());
-	else if (v.IsInteger()) ret = asinf(v.GetInteger());
+	Float ret = asinf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -372,9 +368,7 @@ static int cos(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.cos", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = cosf(DegreeToRadians(v.GetFloat()));
-	else if (v.IsInteger()) ret = cosf(DegreeToRadians(v.GetInteger()));
+	Float ret = cosf(DegreeToRadians(v.GetNumber()));
 
 	svm->PushFloat(ret);
 
@@ -386,9 +380,7 @@ static int acos(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.acos", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = acosf(v.GetFloat());
-	else if (v.IsInteger()) ret = acosf(v.GetInteger());
+	Float ret = acosf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -400,9 +392,7 @@ static int tan(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.tan", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = tanf(DegreeToRadians(v.GetFloat()));
-	else if (v.IsInteger()) ret = tanf(DegreeToRadians(v.GetInteger()));
+	Float ret = tanf(DegreeToRadians(v.GetNumber()));
 
 	svm->PushFloat(ret);
 
@@ -414,9 +404,7 @@ static int atan(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.atan", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = atanf(v.GetFloat());
-	else if (v.IsInteger()) ret = atanf(v.GetInteger());
+	Float ret = atanf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -428,9 +416,7 @@ static int radians(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.radians", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = DegreeToRadians(v.GetFloat());
-	else if (v.IsInteger()) ret = DegreeToRadians(v.GetInteger());
+	Float ret = DegreeToRadians(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -442,9 +428,7 @@ static int degree(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.degree", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = RadiansToDegree(v.GetFloat());
-	else if (v.IsInteger()) ret = RadiansToDegree(v.GetInteger());
+	Float ret = RadiansToDegree(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -456,9 +440,7 @@ static int abs(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.abs", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = fabsf(v.GetFloat());
-	else if (v.IsInteger()) ret = fabsf(v.GetInteger());
+	Float ret = fabsf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -470,9 +452,7 @@ static int log(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.log", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = logf(v.GetFloat());
-	else if (v.IsInteger()) ret = logf(v.GetInteger());
+	Float ret = logf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -485,9 +465,7 @@ static int log2(SVM* svm, int numParams){
 	checkNumber("math.log2", v);
 
 	static Float lg2 = logf(2);
-	Float ret;
-	if (v.IsFloat()) ret = logf(v.GetFloat()) / lg2;
-	else if (v.IsInteger()) ret = logf(v.GetInteger()) / lg2;
+	Float ret  = logf(v.GetNumber()) / lg2;
 
 	svm->PushFloat(ret);
 
@@ -500,9 +478,7 @@ static int log10(SVM* svm, int numParams){
 	checkNumber("math.log10", v);
 
 	static Float lg10 = logf(10);
-	Float ret;
-	if (v.IsFloat()) ret = logf(v.GetFloat()) / lg10;
-	else if (v.IsInteger()) ret = logf(v.GetInteger()) / lg10;
+	Float ret = logf(v.GetNumber()) / lg10;
 
 	svm->PushFloat(ret);
 
@@ -514,9 +490,7 @@ static int exp(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.exp", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = expf(v.GetFloat());
-	else if (v.IsInteger()) ret = expf(v.GetInteger());
+	Float ret = expf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -528,9 +502,7 @@ static int sqrt(SVM* svm, int numParams){
 	Value v = svm->PopStack();
 	checkNumber("math.sqrt", v);
 
-	Float ret;
-	if (v.IsFloat()) ret = sqrtf(v.GetFloat());
-	else if (v.IsInteger()) ret = sqrtf(v.GetInteger());
+	Float ret = sqrtf(v.GetNumber());
 
 	svm->PushFloat(ret);
 
@@ -545,10 +517,8 @@ static int pow(SVM* svm, int numParams){
 	checkNumber("math.pow", exponent, 2);
 
 	Float b = 1, e = 1;
-	if (base.IsFloat()) b = base.GetFloat();
-	else if (base.IsInteger()) b = base.GetInteger();
-	if (exponent.IsFloat()) e = exponent.GetFloat();
-	else if (exponent.IsInteger()) e = exponent.GetInteger();
+	b = base.GetNumber();
+	e = exponent.GetNumber();
 
 	Float ret = powf(b, e);
 	svm->PushFloat(ret);
@@ -597,7 +567,13 @@ static int mmax(SVM* svm, int numParams){
 	Value v2 = svm->PopStack();
 	Value v1 = svm->PopStack();
 
-	v1 = (v1 > v2).GetBoolean() ? v1 : v2;
+	if (v1.IsNumber() && v2.IsNumber()){
+		v1 = v1.GetNumber() > v2.GetNumber() ? v1 : v2;
+	}
+	else if (v1.IsString() && v2.IsString()){
+		v1 = v1.GetString() > v2.GetString() ? v1 : v2;
+	}
+
 	svm->PushStack(v1);
 
 	return 1;
@@ -608,7 +584,13 @@ static int mmin(SVM* svm, int numParams){
 	Value v2 = svm->PopStack();
 	Value v1 = svm->PopStack();
 
-	v1 = (v1 < v2).GetBoolean() ? v1 : v2;
+	if (v1.IsNumber() && v2.IsNumber()){
+		v1 = v1.GetNumber() < v2.GetNumber() ? v1 : v2;
+	}
+	else if (v1.IsString() && v2.IsString()){
+		v1 = v1.GetString() < v2.GetString() ? v1 : v2;
+	}
+
 	svm->PushStack(v1);
 
 	return 1;
@@ -912,7 +894,8 @@ static int format(SVM* svm, int numParams){
 				}
 
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + "d";
+				string f = "%d";
+				if (precise) f = "%." + to_string(precise) + "d";
 				_snprintf(buf, sizeof(buf), f.c_str(), v.GetInteger());
 				ret += buf;
 				break;
@@ -925,7 +908,8 @@ static int format(SVM* svm, int numParams){
 
 				unsigned int i = v.GetInteger();
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + "u";
+				string f = "%u";
+				if(precise) f = "%." + to_string(precise) + "u";
 				_snprintf(buf, sizeof(buf), f.c_str(), i);
 				ret += buf;
 				break;
@@ -939,7 +923,9 @@ static int format(SVM* svm, int numParams){
 
 				unsigned int i = v.GetInteger();
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + next;
+				string f = "%";
+				f += next;
+				if(precise) f = "%." + to_string(precise) + next;
 				_snprintf(buf, sizeof(buf), f.c_str(), i);
 
 				ret += buf;
@@ -953,7 +939,8 @@ static int format(SVM* svm, int numParams){
 
 				unsigned int i = v.GetInteger();
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + "o";
+				string f = "%o";
+				if(precise) f = "%." + to_string(precise) + "o";
 				_snprintf(buf, sizeof(buf), f.c_str(), i);
 				ret += buf;
 				break;
@@ -978,7 +965,9 @@ static int format(SVM* svm, int numParams){
 				if (v.IsInteger()) value = v.GetInteger();
 				else value = v.GetFloat();
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + next;
+				string f = "%";
+				f += next;
+				if(precise) f = "%." + to_string(precise) + next;
 				_snprintf(buf, sizeof(buf), f.c_str(), value);
 
 				ret += buf;
@@ -992,7 +981,9 @@ static int format(SVM* svm, int numParams){
 				}
 
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + next;
+				string f = "%";
+				f += next;
+				if(precise) f = "%." + to_string(precise) + next;
 				_snprintf(buf, sizeof(buf), f.c_str(), v.IsInteger() ? v.GetInteger() : v.GetFloat());
 
 				ret += buf;
@@ -1009,7 +1000,8 @@ static int format(SVM* svm, int numParams){
 				else value = v.GetFloat();
 
 				char buf[256] = { 0 };
-				string f = "%." + to_string(precise) + "f";
+				string f = "%f";
+				if(precise) f = "%." + to_string(precise) + "f";
 				_snprintf(buf, sizeof(buf), f.c_str(), value);
 				ret += buf;
 

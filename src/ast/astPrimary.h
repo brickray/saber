@@ -61,7 +61,6 @@ public:
 				}
 
 				SVM::Instruction ins(Opcode::PUSH, p, tok);
-				if (bc.getad) ins.getad = true;
 				svm->AddCode(ins);
 
 				bc.nearst = p;

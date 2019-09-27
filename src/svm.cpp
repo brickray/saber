@@ -218,15 +218,14 @@ void SVM::execute(){
 	Instruction& ins = code[ip];
 	switch (ins.opcode){
 	case Opcode::MOVE:{
-		move(ins);
+		moveto(ins);
 
 		break;
 	}
 	case Opcode::JZ:{
 		Value& v = stack[--sp];
-		bool t = getBool(v);
-
-		if (!t){
+		//栈顶值为false则跳转
+		if (isfalse(v)){
 			ip = ins.operand;
 			return;
 		}
@@ -235,9 +234,8 @@ void SVM::execute(){
 	}
 	case Opcode::JNZ:{
 		Value& v = stack[--sp];
-		bool t = getBool(v);
-
-		if (t){
+		//栈顶值为true则跳转
+		if (!isfalse(v)){
 			ip = ins.operand;
 			return;
 		}
@@ -424,12 +422,7 @@ void SVM::execute(){
 			stack[sp - 1] = v;
 		}
 		else{
-			if (ins.getad){
-				Value* v = getAddress(ins);
-				if (v->IsPointer()) stack[sp++].SetPointer(v->GetPointer());
-				else stack[sp++].SetPointer(v);
-			}
-			else stack[sp++] = *getAddress(ins);
+			stack[sp++] = *getAddress(ins);
 		}
 		break;
 	}
@@ -438,10 +431,8 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::RESERVE:{
-		for (int i = 0; i < ins.operand; ++i){
-			//局部变量初始化
-			stack[sp++].SetNull();
-		}
+		//预留局部变量
+		sp += ins.operand;
 
 		break;
 	}
@@ -470,8 +461,7 @@ void SVM::execute(){
 			}
 		}
 		else{
-			if (ins.getad) value.SetPointer(t->GetValuePtr(s));
-			else value = t->GetValue(s);
+			value = t->GetValue(s);
 		}
 
 		if (!operand){
@@ -523,247 +513,274 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::NEG:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_neg", 0, "-");
+		Value& r = stack[sp - 1];
+		if (r.IsInteger()){
+			r.SetInt(-r.GetInteger());
+		}
+		else if (r.IsFloat()){
+			r.SetFloat(-r.GetFloat());
 		}
 		else{
-			v = -v;
-			sp++;
+			tryOverrideOp(r, 0, "_neg");
 		}
 
 		break;
 	}
 	case Opcode::ADD:{
-		Value& v1 = stack[--sp];
-		Value& v2 = stack[sp - 1];
-		if (v1.IsTable()){
-			overrideOp(v1, "_add", 1, "+");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() + r.GetInteger());
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() + r.GetNumber());
+		}
+		else if (l.IsString() && r.IsString()){
+			r.SetString(l.GetString() + r.GetString());
 		}
 		else{
-			v2 = v1 + v2;
+			tryOverrideOp(l, 1, "_add");
 		}
 
 		break;
 	}
 	case Opcode::SUB:{
-		Value& v1 = stack[--sp];
-		Value& v2 = stack[sp - 1];
-		if (v1.IsTable()){
-			overrideOp(v1, "_sub", 1, "-");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() - r.GetInteger());
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() - r.GetNumber());
 		}
 		else{
-			v2 = v1 - v2;
+			tryOverrideOp(l, 1, "_sub");
 		}
 
 		break;
 	}
 	case Opcode::MUL:{
-		Value& v1 = stack[--sp];
-		Value& v2 = stack[sp - 1];
-		if (v1.IsTable()){
-			overrideOp(v1, "_mul", 1, "*");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() * r.GetInteger());
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() * r.GetNumber());
 		}
 		else{
-			v2 = v1 * v2;
+			tryOverrideOp(l, 1, "_mul");
 		}
 
 		break;
 	}
 	case Opcode::DIV:{
-		Value& v1 = stack[--sp];
-		Value& v2 = stack[sp - 1];
-		if (v1.IsTable()){
-			overrideOp(v1, "_div", 1, "/");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() / r.GetInteger());
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() / r.GetNumber());
 		}
 		else{
-			v2 = v1 / v2;
+			tryOverrideOp(l, 1, "_div");
 		}
 
 		break;
 	}
 	case Opcode::MOD:{
-		Value& v1 = stack[--sp];
-		Value& v2 = stack[sp - 1];
-		if (v1.IsTable()){
-			overrideOp(v1, "_mod", 1, "%");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() % r.GetInteger());
 		}
 		else{
-			v2 = v1 % v2;
+			tryOverrideOp(l, 1, "_mod");
 		}
 
 		break;
 	}
 	case Opcode::PLUSEQ:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_pluseq", 1, "+=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() + r.GetInteger());
+			moveto(ins);
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() + r.GetNumber());
+			moveto(ins);
+		}
+		else if (l.IsString() && r.IsString()){
+			r.SetString(l.GetString() + r.GetString());
+			moveto(ins);
 		}
 		else{
-			//如果变量类型为字符串，这里顺序很重要
-			Value& v2 = stack[sp - 1];
-			v2 = v + v2;
-			move(ins);
+			tryOverrideOp(l, 1, "_pluseq");
 		}
 
 		break;
 	}
 	case Opcode::MIMUSEQ:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_minuseq", 1, "-=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() - r.GetInteger());
+			moveto(ins);
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() - r.GetNumber());
+			moveto(ins);
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v - v2;
-			move(ins);
+			tryOverrideOp(l, 1, "_minuseq");
 		}
 
 		break;
 	}
 	case Opcode::MULEQ:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_muleq", 1, "*=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() * r.GetInteger());
+			moveto(ins);
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() * r.GetNumber());
+			moveto(ins);
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v * v2;
-			move(ins);
+			tryOverrideOp(l, 1, "_muleq");
 		}
 
 		break;
 	}
 	case Opcode::DIVEQ:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_diveq", 1, "/=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() / r.GetInteger());
+			moveto(ins);
+		}
+		else if (l.IsNumber() && r.IsNumber()){
+			r.SetFloat(l.GetNumber() / r.GetNumber());
+			moveto(ins);
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v / v2;
-			move(ins);
+			tryOverrideOp(l, 1, "_diveq");
 		}
 
 		break;
 	}
 	case Opcode::MODEQ:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_modeq", 1, "%=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsInteger() && r.IsInteger()){
+			r.SetInt(l.GetInteger() % r.GetInteger());
+			moveto(ins);
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v / v2;
-			move(ins);
+			tryOverrideOp(l, 1, "_modeq");
 		}
 
 		break;
 	}
 	case Opcode::GT:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_gt", 1, ">");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsNumber() && r.IsNumber()){
+			r.SetBool(l.GetNumber() > r.GetNumber());
+		}
+		else if (l.IsString() && r.IsString()){
+			r.SetBool(l.GetString() > r.GetString());
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v > v2;
+			tryOverrideOp(l, 1, "_gt");
 		}
 
 		break;
 	}
 	case Opcode::LT:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_lt", 1, "<");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsNumber() && r.IsNumber()){
+			r.SetBool(l.GetNumber() < r.GetNumber());
+		}
+		else if (l.IsString() && r.IsString()){
+			r.SetBool(l.GetString() < r.GetString());
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v < v2;
+			tryOverrideOp(l, 1, "_lt");
 		}
 
 		break;
 	}
 	case Opcode::GE:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_ge", 1, ">=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsNumber() && r.IsNumber()){
+			r.SetBool(l.GetNumber() >= r.GetNumber());
+		}
+		else if (l.IsString() && r.IsString()){
+			r.SetBool(l.GetString() >= r.GetString());
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v >= v2;
+			tryOverrideOp(l, 1, "_ge");
 		}
+		
 
 		break;
 	}
 	case Opcode::LE:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_le", 1, "<=");
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		if (l.IsNumber() && r.IsNumber()){
+			r.SetBool(l.GetNumber() <= r.GetNumber());
+		}
+		else if (l.IsString() && r.IsString()){
+			r.SetBool(l.GetString() <= r.GetString());
 		}
 		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v <= v2;
+			tryOverrideOp(l, 1, "_le");
 		}
 
 		break;
 	}
 	case Opcode::EQ:{
-		Value& v = stack[--sp];
-		if (v.IsTable() && (v.GetTable()->HasValue("_equal") || v.GetTable()->HasValue("_default"))){
-			overrideOp(v, "_equal", 1, "==");
-		}
-		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v == v2;
-		}
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		r.SetBool(isequal(l, r));
 
 		break;
 	}
 	case Opcode::NE:{
-		Value& v = stack[--sp];
-		if (v.IsTable() && (v.GetTable()->HasValue("_equal") || v.GetTable()->HasValue("_default"))){
-			overrideOp(v, "_nequal", 1, "!=");
-		}
-		else{
-			Value& v2 = stack[sp - 1];
-			v2 = v != v2;
-		}
+		Value& l = stack[--sp];
+		Value& r = stack[sp - 1];
+		r.SetBool(!isequal(l, r));
 
 		break;
 	}
 	case Opcode::OR:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_or", 1, "||");
-		}
-		else{
-			v.SetBool(getBool(v));
-			sp++;
-		}
+		Value& r = stack[--sp];
+		//或运算符左边肯定为false，所以运算结果取决于右边
+		r.SetBool(!isfalse(r));
+		sp++;
 
 		break;
 	}
 	case Opcode::AND:{
-		Value& v = stack[--sp];
-		if (v.IsTable()){
-			overrideOp(v, "_and", 1, "&&");
-		}
-		else{
-			v.SetBool(getBool(v));
-			sp++;
-		}
+		Value& r = stack[--sp];
+		//与运算符左边肯定为true， 所以运算结果取决于右边
+		r.SetBool(!isfalse(r));
+		sp++;
 
 		break;
 	}
 	case Opcode::NOT:{
-		Value& v = stack[sp - 1];
-		if (v.IsTable()){
-			overrideOp(v, "_not", 0, "!");
-		}
-		else{
-			stack[sp - 1] = !v;
-		}
+		Value& r = stack[sp - 1];
+		r.SetBool(isfalse(r));
+
 		break;
 	}
 	case Opcode::NOP:{//do nothing
@@ -812,27 +829,6 @@ Clptr SVM::createClosure(Clptr o){
 	return f;
 }
 
-void SVM::overrideOp(Value& t, const char* opname, int np, const char* op){
-	if (t.GetTable()->HasValue(opname)){
-		Value& func = t.GetTable()->GetValue(opname);
-		
-		PushStack(func);
-		CallScript(np);
-	}
-	else{
-		if (t.GetTable()->HasValue("_default")){
-			Value& func = t.GetTable()->GetValue("_default");
-
-			PushString(op);
-			PushStack(func);
-			CallScript(1);
-		}
-		else{
-			Error::GetInstance()->ProcessError("没有对应的操作符[%s]", op);
-		}
-	}
-}
-
 Value* SVM::getAddress(SVM::Instruction& ins){
 	Value* ret;
 	int operand = ins.operand;
@@ -847,10 +843,12 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 		while (true){
 			if (p){
 				if (p->cvs.find(operands) != p->cvs.end()){
+					//首先寻找闭包变量
 					ret = &p->cvs[operands];
 					break;
 				}
 				else if (p->variables.find(operands) != p->variables.end()){
+					//再寻找函数内的局部变量
 					int idx = p->variables[operands];
 					if (isStack(idx)){
 						int o = tcp + idx;
@@ -891,25 +889,83 @@ Value* SVM::getAddress(SVM::Instruction& ins){
 	return ret;
 }
 
-void SVM::move(SVM::Instruction& ins){
-	Value* v = getAddress(ins);
-	if (v->IsPointer()){
-		*(v->GetPointer()) = stack[--sp];
+void SVM::moveto(SVM::Instruction& ins){
+	*getAddress(ins) = stack[--sp];
+}
+
+bool SVM::isfalse(Value& v){
+	bool t;
+	if (v.IsBoolean()) t = !v.GetBoolean();
+	else if (v.IsNumber()) t = v.GetNumber() == 0;
+	else if (v.IsNull()) t = true;
+	else t = false;
+
+	return t;
+}
+
+bool SVM::isequal(Value& l, Value& r){
+	if (l.IsNumber() && r.IsNumber()){
+		//int和float类型有可能相等
+		return l.GetNumber() == r.GetNumber();
+	}
+
+	if (l.GetType() != r.GetType()){
+		//除了以上2中类型外,类型不相同肯定不相等
+		return false;
 	}
 	else{
-		*v = stack[--sp];
+		//根据类型分别判断
+		switch (l.GetType()){
+		case EValueType::ENULL: return true;
+		case EValueType::EBOOLEAN: return l.GetBoolean() == r.GetBoolean();
+		case EValueType::ESTRING: return l.GetString() == r.GetString();
+		case EValueType::EFUNC: return l.GetFunction() == r.GetFunction();
+		case EValueType::ENATIVEFUNC: return l.GetNativeFunction() == r.GetNativeFunction();
+		case EValueType::ELIGHTUDATA: return l.GetLightUData() == r.GetLightUData();
+		case EValueType::ETABLE: return l.GetTable() == r.GetTable();
+		case EValueType::ECOROUTINE: return l.GetCoroutine() == r.GetCoroutine();
+		case EValueType::EPOINTER: return l.GetPointer() == r.GetPointer();
+		}
 	}
 }
 
-bool SVM::getBool(Value& v){
-	bool t;
-	if (v.IsBoolean()) t = v.GetBoolean();
-	else if (v.IsFloat()) t = v.GetFloat() != 0;
-	else if (v.IsInteger()) t = v.GetInteger() != 0;
-	else if (v.IsNull()) t = false;
-	else t = true;
+void SVM::tryOverrideOp(Value& t, int np, const char* op){
+	static hash_map<string, string> opmap = {
+		{ "_neg", "-" },
+		{ "_add", "+" },
+		{ "_sub", "-" },
+		{ "_mul", "*" },
+		{ "_div", "/" },
+		{ "_mod", "%" },
+		{ "_pluseq", "+=" },
+		{ "minuseq", "-=" },
+		{ "_muleq", "*=" },
+		{ "_diveq", "/=" },
+		{ "_modeq", "%=" },
+		{ "_gt", ">" },
+		{ "_lt", "<" },
+		{ "_ge", ">=" },
+		{ "_le", "<=" }
+	};
 
-	return t;
+	if (t.IsTable()){
+		if (t.GetTable()->HasValue(op)){
+			Value& func = t.GetTable()->GetValue(op);
+			PushStack(func);
+			CallScript(np);
+		}
+		else{
+			Error::GetInstance()->ProcessError("table没有重载操作符[%s]", opmap[op].c_str());
+		}
+	}
+	else{
+		if (!np){
+			Error::GetInstance()->ProcessError("尝试对类型%s进行%s操作", t.GetTypeString().c_str(), opmap[op].c_str());
+		}
+		else{
+			Error::GetInstance()->ProcessError("尝试对类型%s和%s进行%s操作", t.GetTypeString().c_str(), stack[sp - 1].GetTypeString().c_str(), opmap[op].c_str());
+		}
+	}
 }
 
 void SVM::dumpStack(){

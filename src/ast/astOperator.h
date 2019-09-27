@@ -36,8 +36,13 @@ public:
 				}
 			}
 
+			//不足用null补齐
 			for (int i = numVariables - loop - 1; i >= 0; --i){
 				children[loop + i]->Compile(e, svm, bc);
+				SVM::Instruction pushn(Opcode::PUSHN);
+				svm->AddCode(pushn);
+				SVM::Instruction ins(Opcode::MOVE, bc.nearst, bc.nearstS);
+				svm->AddCode(ins);
 			}
 		}
 		else if (op == "+"){
@@ -173,12 +178,17 @@ public:
 		else if (op == "||"){
 			children[0]->Compile(e, svm, bc);
 
+			//或运算符左边为false则跳转到运算符右边的指令地址
 			SVM::Instruction jz(Opcode::JZ);
 			int jzAddress = svm->AddCode(jz);
+			//或运算符左边为true则往栈里压入true然后跳过运算符右边的指令
+			//因为不需要执行右边结果就已经确定
 			SVM::Instruction push(Opcode::PUSHB, true);
-			svm->AddCode(push) + 1;
+			svm->AddCode(push);
 			SVM::Instruction jump(Opcode::JUMP);
 			int jumpAddress = svm->AddCode(jump);
+			
+			//左边为false则对右边进行求值
 			jz.operand = jumpAddress + 1;
 			svm->SetCode(jzAddress, jz);
 			children[1]->Compile(e, svm, bc);
@@ -190,18 +200,25 @@ public:
 		}
 		else if (op == "&&"){
 			children[0]->Compile(e, svm, bc);
-			SVM::Instruction jz(Opcode::JZ);
-			int jzAddress = svm->AddCode(jz);
+
+			//与运算符左边为true则跳转到运算符右边的指令地址
+			SVM::Instruction jnz(Opcode::JNZ);
+			int jnzAddress = svm->AddCode(jnz);
+			//与运算符左边为false则往栈里压入false然后跳过运算符右边的指令
+			//执行结果必定为false
+			//压入false然后跳转
+			SVM::Instruction push(Opcode::PUSHB, false);
+			svm->AddCode(push);
+			SVM::Instruction jump(Opcode::JUMP);
+			int jumpAddress = svm->AddCode(jump);
+
+			//左边为true则对右边进行求值
+			jnz.operand = jumpAddress + 1;
+			svm->SetCode(jnzAddress, jnz);
 			children[1]->Compile(e, svm, bc);
 
 			SVM::Instruction ins(Opcode::AND);
-			svm->AddCode(ins);
-			SVM::Instruction jump(Opcode::JUMP);
-			int jumpAddress = svm->AddCode(jump);
-			jz.operand = jumpAddress + 1;
-			svm->SetCode(jzAddress, jz);
-			SVM::Instruction push(Opcode::PUSHB, false);
-			int next = svm->AddCode(push) + 1;
+			int next = svm->AddCode(ins) + 1;
 			jump.operand = next;
 			svm->SetCode(jumpAddress, jump);
 		}
