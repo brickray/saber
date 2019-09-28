@@ -91,12 +91,6 @@ inline void checkCoroutine(string func, Value& v, int idx = 1){
 	}
 }
 
-inline void checkPointer(string func, Value& v, int idx = 1){
-	if (!v.IsPointer()){
-		Error::GetInstance()->ProcessError("%s函数第%d个参数类型需为pointer\n", func.c_str(), idx);
-	}
-}
-
 SABER_NAMESPACE_END
 
 #endif

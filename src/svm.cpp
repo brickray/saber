@@ -792,6 +792,7 @@ void SVM::execute(){
 }
 
 void SVM::constructTDot(Tptr t, int fp, int ap){
+	//构建可变参
 	t->AddInt("num", ap - fp + 1);
 	for (int i = fp - 1; i < ap; ++i){
 		Value& p = stack[cp + i];
@@ -808,6 +809,8 @@ void SVM::createClosure(Tptr table){
 				it->second.SetFunction(createClosure(r));
 		}
 		else if (it->second.IsTable()){
+			//table内的table也可能有非局部变量
+			//所以这里递归处理
 			createClosure(it->second.GetTable());
 		}
 	}
@@ -816,14 +819,14 @@ void SVM::createClosure(Tptr table){
 Clptr SVM::createClosure(Clptr o){
 	Clptr f = Clptr(new Closure(*o));
 	for (auto it : cl->cvs){
+		//将当前函数内的非局部变量复制到闭包
 		f->cvs[it.first] = it.second;
 	}
 	for (auto it : cl->variables){
+		//将当前函数内的变量复制到闭包
 		Value& v = f->cvs[it.first];
 		int idx = it.second;
-		Value* src = getAddress(Instruction(Opcode::NOP, idx));
-		if (src->IsPointer()) v = *src->GetPointer();
-		else v = *src;
+		v = *getAddress(Instruction(Opcode::NOP, idx));
 	}
 
 	return f;
@@ -924,7 +927,6 @@ bool SVM::isequal(Value& l, Value& r){
 		case EValueType::ELIGHTUDATA: return l.GetLightUData() == r.GetLightUData();
 		case EValueType::ETABLE: return l.GetTable() == r.GetTable();
 		case EValueType::ECOROUTINE: return l.GetCoroutine() == r.GetCoroutine();
-		case EValueType::EPOINTER: return l.GetPointer() == r.GetPointer();
 		}
 	}
 }

@@ -302,25 +302,6 @@ static int iscoroutine(SVM* svm, int numParams){
 	return 1;
 }
 
-static int ispointer(SVM* svm, int numParams){
-	checkParamsNum("ispointer", numParams);
-	Value v = svm->PopStack();
-
-	svm->PushBool(v.IsPointer());
-
-	return 1;
-}
-
-static int getvfrompointer(SVM* svm, int numParams){
-	checkParamsNum("getvfrompointer", numParams);
-	Value v = svm->PopStack();
-	checkPointer("getvfrompointer", v);
-
-	svm->PushStack(*v.GetPointer());
-
-	return 1;
-}
-
 static int test(SVM* svm, int numParams){
 	if (numParams == 1){
 		svm->CallScript(0);
@@ -1610,8 +1591,6 @@ static RegisterFunction basic[] = {
 	{ "isnativefunction", isnativefunction },
 	{ "istable", istable },
 	{ "iscoroutine", iscoroutine },
-	{ "ispointer", ispointer },
-	{ "vfp", getvfrompointer },
 //	{ "test", test },
 	{ "", nullptr },
 };

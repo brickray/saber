@@ -16,8 +16,7 @@ enum EValueType{
 	ELIGHTUDATA = 1 << 6,
 	ETABLE      = 1 << 7,
 	ECOROUTINE  = 1 << 8,
-	EPOINTER    = 1 << 9,
-	ENULL       = 1 << 10,
+	ENULL       = 1 << 9,
 	ENUMBER     = EINTEGER | EFLOAT,
 };
 
@@ -92,7 +91,6 @@ public:
 		else if (IsLightUData()) ret = "lightudata";
 		else if (IsTable()) ret = "table";
 		else if (IsCoroutine()) ret = "coroutine";
-		else if (IsPointer()) ret = "pointer";
 		else if (IsNull()) ret = "null";
 
 		return ret;
@@ -106,7 +104,6 @@ public:
 	void SetLightUData(void* p) { type = EValueType::ELIGHTUDATA; value.iValue = Integer(p); value.cl = nullptr; value.t = nullptr; }
 	void SetTable(Tptr t) { type = EValueType::ETABLE; value.t = t; value.cl = nullptr; }
 	void SetCoroutine(Coptr co) { type = EValueType::ECOROUTINE; value.co = co; value.cl = nullptr; value.t = nullptr; }
-	void SetPointer(Value* p) { type = EValueType::EPOINTER; value.iValue = Integer(p); value.cl = nullptr; value.t = nullptr; }
 	void SetNull() { type = EValueType::ENULL; value.cl = nullptr; value.t = nullptr; }
 	bool IsBoolean() const { return type == EValueType::EBOOLEAN; }
 	bool IsInteger() const { return type == EValueType::EINTEGER; }
@@ -118,7 +115,6 @@ public:
 	bool IsLightUData() const { return type == EValueType::ELIGHTUDATA; }
 	bool IsTable() const { return type == EValueType::ETABLE; }
 	bool IsCoroutine() const { return type == EValueType::ECOROUTINE; }
-	bool IsPointer() const { return type == EValueType::EPOINTER; }
 	bool IsNull() const { return type == EValueType::ENULL; }
 	bool GetBoolean() const { return value.bValue; }
 	Integer GetInteger() const { return value.iValue; }
@@ -130,7 +126,6 @@ public:
 	Integer GetLightUData() const { return value.iValue; }
 	Tptr& GetTable() { return value.t; }
 	Coptr& GetCoroutine() { return value.co; }
-	Value* GetPointer() { return (Value*)value.iValue; }
 
 	Value& operator=(Value& v){
 		if (type == EValueType::ETABLE&&v.type == EValueType::ENULL)
@@ -177,22 +172,28 @@ public:
 		else if (IsLightUData()){
 			ret = to_string(value.iValue);
 		}
+		else if (IsFunction()){
+			char hex[32] = { 0 };
+			_snprintf(hex, sizeof(hex), "function: %.8x", int(value.cl.get()));
+			ret = hex;
+		}
+		else if (IsNativeFunction()){
+			char hex[32] = { 0 };
+			_snprintf(hex, sizeof(hex), "function: %.8x", int(value.sfunc));
+			ret = hex;
+		}
 		else if (IsTable()){
-			ret = "table";
+			char hex[32] = { 0 };
+			_snprintf(hex, sizeof(hex), "table: %.8x", int(value.t.get()));
+			ret = hex;
 		}
 		else if (IsCoroutine()){
-			ret = "coroutine";
-		}
-		else if (IsPointer()){
 			char hex[32] = { 0 };
-			_snprintf(hex, sizeof(hex), "pointer:%X", value.iValue);
+			_snprintf(hex, sizeof(hex), "coroutine: %.8x", int(value.co.get()));
 			ret = hex;
 		}
 		else if (IsNull()){
 			ret = "null";
-		}
-		else{
-			ret = "function";
 		}
 
 		return ret;
