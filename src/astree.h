@@ -15,6 +15,7 @@ struct BlockCnt{
 	bool isloop;
 	bool lasttail;
 	bool anyOperator; //只在return语句中使用
+	bool needRet;
 	int nearst;
 	int variableIndex;
 	int maxLevel;
@@ -28,6 +29,7 @@ struct BlockCnt{
 		isloop = false;
 		lasttail = false;
 		anyOperator = false;
+		needRet = false;
 		nearst = 0;
 		variableIndex = 0;
 		maxLevel = 0;

@@ -22,7 +22,7 @@ class SVM{
 public:
 	struct Instruction{
 		char opcode;
-		bool relative;
+		bool operandb;
 		bool padding1;
 		char padding2;
 		union{
@@ -32,16 +32,16 @@ public:
 		string operands;
 
 		Instruction(char opc, int ope = 0, bool r = false)
-			:opcode(opc), operand(ope), relative(r){}
+			:opcode(opc), operand(ope), operandb(r){}
 
 		Instruction(char opc, float ope)
-			:opcode(opc), operandf(ope), relative(false){}
+			:opcode(opc), operandf(ope), operandb(false){}
 
 		Instruction(char opc, string ope)
-			:opcode(opc), operands(ope), relative(false){}
+			:opcode(opc), operands(ope), operandb(false){}
 
 		Instruction(char opc, int ope1, string ope2)
-			:opcode(opc), operand(ope1), operands(ope2), relative(false){}
+			:opcode(opc), operand(ope1), operands(ope2), operandb(false){}
 	};
 
 	struct Register{

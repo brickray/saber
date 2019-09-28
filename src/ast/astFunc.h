@@ -29,12 +29,15 @@ public:
 			}
 		}
 
+		bool needRet = bc.needRet;
 		int start = fromFunc ? 0 : 1;
 		for (int j = start; j < children.size(); ++j){
 			int numParams = children[j]->GetNumChildren();
+			bc.needRet = true;
 			for (int i = 0; i < numParams; ++i){
 				children[j]->GetChild(i)->Compile(e, svm, bc);
 			}
+			bc.needRet = needRet;
 
 			if (!fromFunc && j == start){
 				children[0]->Compile(e, svm, bc);
@@ -45,6 +48,7 @@ public:
 			}
 
 			SVM::Instruction call(Opcode::CALL, numParams);
+			call.operandb = bc.needRet;
 			int address = svm->AddCode(call);
 			bc.nearst = address;
 		}

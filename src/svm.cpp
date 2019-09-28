@@ -255,6 +255,7 @@ void SVM::execute(){
 		}
 		else if (func.IsFunction()){
 			Clptr curCl = func.GetFunction();
+			curCl->needRet = ins.operandb;
 			int p = curCl->entry;
 			int nfp = curCl->fp;
 			bool vararg = curCl->vararg;
@@ -332,15 +333,16 @@ void SVM::execute(){
 	case Opcode::RET:{
 		Value& ret = stack[sp - 1];
 		int numRetVariable = ins.operand;
+		bool needRet = cl->needRet;
 		int base = cp + ap;
-		Tptr t = stack[base + TB_ADDRESS].GetTable();
-		Clptr ocl = stack[base + CL_ADDRESS].GetFunction();
-		int ofp = stack[base + FP_ADDRESS].GetInteger();
-		int oap = stack[base + AP_ADDRESS].GetInteger();
-		int oof = stack[base + OF_ADDRESS].GetInteger();
-		int ocp = stack[base + CP_ADDRESS].GetInteger();
-		int esp = stack[base + SP_ADDRESS].GetInteger();
-		int eip = stack[base + IP_ADDRESS].GetInteger();
+		Tptr t     = stack[base + TB_ADDRESS].GetTable();
+		Clptr ocl  = stack[base + CL_ADDRESS].GetFunction();
+		int ofp    = stack[base + FP_ADDRESS].GetInteger();
+		int oap    = stack[base + AP_ADDRESS].GetInteger();
+		int oof    = stack[base + OF_ADDRESS].GetInteger();
+		int ocp    = stack[base + CP_ADDRESS].GetInteger();
+		int esp    = stack[base + SP_ADDRESS].GetInteger();
+		int eip    = stack[base + IP_ADDRESS].GetInteger();
 		bool isCoroutine = eip & 0x80000000;
 		eip = eip & 0x7fffffff;
 
@@ -367,7 +369,13 @@ void SVM::execute(){
 		cp = ocp;
 		sp = esp;
 		ip = eip;
-		if (numRetVariable) stack[sp++] = ret;
+		if (numRetVariable){
+			stack[sp++] = ret;
+		}
+		else if (needRet){
+			////如果当前函数为赋值语句或为参数，且函数无返回值，则用null补足
+			stack[sp++].SetNull();
+		}
 
 		if (isCoroutine) cocallback(this);
 
@@ -408,7 +416,7 @@ void SVM::execute(){
 		break;
 	}
 	case Opcode::PUSH:{
-		if (ins.relative){
+		if (ins.operandb){
 			//这个位置必定是函数地址
 			int operand = ins.operand;
 			if (!operand) break;
@@ -1066,7 +1074,7 @@ string SVM::ShowCode(){
 			ret += "  ";
 			ret += to_string(code[i].operand);
 			ret += "  ";
-			ret += to_string(code[i].relative);
+			ret += to_string(code[i].operandb);
 		}
 
 		ret += "\n";
