@@ -107,7 +107,7 @@ public:
 	Value PopStack();
 
 	void Run();
-	void CallScript(int numParams);
+	void CallScript(int numParams, bool needRet = false);
 
 	SState* GetSState() const { return S; }
 	Register GetRegister() const { return{ ip, sp, cp, of, ap, fp }; }

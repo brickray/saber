@@ -23,6 +23,7 @@ public:
 		cl->closure = false;
 		cl->hascv = false;
 		cl->vararg = false;
+		cl->needRet = false;
 		cl->entry = start;
 		cl->fp = numParams;
 		func.SetFunction(cl);

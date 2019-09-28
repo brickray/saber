@@ -13,11 +13,13 @@ public:
 		svm->RemoveLastCode();
 
 		BlockCnt subBc;
+		subBc.needRet = true;
 		subBc.isloop = true;
 		subBc.cl = bc.cl;
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
 		children[0]->Compile(e, svm, subBc);
+		subBc.needRet = false;
 
 		int end = 0;
 		SVM::Instruction jz(Opcode::JZ, end);

@@ -142,13 +142,14 @@ void SVM::Run(){
 	}
 }
 
-void SVM::CallScript(int numParams){
+void SVM::CallScript(int numParams, bool needRet){
 	Value& func = stack[--sp];
 	if (func.IsNativeFunction()){
 		func.GetNativeFunction()(this, numParams);
 	}
 	else if (func.IsFunction()){
 		Clptr curCl = func.GetFunction();
+		curCl->needRet = needRet;
 		int p = curCl->entry;
 		int nfp = curCl->fp;
 		bool vararg = curCl->vararg;
@@ -369,12 +370,25 @@ void SVM::execute(){
 		cp = ocp;
 		sp = esp;
 		ip = eip;
-		if (numRetVariable){
+
+		//需要返回值的几种情况
+		//1.函数返回值作为赋值语句            g = A()
+		//2.函数返回值作为参数                func(A())
+		//3.函数返回值作为另一个函数的返回值  return A()
+		//4.函数返回值作为条件语句            if A() | while A() | for..
+		//5.函数返回值作为操作数              A() op ops
+		if (needRet && numRetVariable){
+			//如果当前函数有返回值且语句需要返回值则返回
 			stack[sp++] = ret;
 		}
 		else if (needRet){
-			////如果当前函数为赋值语句或为参数，且函数无返回值，则用null补足
+			////如果当前函数需要返回值，且函数无返回值，则用null补足
 			stack[sp++].SetNull();
+		}
+		else{
+			//为当前函数不需要返回值.
+			//所以函数即便有返回值也不用返回.
+			//这里什么也不做
 		}
 
 		if (isCoroutine) cocallback(this);
@@ -962,7 +976,7 @@ void SVM::tryOverrideOp(Value& t, int np, const char* op){
 		if (t.GetTable()->HasValue(op)){
 			Value& func = t.GetTable()->GetValue(op);
 			PushStack(func);
-			CallScript(np);
+			CallScript(np, true);
 		}
 		else{
 			Error::GetInstance()->ProcessError("table没有重载操作符[%s]", opmap[op].c_str());

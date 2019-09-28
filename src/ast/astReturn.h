@@ -22,6 +22,7 @@ public:
 		int numRetParams = children.size();
 
 		BlockCnt subBc;
+		subBc.needRet = true;
 		subBc.cl = bc.cl;
 		subBc.maxLevel = bc.maxLevel;
 		for (int i = 0; i < numRetParams; ++i)

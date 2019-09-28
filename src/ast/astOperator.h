@@ -13,11 +13,11 @@ public:
 	void SetTableInit() { tbinit = true; }
 	void SetNumVariables(int n) { numVariables = n; }
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
+		bool needRet = bc.needRet;
 		bc.needRet = true;
 
 		string op = token->GetToken();
 		if (op == "="){
-
 			int childs = children.size();
 			int loop = childs - numVariables > numVariables ? numVariables : childs - numVariables;
 			for (int i = 0; i < loop; ++i){
@@ -234,7 +234,7 @@ public:
 		bc.anyOperator = true;
 		bc.lasttail = false;
 
-		bc.needRet = false;
+		bc.needRet = needRet;
 	}
 
 	virtual string ToString() const{

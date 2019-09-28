@@ -26,7 +26,9 @@ public:
 			int loopAddress = svm->AddCode(nop);
 			svm->RemoveLastCode();
 
+			subBc.needRet = true;
 			children[1]->Compile(e, svm, subBc);
+			subBc.needRet = false;
 			SVM::Instruction jz(Opcode::JZ);
 			int jumpAddress = svm->AddCode(jz);
 
@@ -45,7 +47,9 @@ public:
 		}
 		else{
 			int numChilds = GetNumChildren();
+			subBc.needRet = true;
 			children[numChilds - 2]->Compile(e, svm, subBc);
+			subBc.needRet = false;
 			int idx = svm->AddGlobal(Value());
 			SVM::Instruction mov(Opcode::MOVE, idx);
 			svm->AddCode(mov);
@@ -56,6 +60,7 @@ public:
 
 			SVM::Instruction push(Opcode::PUSH, idx);
 			SVM::Instruction call(Opcode::CALL, 0);
+			call.operandb = true; //need return value
 			svm->AddCode(push);
 			svm->AddCode(call);
 

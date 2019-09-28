@@ -10,7 +10,10 @@ public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
 
+		bool needRet = bc.needRet;
+		bc.needRet = true;
 		children[0]->Compile(e, svm, bc);
+		bc.needRet = needRet;
 
 		int next = 0;
 		SVM::Instruction jz(Opcode::JZ, next);

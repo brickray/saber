@@ -18,6 +18,7 @@ public:
 		SVM::Instruction nop(Opcode::NOP);
 
 		BlockCnt subBc;
+		subBc.needRet = true;
 		subBc.isloop = bc.isloop;
 		subBc.bps = bc.bps;
 		subBc.cps = bc.cps;
@@ -25,6 +26,7 @@ public:
 		subBc.variableIndex = bc.variableIndex;
 		subBc.maxLevel = bc.maxLevel;
 		children[0]->Compile(e, svm, subBc);
+		subBc.needRet = false;
 		
 		int next = 0;
 		SVM::Instruction jz(Opcode::JZ, next);
