@@ -6,15 +6,11 @@
 SABER_NAMESPACE_BEGIN
 
 class AstClosure : public Astree{
-private:
-	int numParams = 0;
 public:
-	void SetNumParams(int n) { numParams = n; }
-	int GetNumParams() const { return numParams; }
-
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
 
+		int numParams = children.size() - 1;
 		int next = 0;
 		SVM::Instruction jump(Opcode::JUMP, next);
 		int jumpAddress = svm->AddCode(jump);
@@ -73,6 +69,7 @@ public:
 			svm->SetCode(reserveAddress, reserve);
 		}
 
+		//如果函数最后没有return则加上
 		SVM::Instruction ret(Opcode::RET, 0);
 		SVM::Instruction last = svm->GetLastCode();
 		if (last.opcode != Opcode::RET){

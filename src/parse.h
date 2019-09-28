@@ -77,7 +77,9 @@ private:
 	bool matchIdentifier(shared_ptr<Astree>& astree);
 	bool matchString(shared_ptr<Astree>& astree);
 	bool matchPrimary(shared_ptr<Astree>& astree);
-	bool matchLValue(shared_ptr<Astree>& astree, bool array = false);
+	int  matchRValue(shared_ptr<Astree>& astree);
+	bool matchLValueTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);
+	bool matchLValue(shared_ptr<Astree>& astree);
 	bool matchTerm(shared_ptr<Astree>& astree);
 	bool matchNegnotExpr(shared_ptr<Astree>& astree);
 	bool matchMuldivExprTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term);

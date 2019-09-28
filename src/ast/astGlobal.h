@@ -8,15 +8,11 @@ SABER_NAMESPACE_BEGIN
 class AstGlobal : public Astree{
 public:
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
-		Token* tok = children[0]->GetToken();
-		if (istable){
-			shared_ptr<Astree> node = children[0], left = node;
-			while (node->GetNumChildren()){
-				node = node->GetChild(0);
-				left = node;
-			}
-			tok = left->GetToken();
-		}
+		Token* tok;
+		shared_ptr<Astree> node = children[0];
+		while (node->GetNumChildren()) node = node->GetChild(0);
+		
+		tok = node->GetToken();
 		if (tok->GetTokenType() != ETokenType::EIDENTIFIER){
 			Error::GetInstance()->ProcessError("行数:%d, 变量名格式错误\n", tok->GetLineNumber());
 			return;

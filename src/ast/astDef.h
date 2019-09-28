@@ -6,15 +6,11 @@
 SABER_NAMESPACE_BEGIN
 
 class AstDef : public Astree{
-private:
-	int numParams = 0;
 public:
-	void SetNumParams(int n) { numParams = n; }
-	int GetNumParams() const { return numParams; }
-
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		SVM::Instruction nop(Opcode::NOP);
 
+		int numParams = children.size() - 2;
 		int next = 0;
 		SVM::Instruction jump(Opcode::JUMP, next);
 		int jumpAddress = svm->AddCode(jump);
@@ -32,8 +28,12 @@ public:
 		func.SetFunction(cl);
 		int funcAddress = svm->AddGlobal(func);
 		SymbolInfo si = { func, funcAddress };
-		e->SetSymbol(children[0]->GetToken()->GetToken(), si);
-		if (bc.cl) bc.cl->cls.insert(cl);
+		string funcName = children[0]->GetToken()->GetToken();
+		e->SetSymbol(funcName, si);
+		if (bc.cl){
+			bc.cl->variables[funcName] = si.address;
+			bc.cl->cls.insert(cl);
+		}
 
 		//set environment
 		shared_ptr<Environment> local = shared_ptr<Environment>(new Environment());
@@ -81,6 +81,7 @@ public:
 			svm->SetCode(subBc.nearst, tail);
 		}
 
+		//如果函数最后没有return则加上
 		SVM::Instruction ret(Opcode::RET, 0);
 		SVM::Instruction last = svm->GetLastCode();
 		if (last.opcode != Opcode::RET){

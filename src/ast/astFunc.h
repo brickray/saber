@@ -14,14 +14,9 @@ public:
 
 	virtual void Compile(shared_ptr<Environment>& e, shared_ptr<SVM>& svm, BlockCnt& bc){
 		string funcName;
-		if (!fromFunc){
-			Token* tok = children[0]->GetToken();
-			funcName = tok->GetToken();
-			if (!istable && !e->HasSymbol(funcName)){
-				Error::GetInstance()->ProcessError("行数:%d, 未定义标识符[%s]\n", tok->GetLineNumber(), funcName.c_str());
-
-				return;
-			}
+		bool nor = !fromFunc && dynamic_cast<AstPrimary*>(children[0]->GetChild(0).get());
+		if (nor){
+			funcName = children[0]->GetChild(0)->GetToken()->GetToken();
 		}
 		
 		bool lasttail = false;
@@ -33,7 +28,7 @@ public:
 				lasttail = true;
 			}
 		}
-		int func = si.address;
+
 		int start = fromFunc ? 0 : 1;
 		for (int j = start; j < children.size(); ++j){
 			int numParams = children[j]->GetNumChildren();
@@ -41,20 +36,8 @@ public:
 				children[j]->GetChild(i)->Compile(e, svm, bc);
 			}
 
-			if (!fromFunc){
-				if (j == start){
-					if (!istable){
-						SVM::Instruction push(Opcode::PUSH, func);
-						svm->AddCode(push);
-					}
-					else{
-						children[0]->Compile(e, svm, bc);
-					}
-				}
-				else{
-					SVM::Instruction push(Opcode::PUSH, numParams, true);
-					svm->AddCode(push);
-				}
+			if (!fromFunc && j == start){
+				children[0]->Compile(e, svm, bc);
 			}
 			else{
 				SVM::Instruction push(Opcode::PUSH, numParams, true);

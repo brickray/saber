@@ -3,40 +3,10 @@
 
 SABER_NAMESPACE_BEGIN
 
-shared_ptr<Astree> RotateBTree(shared_ptr<Astree>& root){
-	if (!root || !root->GetNumChildren()) return root;
-
-	bool first = true;
-	shared_ptr<Astree> node = root, ret = root, temp;
-	while (node->GetNumChildren() &&  node->GetToken()){
-		shared_ptr<Astree> left = node->GetChild(0);
-		shared_ptr<Astree> right = node->GetChild(1);
-		node->RemoveAllChild();
-		if (!first){
-			ret->AddChild(left);
-			temp = ret;
-			ret = node;
-			ret->AddChild(temp);
-		}
-		else{
-			ret->AddChild(left);
-		}
-
-		node = right;
-		temp = right;
-
-		first = false;
-	}
-
-	ret->AddChild(temp);
-	return ret;
-}
-
 void SyntaxParse::Parse(Lexer& lex){
 	astProgram = shared_ptr<Astree>(new AstProgram());
 	lexer = lex;
 
-	int idx = 0;
 	while (!lexer.IsEnd()){
 		shared_ptr<Astree> node = shared_ptr<Astree>(new AstStatement());
 		if (matchStatement(node)){
@@ -92,20 +62,11 @@ bool SyntaxParse::matchReturn(shared_ptr<Astree>& astree){
 	Token* tok;
 	if (match("return", &tok)){
 		astReturn->SetToken(tok);
-		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-		if (matchClosure(stat)){
-			astReturn->AddChild(stat);
-		}
-		else if (matchExpr(stat)){
-			astReturn->AddChild(stat); 
+		if (matchRValue(astReturn) == 2){
 			dynamic_cast<AstReturn*>(astReturn.get())->SetMaybeTailCall(true);
-		}
-		else if (matchTable(stat)){
-			astReturn->AddChild(stat);
 		}
 
 		astree->AddChild(astReturn);
-
 		return true;
 	}
 
@@ -155,79 +116,69 @@ bool SyntaxParse::matchPrimary(shared_ptr<Astree>& astree){
 	return false;
 }
 
-bool SyntaxParse::matchLValue(shared_ptr<Astree>& astree, bool array){
-	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
-	if (!array){
-		if (!matchIdentifier(name)) return false;
+int SyntaxParse::matchRValue(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (matchClosure(stat)){
+		astree->AddChild(stat);
+		return 1;
 	}
-	bool d = astree->GetToken() ? (astree->GetToken()->GetToken() == "." ||
-		astree->GetToken()->GetToken() == "[") : false;
-	if (d) name->SetTable(true);
+	else if (matchOrExpr(stat)){
+		astree->AddChild(stat);
+		return 2;
+	}
+	else if (matchTable(stat)){
+		astree->AddChild(stat);
+		return 4;
+	}
+
+	return 0;
+}
+
+//term       : identifier termTail
+//termTail   : . identifier termTail | [ identifier ] termTail
+bool SyntaxParse::matchLValueTail(shared_ptr<Astree>& astree, shared_ptr<Astree>& term){
+	bool fromFunc = !term.get();
 	Token* tok;
 	if (match(".", &tok)){
 		shared_ptr<Astree> dot = shared_ptr<Astree>(new AstDot());
 		dot->SetToken(tok);
-		if (!array) dot->AddChild(name);
-		if (matchLValue(dot)){
-			if (!array){
-				if (d) astree->AddChild(dot);
-				else astree = dot;
-			}
-			else{
-				astree->AddChild(dot->GetChild(0));
-			}
+		shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+		if (!matchIdentifier(name)) return false;
+		name->SetTable(true);
+		if(!fromFunc) dot->AddChild(term);
+		dot->AddChild(name);
 
-			return true;
-		}
-
-		return false;
+		return matchLValueTail(astree, dot);
 	}
 	else if (match("[", &tok)){
 		shared_ptr<Astree> dot = shared_ptr<Astree>(new AstDot());
-		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
 		dot->SetToken(tok);
-		if(!array) dot->AddChild(name);
-		if (matchExpr(stat)){
-			if (!match("]")){
-				Error::GetInstance()->ProcessError("行数:%d, table语法错误，缺少']'", tok->GetLineNumber());
-				return false;
-			}
+		shared_ptr<Astree> name = shared_ptr<Astree>(new AstStatement());
+		if (!matchExpr(name)) return false;
 
-			shared_ptr<Astree> ndot = shared_ptr<Astree>(new AstDot());
-			ndot->SetToken(tok);
-			ndot->AddChild(stat);
-			if (matchLValue(ndot, true)){
-				if (dot->GetNumChildren() == 0){
-					astree->AddChild(ndot);
-					return true;
-				}
-				dot->AddChild(ndot);
-			}
-			else{
-				if (dot->GetNumChildren() == 0){
-					astree->AddChild(stat);
-					return true;
-				}
-
-				dot->AddChild(stat);
-			}
-
-			if (d) astree->AddChild(dot);
-			else astree = dot;
-
-			return true;
+		if (!match("]", &tok)){
+			Error::GetInstance()->ProcessError("行数:%d, table语法错误，缺少']'", tok->GetLineNumber());
+			return false;
 		}
+		if (!fromFunc) dot->AddChild(term);
+		dot->AddChild(name);
 
-		return false;
+		return matchLValueTail(astree, dot);
 	}
-
-	if (!array){
-		if (d) astree->AddChild(name);
-		else astree = name;
+	else if (!fromFunc){
+		astree->AddChild(term);
 		return true;
 	}
+	else{
+		return false;
+	}
+}
 
-	return false;
+bool SyntaxParse::matchLValue(shared_ptr<Astree>& astree){
+	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+	if (!matchIdentifier(name)) return false;
+
+	return matchLValueTail(astree, name);
 }
 
 bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
@@ -238,27 +189,14 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 		return true;
 	}
 
+	shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+	if (matchLValue(stat)){
+		astree = stat;
+
+		return true;
+	}
+
 	Token* tok;
-	if (match("#", &tok)){
-		shared_ptr<Astree> astHash = shared_ptr<Astree>(new AstHash());
-		astree = astHash;
-		if (!matchLValue(left)){
-			Error::GetInstance()->ProcessError("行数:%d,[#]只能应用在左值上", tok->GetLineNumber());
-			return false;
-		}
-
-		left = RotateBTree(left);
-		astree->AddChild(left);
-		return true;
-	}
-
-	if (matchLValue(left)){
-		left = RotateBTree(left);
-		astree = left;
-		
-		return true;
-	}
-
 	if (match("(", &tok)){
 		if (!matchOrExpr(astree)) return false;
 		if (!match(")")){
@@ -267,6 +205,26 @@ bool SyntaxParse::matchTerm(shared_ptr<Astree>& astree){
 		}
 
 		return true;
+	}
+
+	if (match("#", &tok)){
+		shared_ptr<Astree> astHash = shared_ptr<Astree>(new AstHash());
+		astree = astHash;
+		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
+		if (matchClosure(stat)){
+			astree->AddChild(stat);
+			return true;
+		}
+		else if (matchTerm(stat)){
+			astree->AddChild(stat);
+			return true;
+		}
+		else if (matchTable(stat)){
+			astree->AddChild(stat);
+			return true;
+		}
+
+		Error::GetInstance()->ProcessError("行数:%d,[#]只能应用在左值上", tok->GetLineNumber());
 	}
 
 	return false;
@@ -300,7 +258,10 @@ bool SyntaxParse::matchMuldivExprTail(shared_ptr<Astree>& astree, shared_ptr<Ast
 		match("%", &tok) || match("%=", &tok)){
 		if (tok->GetTokenType() == ETokenType::EOPERATOR){
 			if (tok->GetToken() == "*=" || tok->GetToken() == "/=" || tok->GetToken() == "%="){
-				if (!term->GetToken() || term->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+				shared_ptr<Astree> t = term;
+				while (t->GetNumChildren())	t = t->GetChild(0);
+				
+				if (!t->GetToken() || t->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
 					Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 					return false;
 				}
@@ -334,7 +295,10 @@ bool SyntaxParse::matchAddsubExprTail(shared_ptr<Astree>& astree, shared_ptr<Ast
 	if (match("+", &tok) || match("-", &tok) || match("+=", &tok) || match("-=", &tok)){
 		if (tok->GetTokenType() == ETokenType::EOPERATOR){
 			if (tok->GetToken() == "+=" || tok->GetToken() == "-="){
-				if (!term->GetChild(0)->GetToken() || term->GetChild(0)->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
+				shared_ptr<Astree> t = term;
+				while (t->GetNumChildren())	t = t->GetChild(0);
+
+				if (!t->GetToken() || t->GetToken()->GetTokenType() != ETokenType::EIDENTIFIER){
 					Error::GetInstance()->ProcessError("行数:%d, %s : 左操作数必须为左值", tok->GetLineNumber(), tok->GetToken().c_str());
 					return false;
 				}
@@ -448,7 +412,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 			shared_ptr<Astree> l = shared_ptr<Astree>(new AstLocal());
 			l->SetToken(local);
 			int childs = locals.size();
-			shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+			shared_ptr<Astree> name = shared_ptr<Astree>(new AstStatement());
 			if (matchLValue(name)){
 				l->AddChild(name);
 			}
@@ -468,17 +432,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 				op->AddChild(locals[i]);
 			}
 			do{
-				shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-				if (matchClosure(stat)){
-					op->AddChild(stat);
-				}
-				else if (matchOrExpr(stat)){
-					op->AddChild(stat);
-				}
-				else if (matchTable(stat)){
-					op->AddChild(stat);
-				}
-				else{
+				if (!matchRValue(op)){
 					Error::GetInstance()->ProcessError("行数:%d, 赋值语句后缺少表达式", tok->GetLineNumber());
 					return false;
 				}
@@ -503,11 +457,9 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 	do{
 		shared_ptr<Astree> g = shared_ptr<Astree>(new AstGlobal());
 		int childs = g->GetNumChildren();
-		shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+		shared_ptr<Astree> name = shared_ptr<Astree>(new AstStatement());
 		if (matchLValue(name)){
-			bool istable = name->GetToken()->GetToken() == "." ||
-				name->GetToken()->GetToken() == "[";
-			name = RotateBTree(name);
+			bool istable = !dynamic_cast<AstPrimary*>(name->GetChild(0).get());
 			g->SetTable(istable);
 			g->AddChild(name);
 
@@ -529,17 +481,7 @@ bool SyntaxParse::matchAssignExpr(shared_ptr<Astree>& astree, bool norFor){
 			op->SetTable(vts[i], i);
 		}
 		do{
-			shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-			if (matchClosure(stat)){
-				op->AddChild(stat);
-			}
-			else if (matchOrExpr(stat)){
-				op->AddChild(stat);
-			}
-			else if (matchTable(stat)){
-				op->AddChild(stat);
-			}
-			else {
+			if (!matchRValue(op)){
 				Error::GetInstance()->ProcessError("行数:%d, 赋值语句后缺少表达式", tok->GetLineNumber());
 				return false;
 			}
@@ -789,9 +731,6 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 		}
 	} while (match(",", &tok));
 
-	AstDef* d = dynamic_cast<AstDef*>(def.get());
-	d->SetNumParams(d->GetNumChildren() - 1);
-
 	if (!match(")")){
 		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少')'", tok->GetLineNumber());
 		return false;
@@ -801,8 +740,9 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 	while (true){
 		shared_ptr<Astree> statement = shared_ptr<Astree>(new AstStatement());
 		if (!matchStatement(statement)) break;
-		def->AddChild(statement);
+		stat->AddChild(statement);
 	}
+	def->AddChild(stat);
 	
 	if (!match("end")) return false;
 
@@ -813,17 +753,12 @@ bool SyntaxParse::matchDef(shared_ptr<Astree>& astree){
 
 bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 	shared_ptr<Astree> func = shared_ptr<Astree>(new AstFunc());
-	shared_ptr<Astree> name = shared_ptr<Astree>(new AstPrimary());
+	shared_ptr<Astree> name = shared_ptr<Astree>(new AstStatement());
 	Token* tok = nullptr;
 	int p = lexer.GetTkptr();
 	if (!fromClosure){
 		if (!matchLValue(name)) return false;
-		
-		bool istable = name->GetToken()->GetToken() == "." ||
-			name->GetToken()->GetToken() == "[";
-		func->SetTable(istable);
 
-		name = RotateBTree(name);
 		func->AddChild(name);
 	}
 
@@ -839,13 +774,7 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 		do{
 			int childs = parent->GetNumChildren();
 			shared_ptr<Astree> param = shared_ptr<Astree>(new AstStatement());
-			if (matchClosure(param)){
-				parent->AddChild(param);
-			}
-			else if (matchExpr(param)){
-				parent->AddChild(param);
-			}
-			else if (matchTable(param)){
+			if (matchRValue(param)){
 				parent->AddChild(param);
 			}
 			else if (childs != 0){
@@ -862,19 +791,11 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 	} while (match("(", &tok));
 
 	astree->AddChild(func);
-	shared_ptr<Astree> t = shared_ptr<Astree>(new AstDot());
-	if (matchLValue(t, true)){
-		(dynamic_cast<AstDot*>(t.get()))->SetFunc(true);
-		shared_ptr<Astree> c = t->GetChild(0);
-		while (c){
-			AstDot* dot = dynamic_cast<AstDot*>(c.get());
-			if (dot) dot->SetFunc(true);
-			if (c->GetNumChildren() > 1)
-				c = c->GetChild(1);
-			else
-				c = nullptr;
-		}
-		astree->AddChild(t);
+
+	name = shared_ptr<Astree>(new AstStatement());
+	shared_ptr<Astree> dumy;
+	if (matchLValueTail(name, dumy)){
+		astree->AddChild(name);
 		matchFunc(astree, true);
 	}
 
@@ -884,8 +805,8 @@ bool SyntaxParse::matchFunc(shared_ptr<Astree>& astree, bool fromClosure){
 bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 	shared_ptr<Astree> closure = shared_ptr<Astree>(new AstClosure());
 	int p = lexer.GetTkptr();
-	int numParentheses = 0;
-	while (match("(")) numParentheses++;
+	int leftParentheses = 0;
+	while (match("(")) leftParentheses++;
 	Token* tok;
 	if (!match("def", &tok)){
 		lexer.SetTkptr(p);
@@ -915,9 +836,6 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 		}
 	} while (match(",", &tok));
 
-	AstClosure* d = dynamic_cast<AstClosure*>(closure.get());
-	d->SetNumParams(d->GetNumChildren());
-
 	if (!match(")")){
 		Error::GetInstance()->ProcessError("行数:%d, 函数定义语法错误,缺少')'", tok->GetLineNumber());
 		return false;
@@ -936,13 +854,19 @@ bool SyntaxParse::matchClosure(shared_ptr<Astree>& astree){
 
 	astree->AddChild(closure);
 
-	int num = numParentheses;
-	while (num){
-		if (!match(")")) break;
-		num--;
+	int rightParentheses = leftParentheses;
+	while (rightParentheses--) if (!match(")")) break;
+	
+	if (leftParentheses != 0){
+		if (rightParentheses != -1){
+			Error::GetInstance()->ProcessError("行数:%d, 匿名函数调用语法错误,缺少')'", tok->GetLineNumber());
+			return false;
+		}
+
+		matchFunc(astree, true);
 	}
-	if (matchFunc(astree, true) && (numParentheses == 0 || num != 0)){
-		Error::GetInstance()->ProcessError("行数:%d, 匿名函数调用语法错误,缺少')'", tok->GetLineNumber());
+	else if (match("(")){
+		Error::GetInstance()->ProcessError("行数:%d, 匿名函数调用语法错误", tok->GetLineNumber());
 		return false;
 	}
 
@@ -960,24 +884,9 @@ bool SyntaxParse::matchTableInit(shared_ptr<Astree>& astree){
 		dynamic_cast<AstOperator*>(op.get())->SetTableInit();
 		op->SetToken(tok);
 		op->AddChild(name);
-		shared_ptr<Astree> stat = shared_ptr<Astree>(new AstStatement());
-		if (matchClosure(stat)){
-			op->AddChild(stat);
-			astree->AddChild(op);
-			return true;
-		}
-		else if (matchOrExpr(stat)){
-			op->AddChild(stat);
-			astree->AddChild(op);
-			return true;
-		}
-		else if (matchTable(stat)){
-			op->AddChild(stat);
-			astree->AddChild(op);
-			return true;
-		}
+		if (!matchRValue(op)) return false;
 
-		return false;
+		astree->AddChild(op);
 	}
 
 	return true;
